@@ -2,10 +2,11 @@
 
 # Author  : Doomlad
 # Date    : 2023-07-05
-# Edit    : 2023-07-05
+# Edit    : 2023-07-09
 # License : BSD-3-Clause
 
-from __init__ import *
+from datetime import datetime
+from opgg.tier import Tier
 
 
 class Season:

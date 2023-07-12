@@ -6,7 +6,11 @@
 # License : BSD-3-Clause
 
 
-from __init__ import datetime, Season, LeagueStats, ChampionStats, Game
+from datetime import datetime
+from opgg.season import Season
+from opgg.league_stats import LeagueStats
+from opgg.champion_stats import ChampionStats
+from opgg.game import Game
 
 
 class Summoner:

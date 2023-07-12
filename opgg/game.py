@@ -6,7 +6,7 @@
 # License : BSD-3-Clause
 
 
-from __init__ import datetime
+from datetime import datetime
 
 class Game:
     def __init__(self,

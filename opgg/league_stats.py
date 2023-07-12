@@ -6,7 +6,9 @@
 # License : BSD-3-Clause
 
 
-from __init__ import *
+from opgg.queue_info import QueueInfo
+from opgg.tier import Tier
+from datetime import datetime
 
 
 class LeagueStats:
