@@ -10,14 +10,11 @@ import requests
 from bs4 import BeautifulSoup
 
 from opgg.summoner import Summoner
-from opgg.season import Season
-from opgg.champion import Champion, Spell, Passive, Skin, Price
-from opgg.champion_stats import ChampionStats
-from opgg.league_stats import LeagueStats
+from opgg.season import Season, SeasonInfo
+from opgg.champion import ChampionStats, Champion, Spell, Passive, Skin, Price
+from opgg.league_stats import LeagueStats, Tier
 from opgg.game import Game
-from opgg.tier import Tier
 from opgg.queue_info import QueueInfo
-from opgg.season_info import SeasonInfo
 from opgg.params import Regions, By
 
 

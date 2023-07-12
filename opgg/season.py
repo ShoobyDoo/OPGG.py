@@ -6,7 +6,7 @@
 # License : BSD-3-Clause
 
 from datetime import datetime
-from opgg.tier import Tier
+from opgg.league_stats import Tier
 
 
 class Season:
@@ -41,3 +41,15 @@ class Season:
     @created_at.setter
     def created_at(self, value: datetime) -> None:
         self._created_at = value
+    
+    
+class SeasonInfo:
+    def __init__(self,
+                 id: int,
+                 value: int,
+                 display_value: int,
+                 is_preseason: bool) -> None:
+        self._id = id
+        self._value = value
+        self._display_value = display_value
+        self._is_preseason = is_preseason
