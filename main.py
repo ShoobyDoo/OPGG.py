@@ -31,9 +31,9 @@ def main():
     opgg = OPGG(None, "NA")
     # print(opgg.get_all_champions())
     
-    for summoner_id in opgg.multi_search("Doomlad,TheOddOne,Doublelift,Shiphtur,Scarra"):
+    for summoner_id in opgg.search(["Doomlad", "HandoftheCouncil"]):
         opgg.summoner_id = summoner_id
-        print(opgg.get_summoner())  
+        print(opgg.get_summoner())
         
         
 if __name__ == "__main__":

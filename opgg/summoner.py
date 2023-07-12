@@ -169,7 +169,7 @@ class Summoner:
         for champ_stat in self.most_champions: champion_stats_fmt += f"{''.ljust(LJF)} : {champ_stat}\n"
         for game in self.recent_game_stats: game_fmt += f"{''.ljust(LJF)} : {game}\n"
         
-        return  f"[Summoner]\n{'-' * 41}\n" \
+        return  f"[Summoner: {self.name}]\n{'-' * 80}\n" \
                 f"{'Id'.ljust(LJF)} : {self.id}\n" \
                 f"{'Summoner Id'.ljust(LJF)} : {self.summoner_id}\n" \
                 f"{'Account Id'.ljust(LJF)} : {self.acct_id}\n" \

@@ -230,7 +230,7 @@ class OPGG:
         return json.loads(soup.select_one("#__NEXT_DATA__").text)['props']['pageProps']
     
     @staticmethod
-    def multi_search(summoner_names: str | list[str], region = "NA") -> list[str]:
+    def search(summoner_names: str | list[str], region = "NA") -> list[str]:
 
         if OPGG.cached_page_props:
             opgg_data = OPGG.cached_page_props
