@@ -42,6 +42,9 @@ class Season:
     def created_at(self, value: datetime) -> None:
         self._created_at = value
     
+    def __repr__(self) -> str:
+        return f"Season(season_id={self._season_id}, tier_info={self._tier_info})"
+    
     
 class SeasonInfo:
     def __init__(self,

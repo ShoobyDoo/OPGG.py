@@ -19,9 +19,14 @@ class Regions:
     RU = "RU"
     TR = "TR"
 
-class By:
+class By(str):
+    def __init__(self, string):
+        super().__init__(string)
+        
     ID = "id"
     KEY = "key"
     NAME = "name"
     COST = "cost"
+    BLUE_ESSENCE = "BE"
+    RIOT_POINTS = "RP"
     

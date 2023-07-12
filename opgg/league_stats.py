@@ -5,8 +5,6 @@
 # Edit    : 2023-07-05
 # License : BSD-3-Clause
 
-
-from opgg.queue_info import QueueInfo
 from datetime import datetime
 
 
@@ -62,6 +60,46 @@ class Tier:
     @border_image_url.setter 
     def border_image_url(self, value: str) -> None:
         self._border_image_url = value
+
+    def __repr__(self) -> str:
+        return f"Tier(tier={self._tier}, division={self._division}, lp={self._lp})"
+    
+
+class QueueInfo:
+    def __init__(self,
+                 id: int,
+                 queue_translate: str,
+                 game_type: str) -> None:
+        self._id = id
+        self._queue_translate = queue_translate
+        self._game_type = game_type
+        
+    @property
+    def id(self) -> int:
+        return self._id
+     
+    @id.setter
+    def id(self, value: int) -> None:
+        self._id = value
+        
+    @property
+    def queue_translate(self) -> str:
+        return self._queue_translate
+    
+    @queue_translate.setter
+    def queue_translate(self, value: str) -> None:
+        self._queue_translate = value
+        
+    @property
+    def game_type(self) -> str:
+        return self._game_type
+    
+    @game_type.setter
+    def game_type(self, value: str) -> None:
+        self._game_type = value
+    
+    def __repr__(self) -> str:
+        return f"QueueInfo(game_type={self.game_type})"
 
 
 class LeagueStats:
@@ -166,3 +204,6 @@ class LeagueStats:
     @updated_at.setter
     def updated_at(self, value: datetime) -> None:
         self._updated_at = value
+    
+    def __repr__(self) -> str:
+        return f"LeagueStats(queue_info={self.queue_info}, tier_info={self.tier_info}, win={self.win}, lose={self.lose})"

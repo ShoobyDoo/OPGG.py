@@ -6,6 +6,10 @@
 # License : BSD-3-Clause
 
 
+from typing import Literal
+from opgg.params import By
+
+
 class Passive:
     def __init__(self,
                  name: str,
@@ -212,21 +216,21 @@ class Champion:
     def skins(self) -> list[Skin]:
         return self._skins
 
-    def get_cost_in(self, metric = "BE") -> int | None:
+    def get_cost_by(self, by: By = By.BLUE_ESSENCE) -> int | None:
         # Get the cost of the champion in either blue essence or riot points
-        metric = "IP" if metric == "BE" else metric.upper()
+        by = "IP" if by == By.BLUE_ESSENCE else by.upper()
         
         for skin in self.skins:
             if skin.prices is not None:
                 for price in skin.prices:
-                    if price.currency == metric:
+                    if price.currency == by:
                         return price.cost
             else:
                 return None
         
         
     def __repr__(self) -> str:
-        return f"Champion(id={self.id}, name={self.name}, cost_be={self.get_cost_in()}, cost_rp={self.get_cost_in('rp')})"
+        return f"Champion(id={self.id}, name={self.name}, cost_be={self.get_cost_by()}, cost_rp={self.get_cost_by(By.RIOT_POINTS)})"
 
 
 class ChampionStats:

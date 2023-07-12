@@ -130,3 +130,6 @@ class Game:
     @created_at.setter
     def created_at(self, value: datetime) -> None:
         self._created_at = value
+    
+    def __repr__(self) -> str:
+        return f"Game(champion_id={self._champion_id}, kill={self._kill}, death={self._death}, assist={self._assist}, position={self._position}, is_win={self._is_win})"

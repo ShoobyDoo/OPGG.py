@@ -12,9 +12,8 @@ from bs4 import BeautifulSoup
 from opgg.summoner import Summoner
 from opgg.season import Season, SeasonInfo
 from opgg.champion import ChampionStats, Champion, Spell, Passive, Skin, Price
-from opgg.league_stats import LeagueStats, Tier
+from opgg.league_stats import LeagueStats, Tier, QueueInfo
 from opgg.game import Game
-from opgg.queue_info import QueueInfo
 from opgg.params import Regions, By
 
 
@@ -24,7 +23,7 @@ __license__ = 'BSD-3-Clause'
 
 
 class OPGG:
-    cached_page_props = None
+    cached_page_props = None # todo: fix this later.
     
     
     def __init__(self, summoner_id: str, region = "NA") -> None:
