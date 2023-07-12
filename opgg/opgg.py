@@ -5,15 +5,38 @@
 # Edit    : 2023-07-05
 # License : BSD-3-Clause
 
-from __init__ import *
+import json
+import requests
+from bs4 import BeautifulSoup
+
+from opgg.summoner import Summoner
+from opgg.season import Season
+from opgg.champion import Champion, Spell, Passive, Skin, Price
+from opgg.champion_stats import ChampionStats
+from opgg.league_stats import LeagueStats
+from opgg.game import Game
+from opgg.tier import Tier
+from opgg.queue_info import QueueInfo
+from opgg.season_info import SeasonInfo
+from opgg.params import Regions, By
+
+
+__version__ = '1.0.0'
+__author__ = 'Doomlad'
+__license__ = 'BSD-3-Clause'
 
 
 class OPGG:
+    cached_page_props = None
+    
+    
     def __init__(self, summoner_id: str, region = "NA") -> None:
         self._summoner_id = summoner_id
         self._region = region
         self._api_url = f"https://op.gg/api/v1.0/internal/bypass/summoners/{self.region}/{self.summoner_id}/summary"
         self._headers = { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36" }
+        self._all_champions = None
+        self._all_seasons = None
     
     @property
     def summoner_id(self) -> str:
@@ -48,6 +71,22 @@ class OPGG:
     @headers.setter
     def headers(self, value: dict) -> None:
         self._headers = value
+    
+    @property
+    def all_champions(self) -> list[Champion]:
+        return self._all_champions
+    
+    @all_champions.setter
+    def all_champions(self, value: list[Champion]) -> None:
+        self._all_champions = value
+    
+    @property
+    def all_seasons(self) -> list[Season]:
+        return self._all_seasons
+    
+    @all_seasons.setter
+    def all_seasons(self, value: list[Season]) -> None:
+        self._all_seasons = value
     
     def refresh_api_url(self) -> None:
         # update api url with new region
@@ -168,7 +207,7 @@ class OPGG:
             req.raise_for_status()
 
     @staticmethod
-    def multi_search(summoner_names: str | list[str], region = "NA") -> list[str]:
+    def get_page_props(summoner_names: str | list[str] = "Doomlad", region = "NA") -> dict:
         """
         Search multiple summoners at once.
         
@@ -181,10 +220,10 @@ class OPGG:
 
         Returns
         -------
-        list[summoner_id]
-            Returns a list of summoner ids.
+        dict
+            Returns a dictionary with the page props.
         """
-        if not isinstance(summoner_names, str): summoner_names = ",".join(summoner_names)
+        if isinstance(summoner_names, list): summoner_names = ",".join(summoner_names)
         
         url = f"https://op.gg/multisearch/{region}?summoners={summoner_names}"
         headers = { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36" }
@@ -192,8 +231,158 @@ class OPGG:
         req = requests.get(url, headers=headers)
         soup = BeautifulSoup(req.content, "html.parser")
         
+        return json.loads(soup.select_one("#__NEXT_DATA__").text)['props']['pageProps']
+    
+    @staticmethod
+    def multi_search(summoner_names: str | list[str], region = "NA") -> list[str]:
+
+        if OPGG.cached_page_props:
+            opgg_data = OPGG.cached_page_props
+        else:
+            opgg_data = OPGG.get_page_props(summoner_names, region)
+            OPGG.cached_page_props = opgg_data
+            
         ids = []
-        for summoner_id in json.loads(soup.select_one("#__NEXT_DATA__").text)['props']['pageProps']['summoners']:
-            ids.append(summoner_id["summoner_id"])
-        
+        for id in opgg_data['summoners']:
+            ids.append(id["summoner_id"])
+            
         return ids
+    
+    @staticmethod
+    def get_all_seasons(region = "NA") -> list[SeasonInfo]:
+        # TODO: Revisit this caching logic, pretty sure there's a better way to do this
+        if OPGG.cached_page_props:
+            opgg_data = OPGG.cached_page_props
+        else:
+            opgg_data = OPGG.get_page_props("Doomlad", region)
+            OPGG.cached_page_props = opgg_data
+        
+        seasons = []
+        for season in opgg_data['seasonsById']:
+            seasons.append(SeasonInfo(
+                id = season["id"],
+                value = season["value"],
+                display_value = season["display_value"],
+                is_preseason = season["is_preseason"]
+            )
+        )
+            
+        return seasons
+
+    @staticmethod
+    def get_all_champions(region = Regions.NA) -> list[Champion]:
+        # TODO: Revisit this caching logic, pretty sure there's a better way to do this
+        if OPGG.cached_page_props:
+            opgg_data = OPGG.cached_page_props
+        else:
+            # pass any username here, it doesnt matter.
+            # we just need the page props, and we dont get them without a username
+            opgg_data = OPGG.get_page_props(region)
+            OPGG.cached_page_props = opgg_data
+        
+        champions = []
+        
+        for champion in dict(opgg_data["championsById"]).values():
+            # reinit per iteration
+            _spells = []
+            _skins = []
+            
+            for skin in champion["skins"]:
+                _prices = []
+                
+                if skin["prices"]:
+                    for price in skin["prices"]:
+                        _prices.append(Price(
+                            currency = price["currency"] if "RP" in price["currency"] else "BE",
+                            cost = price["cost"]
+                        ))
+                else:
+                    _prices = None
+                
+                _skins.append(Skin(
+                    id = skin["id"],
+                    name = skin["name"],
+                    centered_image = skin["centered_image"],
+                    skin_video_url = skin["skin_video_url"],
+                    prices = _prices,
+                    sales = skin["sales"]
+                ))
+                    
+            for spell in champion["spells"]:
+                _spells.append(Spell(
+                    key = spell["key"],
+                    name = spell["name"],
+                    description = spell["description"],
+                    max_rank = spell["max_rank"],
+                    range_burn = spell["range_burn"],
+                    cooldown_burn = spell["cooldown_burn"],
+                    cost_burn = spell["cost_burn"],
+                    tooltip = spell["tooltip"],
+                    image_url = spell["image_url"],
+                    video_url = spell["video_url"]
+                ))       
+              
+            champions.append(Champion(
+                id = champion["id"],
+                key = champion["key"],
+                name = champion["name"],
+                image_url = champion["image_url"],
+                evolve = champion["evolve"],
+                passive = Passive(
+                    name = champion["passive"]["name"],
+                    description = champion["passive"]["description"],
+                    image_url = champion["passive"]["image_url"],
+                    video_url = champion["passive"]["video_url"]
+                ),
+                spells = _spells,
+                skins = _skins
+            ))            
+        
+        return champions
+    
+    @staticmethod
+    def get_champion_by(by: By, value: int | str | list, **kwargs) -> Champion | list[Champion]:
+        all_champs = OPGG.get_all_champions()
+        result_set = []
+        
+        if by == By.ID:
+            if isinstance(value, list):
+                for champ in all_champs:
+                    for id in value:
+                        if champ.id == id:
+                            result_set.append(champ)
+            else:
+                for champ in all_champs:
+                    if champ.id == int(value):
+                        result_set.append(champ)
+                
+        elif by == By.KEY:
+            if isinstance(value, list):
+                for champ in all_champs:
+                    for key in value:
+                        if champ.key == key:
+                            result_set.append(champ)
+            else:
+                for champ in all_champs:
+                    if champ.key == value:
+                        result_set.append(champ)
+        
+        elif by == By.NAME:
+            if isinstance(value, list):
+                for champ in all_champs:
+                    for name in value:
+                        if champ.name == name:
+                            result_set.append(champ)
+            else:
+                for champ in all_champs:
+                    if champ.name == value:
+                        result_set.append(champ)
+        
+        elif by == By.COST:
+                for champ in all_champs:
+                    if champ.skins[0].prices:
+                        for price in champ.skins[0].prices:
+                            if str(kwargs["currency"]).upper() == price.currency and price.cost in value:
+                                result_set.append(champ)
+                
+        return result_set
