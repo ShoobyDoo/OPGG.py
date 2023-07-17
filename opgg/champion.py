@@ -230,12 +230,12 @@ class Champion:
         
         
     def __repr__(self) -> str:
-        return f"Champion(id={self.id}, name={self.name}, cost_be={self.get_cost_by()}, cost_rp={self.get_cost_by(By.RIOT_POINTS)})"
+        return f"Champion(name={self.name})"
 
 
 class ChampionStats:
     def __init__(self,
-                 id,
+                 champion,
                  play,
                  win,
                  lose,
@@ -258,7 +258,7 @@ class ChampionStats:
                  quadra_kill,
                  penta_kill,
                  game_length_second) -> None:
-        self._id = id
+        self._champion = champion
         self._play = play
         self._win = win
         self._lose = lose
@@ -283,8 +283,8 @@ class ChampionStats:
         self._game_length_second = game_length_second
         
     @property
-    def id(self) -> int:
-        return self._id
+    def champion(self) -> Champion:
+        return self._champion
     
     @property
     def play(self) -> int:
@@ -378,5 +378,9 @@ class ChampionStats:
     def kda(self) -> float:
         return (self._kill + self._assist) / self._death if self._death != 0 else 0
 
+    @property
+    def win_rate(self) -> float:
+        return round(float((self._win / self._play) * 100), 2) if self._play != 0 else 0
+
     def __repr__(self) -> str:
-        return  f"ChampionStats(ID={self.id}, Win={self.win}, Lose={self.lose}, KDA={round(self.kda, 2)})"
+        return  f"ChampionStats(Champion=({self.champion}), Win={self.win} / Lose={self.lose} (Winrate: {self.win_rate}%), KDA={round(self.kda, 2)})"

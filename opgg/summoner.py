@@ -13,8 +13,9 @@ from opgg.champion import ChampionStats
 from opgg.game import Game
 
 
-# left just factor
-LJF = 20
+# left/right just factor
+LJF = 18
+RJF = 14
 
 
 class Summoner:
@@ -164,23 +165,23 @@ class Summoner:
     def __repr__(self) -> str:
         previous_seasons_fmt, league_stats_fmt, champion_stats_fmt, game_fmt = "", "", "", ""
         
-        for season in self.previous_seasons: previous_seasons_fmt += f"{''.ljust(LJF)} : {season}\n"
-        for league_stat in self.league_stats: league_stats_fmt += f"{''.ljust(LJF)} : {league_stat}\n"
-        for champ_stat in self.most_champions: champion_stats_fmt += f"{''.ljust(LJF)} : {champ_stat}\n"
-        for game in self.recent_game_stats: game_fmt += f"{''.ljust(LJF)} : {game}\n"
+        for season in self.previous_seasons: previous_seasons_fmt += f"{''.ljust(LJF+RJF)}  | {season}\n"
+        for league_stat in self.league_stats: league_stats_fmt += f"{''.ljust(LJF+RJF)}  | {league_stat}\n"
+        for champ_stat in self.most_champions: champion_stats_fmt += f"{''.ljust(LJF+RJF)}  | {champ_stat}\n"
+        for game in self.recent_game_stats: game_fmt += f"{''.ljust(LJF+RJF)}  | {game}\n"
         
         return  f"[Summoner: {self.name}]\n{'-' * 80}\n" \
-                f"{'Id'.ljust(LJF)} : {self.id}\n" \
-                f"{'Summoner Id'.ljust(LJF)} : {self.summoner_id}\n" \
-                f"{'Account Id'.ljust(LJF)} : {self.acct_id}\n" \
-                f"{'Puuid'.ljust(LJF)} : {self.puuid}\n" \
-                f"{'Name'.ljust(LJF)} : {self.name}\n" \
-                f"{'Internal Name'.ljust(LJF)} : {self.internal_name}\n" \
-                f"{'Profile Image Url'.ljust(LJF)} : {self.profile_image_url}\n" \
-                f"{'Level'.ljust(LJF)} : {self.level}\n" \
-                f"{'Updated At'.ljust(LJF)} : {self.updated_at}\n" \
-                f"{'Renewable At'.ljust(LJF)} : {self.renewable_at}\n" \
-                f"{'Previous Seasons'.ljust(LJF)} : [List ({len(self.previous_seasons)})] \n{previous_seasons_fmt}" \
-                f"{'League Stats'.ljust(LJF)} : [List ({len(self.league_stats)})] \n{league_stats_fmt}" \
-                f"{'Most Champions'.ljust(LJF)} : [List ({len(self.most_champions)})] \n{champion_stats_fmt}" \
-                f"{'Recent Game Stats'.ljust(LJF)} : [List ({len(self.recent_game_stats)})] \n{game_fmt}"
+                f"{'Id'.ljust(LJF)} {'(int)'.rjust(RJF)} | {self.id}\n" \
+                f"{'Summoner Id'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.summoner_id}\n" \
+                f"{'Account Id'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.acct_id}\n" \
+                f"{'Puuid'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.puuid}\n" \
+                f"{'Name'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.name}\n" \
+                f"{'Internal Name'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.internal_name}\n" \
+                f"{'Profile Image Url'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.profile_image_url}\n" \
+                f"{'Level'.ljust(LJF)} {'(int)'.rjust(RJF)} | {self.level}\n" \
+                f"{'Updated At'.ljust(LJF)} {'(datetime)'.rjust(RJF)} | {self.updated_at}\n" \
+                f"{'Renewable At'.ljust(LJF)} {'(datetime)'.rjust(RJF)} | {self.renewable_at}\n" \
+                f"{'Previous Seasons'.ljust(LJF)} {'(SeasonInfo)'.rjust(RJF)} | [List ({len(self.previous_seasons)})] \n{previous_seasons_fmt}" \
+                f"{'League Stats'.ljust(LJF)} {'(LeagueStats)'.rjust(RJF)} | [List ({len(self.league_stats)})] \n{league_stats_fmt}" \
+                f"{'Most Champions'.ljust(LJF)} {'(ChampStats)'.rjust(RJF)} | [List ({len(self.most_champions)})] \n{champion_stats_fmt}" \
+                f"{'Recent Game Stats'.ljust(LJF)} {'(Game)'.rjust(RJF)} | [List ({len(self.recent_game_stats)})] \n{game_fmt}"

@@ -43,7 +43,7 @@ class Season:
         self._created_at = value
     
     def __repr__(self) -> str:
-        return f"Season(season_id={self._season_id}, tier_info={self._tier_info})"
+        return f"Season(season={self._season_id}, tier_info={self._tier_info})"
     
     
 class SeasonInfo:
@@ -56,3 +56,22 @@ class SeasonInfo:
         self._value = value
         self._display_value = display_value
         self._is_preseason = is_preseason
+    
+    @property
+    def id(self) -> int:
+        return self._id
+    
+    @property
+    def value(self) -> int:
+        return self._value
+    
+    @property
+    def display_value(self) -> int:
+        return self._display_value
+    
+    @property
+    def is_preseason(self) -> bool:
+        return self._is_preseason
+
+    def __repr__(self) -> str:
+        return f"SeasonInfo(display_value={self._display_value}, is_preseason={self._is_preseason})"

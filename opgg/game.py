@@ -7,11 +7,12 @@
 
 
 from datetime import datetime
+from opgg.champion import Champion
 
 class Game:
     def __init__(self,
                  game_id: str,
-                 champion_id: int,
+                 champion: Champion,
                  kill: int,
                  death: int,
                  assist: int,
@@ -23,7 +24,7 @@ class Game:
                  is_opscore_max_in_team: bool,
                  created_at: datetime) -> None:
         self._game_id = game_id
-        self._champion_id = champion_id
+        self._champion = champion
         self._kill = kill
         self._death = death
         self._assist = assist
@@ -44,12 +45,12 @@ class Game:
         self._game_id = value
         
     @property
-    def champion_id(self) -> int:
-        return self._champion_id
+    def champion(self) -> Champion:
+        return self._champion
     
-    @champion_id.setter
-    def champion_id(self, value: int) -> None:
-        self._champion_id = value
+    @champion.setter
+    def champion(self, value: Champion) -> None:
+        self._champion = value
         
     @property
     def kill(self) -> int:
@@ -132,4 +133,4 @@ class Game:
         self._created_at = value
     
     def __repr__(self) -> str:
-        return f"Game(champion_id={self._champion_id}, kill={self._kill}, death={self._death}, assist={self._assist}, position={self._position}, is_win={self._is_win})"
+        return f"Game(champion={self._champion}, kill={self._kill}, death={self._death}, assist={self._assist}, position={self._position}, is_win={self._is_win})"

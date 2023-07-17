@@ -31,9 +31,9 @@ def main():
     opgg = OPGG(None, "NA")
     # print(opgg.get_all_champions())
     
-    for summoner_id in opgg.search(["Doomlad", "HandoftheCouncil"]):
-        opgg.summoner_id = summoner_id
-        print(opgg.get_summoner())
+    # todo:  more than 5 members, break the array into 5 max segs and iterate over each set
+    for summoner in opgg.search(["HandoftheCouncil", "Tired Mid Laner"]):
+        print(summoner)
         
         
 if __name__ == "__main__":
