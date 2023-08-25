@@ -11,7 +11,7 @@ An unofficial Python library for accessing OPGG data.
 
 ### Automatic
 
-This library is available as a pip package and can be installed via the following command:
+This library is available as a [pip package](https://pypi.org/project/opgg.py/) and can be installed via the following command:
 ```
 py -m pip install opgg.py
 ```
