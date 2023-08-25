@@ -1,14 +1,24 @@
 # Quick and simple scraper to pull some data from OPGG using multisearch
 
-# Author  : Doomlad
+# Author  : ShoobyDoo
 # Date    : 2023-07-05
-# Edit    : 2023-07-05
+# Edit    : 2023-08-24
 # License : BSD-3-Clause
 
 from datetime import datetime
 
 
 class Tier:
+    """
+    Represents a tier in a league.
+    
+    ### Properties:
+        `tier` - Tier name\n
+        `division` - Division number\n
+        `lp` - League points\n
+        `tier_image_url` - URL to the tier image\n
+        `border_image_url` - URL to the border image\n
+    """
     def __init__(self,
                  tier: str,
                  division: int,
@@ -23,6 +33,9 @@ class Tier:
         
     @property
     def tier(self) -> str:
+        """
+        A `str` representing the tier (e.g. "Silver")
+        """
         return self._tier
     
     @tier.setter
@@ -31,6 +44,9 @@ class Tier:
     
     @property
     def division(self) -> int:
+        """
+        An `int` representing the division
+        """
         return self._division
     
     @division.setter
@@ -39,6 +55,9 @@ class Tier:
         
     @property
     def lp(self) -> int:
+        """
+        An `int` representing the league points
+        """
         return self._lp
     
     @lp.setter
@@ -47,6 +66,9 @@ class Tier:
         
     @property
     def tier_image_url(self) -> str:
+        """
+        A `str` representing the URL to the tier image
+        """
         return self._tier_image_url
     
     @tier_image_url.setter
@@ -55,6 +77,9 @@ class Tier:
         
     @property
     def border_image_url(self) -> str:
+        """
+        A `str` representing the URL to the border image
+        """
         return self._border_image_url 
      
     @border_image_url.setter 
@@ -66,6 +91,14 @@ class Tier:
     
 
 class QueueInfo:
+    """
+    Represents a queue in a league.
+    
+    ### Properties:
+        `id` - Queue ID\n
+        `queue_translate` - Game type in KOREAN\n
+        `game_type` - Queue/Game type\n
+    """
     def __init__(self,
                  id: int,
                  queue_translate: str,
@@ -76,6 +109,9 @@ class QueueInfo:
         
     @property
     def id(self) -> int:
+        """
+        An `int` representing the queue ID
+        """
         return self._id
      
     @id.setter
@@ -84,6 +120,9 @@ class QueueInfo:
         
     @property
     def queue_translate(self) -> str:
+        """
+        A `str` representing the queue/game type in KOREAN
+        """
         return self._queue_translate
     
     @queue_translate.setter
@@ -92,6 +131,9 @@ class QueueInfo:
         
     @property
     def game_type(self) -> str:
+        """
+        A `str` representing the queue/game type
+        """
         return self._game_type
     
     @game_type.setter
@@ -103,6 +145,21 @@ class QueueInfo:
 
 
 class LeagueStats:
+    """
+    Represents a users league stats.
+    
+    ### Properties:
+        `queue_info` - QueueInfo object\n
+        `tier_info` - Tier object\n
+        `win` - Number of wins\n
+        `lose` - Number of losses\n
+        `is_hot_streak` - Whether or not the user is on a hot streak (3+ winstreak)\n
+        `is_fresh_blood` - Whether or not the user is fresh blood\n
+        `is_veteran` - Whether or not the user is a veteran\n
+        `is_inactive` - Whether or not the user is inactive\n
+        `series` - Series object\n
+        `updated_at` - Datetime object representing the last time the stats were updated\n
+    """
     def __init__(self,
                  queue_info: QueueInfo,
                  tier_info: Tier,
@@ -112,7 +169,7 @@ class LeagueStats:
                  is_fresh_blood: bool,
                  is_veteran: bool,
                  is_inactive: bool,
-                 series,
+                 series: bool,
                  updated_at: datetime) -> None:
         self._queue_info = queue_info
         self._tier_info = tier_info
@@ -127,6 +184,9 @@ class LeagueStats:
     
     @property
     def queue_info(self) -> QueueInfo:
+        """
+        A `QueueInfo` object representing the queue
+        """
         return self._queue_info
     
     @queue_info.setter
@@ -135,6 +195,9 @@ class LeagueStats:
         
     @property
     def tier_info(self) -> Tier:
+        """
+        A `Tier` object representing the tier
+        """
         return self._tier_info
     
     @tier_info.setter
@@ -143,6 +206,9 @@ class LeagueStats:
         
     @property
     def win(self) -> int:
+        """
+        An `int` representing the number of wins
+        """
         return self._win
     
     @win.setter
@@ -151,6 +217,9 @@ class LeagueStats:
         
     @property
     def lose(self) -> int:
+        """
+        An `int` representing the number of losses
+        """
         return self._lose
     
     @lose.setter
@@ -159,6 +228,9 @@ class LeagueStats:
         
     @property
     def is_hot_streak(self) -> bool:
+        """
+        A `bool` representing whether or not the user is on a hot streak (3+ winstreak)
+        """
         return self._is_hot_streak
     
     @is_hot_streak.setter
@@ -167,6 +239,9 @@ class LeagueStats:
         
     @property
     def is_fresh_blood(self) -> bool:
+        """
+        A `bool` representing whether or not the user is fresh blood
+        """
         return self._is_fresh_blood
     
     @is_fresh_blood.setter
@@ -175,6 +250,9 @@ class LeagueStats:
         
     @property
     def is_veteran(self) -> bool:
+        """
+        A `bool` representing whether or not the user is a veteran
+        """
         return self._is_veteran
     
     @is_veteran.setter
@@ -183,6 +261,9 @@ class LeagueStats:
         
     @property
     def is_inactive(self) -> bool:
+        """
+        A `bool` representing whether or not the user is inactive
+        """
         return self._is_inactive
      
     @is_inactive.setter
@@ -190,7 +271,10 @@ class LeagueStats:
         self._is_inactive = value
         
     @property
-    def series(self):
+    def series(self) -> bool:
+        """
+        A `bool` representing if the summoner is in a series
+        """
         return self._series
      
     @series.setter
@@ -199,6 +283,9 @@ class LeagueStats:
         
     @property
     def updated_at(self) -> datetime:
+        """
+        A `datetime` object representing the last time the stats were updated
+        """
         return self._updated_at
     
     @updated_at.setter

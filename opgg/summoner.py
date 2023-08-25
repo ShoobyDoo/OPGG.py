@@ -1,8 +1,8 @@
 # Quick and simple scraper to pull some data from OPGG using multisearch
 
-# Author  : Doomlad
+# Author  : ShoobyDoo
 # Date    : 2023-07-05
-# Edit    : 2023-07-05
+# Edit    : 2023-08-24
 # License : BSD-3-Clause
 
 
@@ -19,6 +19,25 @@ RJF = 14
 
 
 class Summoner:
+    """
+    Represents a summoner.
+    
+    ### Properties:
+        `id` - Summoner id\n
+        `summoner_id` - Summoner id\n
+        `acct_id` - Account id\n
+        `puuid` - Puuid\n
+        `name` - Summoner name\n
+        `internal_name` - Internal name\n
+        `profile_image_url` - Profile image url\n
+        `level` - Summoner level\n
+        `updated_at` - When the summoner was last updated\n
+        `renewable_at` - When the summoner can be renewed\n
+        `previous_seasons` - Previous seasons\n
+        `league_stats` - League stats\n
+        `most_champions` - Most champions\n
+        `recent_game_stats` - Recent game stats
+    """
     def __init__(self,
                  id: int,
                  summoner_id: str,
@@ -46,12 +65,14 @@ class Summoner:
         self._renewable_at = renewable_at
         self._previous_seasons = previous_seasons
         self._league_stats = league_stats
-        # TODO: Inevitably, implement the Champion class & lookup logic. These come in as IDs...
         self._most_champions = most_champions  
         self._recent_game_stats = recent_game_stats
         
     @property
     def id(self) -> int:
+        """
+        An `int` representing the id (opgg specific)
+        """
         return self._id
     
     @id.setter
@@ -60,6 +81,9 @@ class Summoner:
         
     @property
     def summoner_id(self) -> str:
+        """
+        A `str` representing the summoner id (riot api)
+        """
         return self._summoner_id
     
     @summoner_id.setter
@@ -68,6 +92,9 @@ class Summoner:
         
     @property
     def acct_id(self) -> str:
+        """
+        A `str` representing the account id (riot api)
+        """
         return self._acct_id
     
     @acct_id.setter
@@ -76,6 +103,9 @@ class Summoner:
         
     @property
     def puuid(self) -> str:
+        """
+        A `str` representing the puuid (riot api)
+        """
         return self._puuid
     
     @puuid.setter
@@ -84,6 +114,9 @@ class Summoner:
         
     @property
     def name(self) -> str:
+        """
+        A `str` representing the summoner name
+        """
         return self._name
     
     @name.setter
@@ -92,6 +125,9 @@ class Summoner:
         
     @property
     def internal_name(self) -> str:
+        """
+        A `str` representing the internal name
+        """
         return self._internal_name
     
     @internal_name.setter
@@ -100,6 +136,9 @@ class Summoner:
         
     @property
     def profile_image_url(self) -> str:
+        """
+        A `str` representing the profile image url
+        """
         return self._profile_image_url
     
     @profile_image_url.setter
@@ -108,6 +147,9 @@ class Summoner:
         
     @property
     def level(self) -> int:
+        """
+        An `int` representing the summoner level
+        """
         return self._level
     
     @level.setter
@@ -116,6 +158,9 @@ class Summoner:
         
     @property
     def updated_at(self) -> datetime:
+        """
+        A `datetime` object representing when the summoner was last updated
+        """
         return self._updated_at
     
     @updated_at.setter
@@ -124,6 +169,9 @@ class Summoner:
         
     @property
     def renewable_at(self) -> datetime:
+        """
+        A `datetime` object representing when the summoner can be renewed
+        """
         return self._renewable_at
     
     @renewable_at.setter
@@ -132,6 +180,9 @@ class Summoner:
         
     @property
     def previous_seasons(self) -> Season | list[Season]:
+        """
+        A `Season | list[Season]` object(s) representing the previously played seasons
+        """
         return self._previous_seasons
       
     @previous_seasons.setter
@@ -140,6 +191,9 @@ class Summoner:
         
     @property
     def league_stats(self) -> LeagueStats | list[LeagueStats]:
+        """
+        A `LeagueStats | list[LeagueStats]` object(s) representing all applicable league stats
+        """
         return self._league_stats
     
     @league_stats.setter
@@ -148,6 +202,9 @@ class Summoner:
         
     @property
     def most_champions(self) -> list[ChampionStats]:
+        """
+        A `list[ChampionStats]` objects representing the most played champions
+        """
         return self._most_champions
     
     @most_champions.setter
@@ -156,6 +213,9 @@ class Summoner:
         
     @property
     def recent_game_stats(self) -> Game | list[Game]:
+        """
+        A `Game | list[Game]` object(s) representing the most recent games
+        """
         return self._recent_game_stats
     
     @recent_game_stats.setter

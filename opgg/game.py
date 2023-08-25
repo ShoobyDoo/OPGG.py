@@ -1,15 +1,33 @@
 # Quick and simple scraper to pull some data from OPGG using multisearch
 
-# Author  : Doomlad
+# Author  : ShoobyDoo
 # Date    : 2023-07-05
-# Edit    : 2023-07-05
+# Edit    : 2023-08-24
 # License : BSD-3-Clause
 
 
 from datetime import datetime
 from opgg.champion import Champion
 
+
 class Game:
+    """
+    Represents a game played by a summoner.
+    
+    ### Properties:
+        `game_id` - Internal game id\n
+        `champion` - Champion played\n
+        `kill` - Number of kills\n
+        `death` - Number of deaths\n
+        `assist` - Number of assists\n
+        `position` - Position played\n
+        `is_win` - Whether the game was won\n
+        `is_remake` - Whether the game was a remake\n
+        `op_score` - OP.GG score\n
+        `op_score_rank` - OP.GG score rank\n
+        `is_opscore_max_in_team` - Whether the OP.GG score was the highest in the team\n
+        `created_at` - When the game was played\n
+    """
     def __init__(self,
                  game_id: str,
                  champion: Champion,
@@ -38,6 +56,9 @@ class Game:
         
     @property
     def game_id(self) -> str:
+        """
+        A `str` representing the Internal game id
+        """
         return self._game_id
     
     @game_id.setter
@@ -46,6 +67,9 @@ class Game:
         
     @property
     def champion(self) -> Champion:
+        """
+        A `Champion` object representing the champion played
+        """
         return self._champion
     
     @champion.setter
@@ -54,6 +78,9 @@ class Game:
         
     @property
     def kill(self) -> int:
+        """
+        An `int` representing the number of kills
+        """
         return self._kill
     
     @kill.setter
@@ -62,6 +89,9 @@ class Game:
         
     @property
     def death(self) -> int:
+        """
+        An `int` representing the number of deaths
+        """
         return self._death
     
     @death.setter
@@ -70,6 +100,9 @@ class Game:
         
     @property
     def assist(self) -> int:
+        """
+        An `int` representing the number of assists
+        """
         return self._assist
     
     @assist.setter
@@ -78,6 +111,9 @@ class Game:
         
     @property
     def position(self) -> str:
+        """
+        A `str` representing the position played
+        """
         return self._position
      
     @position.setter
@@ -86,6 +122,9 @@ class Game:
         
     @property
     def is_win(self) -> bool:
+        """
+        A `bool` representing whether the game was won
+        """
         return self._is_win
     
     @is_win.setter
@@ -94,6 +133,9 @@ class Game:
         
     @property
     def is_remake(self) -> bool:
+        """
+        A `bool` representing whether the game was a remake
+        """
         return self._is_remake
     
     @is_remake.setter
@@ -102,6 +144,9 @@ class Game:
         
     @property
     def op_score(self) -> float:
+        """
+        A `float` representing the OP.GG score
+        """
         return self._op_score
     
     @op_score.setter
@@ -110,6 +155,9 @@ class Game:
         
     @property
     def op_score_rank(self) -> int:
+        """
+        An `int` representing the OP.GG score rank
+        """
         return self._op_score_rank
     
     @op_score_rank.setter
@@ -118,6 +166,9 @@ class Game:
         
     @property
     def is_opscore_max_in_team(self) -> bool:
+        """
+        A `bool` representing whether the OP.GG score was the highest in the team (MVP)
+        """
         return self._is_opscore_max_in_team
     
     @is_opscore_max_in_team.setter
@@ -126,6 +177,9 @@ class Game:
          
     @property
     def created_at(self) -> datetime:
+        """
+        A `datetime` object representing when the game was played
+        """
         return self._created_at
     
     @created_at.setter

@@ -1,12 +1,15 @@
 # Quick and simple scraper to pull some data from OPGG using multisearch
 
-# Author  : Doomlad
+# Author  : ShoobyDoo
 # Date    : 2023-07-05
-# Edit    : 2023-07-05
+# Edit    : 2023-08-24
 # License : BSD-3-Clause
 
+import os
 import json
+import logging
 import requests
+from datetime import datetime
 from bs4 import BeautifulSoup
 
 from opgg.summoner import Summoner
@@ -14,27 +17,57 @@ from opgg.season import Season, SeasonInfo
 from opgg.champion import ChampionStats, Champion, Spell, Passive, Skin, Price
 from opgg.league_stats import LeagueStats, Tier, QueueInfo
 from opgg.game import Game
-from opgg.params import Regions, By
+from opgg.params import Region, By
 
 
-__version__ = '1.0.0'
-__author__ = 'Doomlad'
+__author__ = 'ShoobyDoo'
 __license__ = 'BSD-3-Clause'
+
+# ===== SETUP STR =====
+if not os.path.exists('./logs'):
+    os.mkdir('./logs')
+
+logging.root.name = 'OPGG.py'
+
+logging.basicConfig(
+    filename=f'./logs/opgg_{datetime.now().strftime("%Y-%m-%d")}.log',
+    filemode='a+', 
+    format='[%(asctime)s][%(name)-22s][%(levelname)-7s] : %(message)s', 
+    datefmt='%d-%b-%y %H:%M:%S',
+    level=logging.CRITICAL
+)
+# ===== SETUP END =====
 
 
 class OPGG:
+    """
+    ### OPGG.py
+    A simple library to access and structure the data from OP.GG's Website & API.
+    """
     cached_page_props = None # todo: fix this later.
     
-    def __init__(self, summoner_id: str | None = None, region = "NA") -> None:
+    def __init__(self, summoner_id: str | None = None, region = Region.NA) -> None:
         self._summoner_id = summoner_id
         self._region = region
         self._api_url = f"https://op.gg/api/v1.0/internal/bypass/summoners/{self.region}/{self.summoner_id}/summary"
         self._headers = { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36" }
         self._all_champions = None
         self._all_seasons = None
+        
+        logging.debug(
+            f"OPGG.__init__(summoner_id={self.summoner_id}, " \
+            f"region={self.region}, " \
+            f"api_url={self.api_url}, " \
+            f"headers={self.headers}, " \
+            f"all_champions={self.all_champions}, " \
+            f"all_seasons={self.all_seasons})"
+        )
     
     @property
     def summoner_id(self) -> str:
+        """
+        A `str` representing the summoner id. (Riot API)
+        """
         return self._summoner_id
     
     @summoner_id.setter
@@ -44,6 +77,9 @@ class OPGG:
         
     @property
     def region(self) -> str:
+        """
+        A `str` representing the region to search in.
+        """
         return self._region
     
     @region.setter
@@ -53,6 +89,9 @@ class OPGG:
         
     @property
     def api_url(self) -> str:
+        """
+        A `str` representing the api url to send requests to. (OPGG API)
+        """
         return self._api_url
     
     @api_url.setter
@@ -61,6 +100,9 @@ class OPGG:
     
     @property
     def headers(self) -> dict:
+        """
+        A `dict` representing the headers to send with the request.
+        """
         return self._headers
     
     @headers.setter
@@ -69,6 +111,9 @@ class OPGG:
     
     @property
     def all_champions(self) -> list[Champion]:
+        """
+        A `list[Champion]` objects representing all champions in the game.
+        """
         return self._all_champions
     
     @all_champions.setter
@@ -77,17 +122,38 @@ class OPGG:
     
     @property
     def all_seasons(self) -> list[SeasonInfo]:
+        """
+        A `list[SeasonInfo]` objects representing all seasons in the game.
+        """
         return self._all_seasons
     
     @all_seasons.setter
     def all_seasons(self, value: list[SeasonInfo]) -> None:
         self._all_seasons = value
     
+    
     def refresh_api_url(self) -> None:
-        # update api url with new region
+        """
+        A method to refresh the api url with the current summoner id and region.
+        """
         self.api_url = f"https://op.gg/api/v1.0/internal/bypass/summoners/{self.region}/{self.summoner_id}/summary"
+        
+        logging.debug(f"self.refresh_api_url() called... self.api_url = {self.api_url}")
+    
     
     def get_summoner(self) -> Summoner:
+        """
+        A method to get data from the OPGG API and form a Summoner object.
+        
+        General flow:\n
+            -> Send request to OPGG API\n
+            -> Parse data from request (jsonify)\n
+            -> Loop through data and form the summoner object.
+            
+        ### Returns:
+            `Summoner`: A Summoner object representing the summoner.
+        """
+        logging.info(f"Sending request to OPGG API... (API_URL = {self.api_url}, HEADERS = {self.headers})")
         req = requests.get(self.api_url, headers=self.headers)
         
         previous_seasons: list[Season] = []
@@ -96,6 +162,7 @@ class OPGG:
         recent_game_stats: list[Game] = []
         
         if req.status_code == 200:
+            logging.info(f"Request to OPGG API was successful, parsing data (Content Length: {len(req.text)})...")
             content = json.loads(req.text)["data"]
         else:
             req.raise_for_status()
@@ -202,6 +269,7 @@ class OPGG:
                     created_at = game["created_at"]
                 ))
         except Exception as e:
+            logging.error(f"Error parsing summoner data... (Could be that they just come in as nulls): {e}")
             pass
         
         
@@ -222,41 +290,62 @@ class OPGG:
             recent_game_stats = recent_game_stats
         )
     
-    def search(self, summoner_names: str | list[str], region = "NA") -> list[str]:
-        # print("search() : OPGG.cached_page_props = ", OPGG.cached_page_props)
-        if OPGG.cached_page_props:
-            opgg_data = OPGG.cached_page_props
-        else:
-            opgg_data = self.get_page_props(summoner_names, region)
-            OPGG.cached_page_props = opgg_data
+    
+    def search(self, summoner_names: str | list[str], region = Region.NA) -> list[Summoner]:
+        """
+        Search for a single or multiple summoner(s) on OPGG.
+
+        ### Args:
+            summoner_names : `str | list[str]`
+                Pass either a `str` (comma seperated or single) or `str` list of summoner names.
+                
+            region : `Region, optional`
+                Pass the region you want to search in. Defaults to "NA".
+
+        ### Returns:
+            `list[Summoner]` : A list of summoner objects.
+        """
         
-        self.all_seasons = self.get_all_seasons(self.region, opgg_data)
-        self.all_champions = self.get_all_champions(self.region, opgg_data)
-            
+        if OPGG.cached_page_props:
+            page_props = OPGG.cached_page_props
+            logging.info("Using cached page props...")
+        else:
+            page_props = self.get_page_props(summoner_names, region)
+            OPGG.cached_page_props = page_props
+            logging.info("No cached page props found, fetching...")
+        
+        self.all_seasons = self.get_all_seasons(self.region, page_props)
+        self.all_champions = self.get_all_champions(self.region, page_props)
+        
+        # todo: if more than 5 summoners are passed, break into 5s and iterate over each set
+        # note: this would require calls to the refresh_api_url() method each iteration
         summoners = []
-        for id in opgg_data['summoners']:
+        for id in page_props['summoners']:
             self.summoner_id = id["summoner_id"]
-            summoners.append(self.get_summoner())
+            summoner = self.get_summoner()
+            summoners.append(summoner) 
+            logging.info(summoner)
             
         return summoners
 
-    @staticmethod
-    def get_page_props(summoner_names: str | list[str] = "Doomlad", region = "NA") -> dict:
-        """
-        Search multiple summoners at once.
-        
-        Parameters
-        ----------
-        `summoner_names : str | list[str]`
-            Pass a comma separated string or a list of summoner names.
-        `region : str`
-            Pass a region. Default is "NA".
 
-        Returns
-        -------
-        dict
-            Returns a dictionary with the page props.
+    @staticmethod
+    def get_page_props(summoner_names: str | list[str] = "abc", region = Region.NA) -> dict:
         """
+        Get the page props from OPGG. (Contains data such as summoner info, champions, seasons, etc.)
+        
+        ### Parameters
+            summoner_names : `str | list[str], optional`
+                Pass a single or comma separated `str` or a list of summoner names.\n
+                Note: Default is "abc", as this can be any valid summoner if you just want page props. (All champs, seasons, etc.)
+            
+            region : `Region, optional`
+                Pass the region you want to search in. Default is "NA".
+
+        ### Returns
+            `dict` : Returns a dictionary with the page props.
+        """
+        
         if isinstance(summoner_names, list): summoner_names = ",".join(summoner_names)
         
         url = f"https://op.gg/multisearch/{region}?summoners={summoner_names}"
@@ -267,23 +356,38 @@ class OPGG:
         req = requests.get(url, headers=headers)
         soup = BeautifulSoup(req.content, "html.parser")
         
-        # TODO: One request out to OPGG is done here. 
-        # TODO: I want to build out the all_champions and all_seasons properties here as well.
-        # Reduce the overhead of multiple requests out, and just do it all in one go.
-        
-        # TODO: BUILD OUT THE CHAMPION AND SEASON OBJECTS HERE
+        # One request out to OPGG is done here. 
+        # Therefore, build out the all_champions and all_seasons properties here as well.
+        # This will reduce the overhead of multiple requests out, and just do it all in one go.
+        # TODO: Build out the champion and season objects here (?)
         
         return json.loads(soup.select_one("#__NEXT_DATA__").text)['props']['pageProps']
     
+    
     @staticmethod
-    def get_all_seasons(region = "NA", opgg_data: dict = None) -> list[SeasonInfo]:
+    def get_all_seasons(region = Region.NA, page_props: dict = None) -> list[SeasonInfo]:
+        """
+        Get all seasons from OPGG.
+
+        ### Args:
+            region : `Region, optional`
+                Pass the region you want to search in. Defaults to "NA".
+                
+            page_props : `dict, optional`
+                Pass the page props if the program has queried them once before.\n
+                Note: Defaults to None, but if you pass them it reduces the overhead of another request out to OPGG.
+
+        ### Returns:
+            `list[SeasonInfo]` : A list of SeasonInfo objects.
+        """
+        
         # TODO: Revisit this caching logic, pretty sure there's a better way to do this
-        if opgg_data is None:
-            opgg_data = OPGG.get_page_props(region)
-            OPGG.cached_page_props = opgg_data
-            
+        if page_props is None:
+            page_props = OPGG.get_page_props(region)
+            OPGG.cached_page_props = page_props
+        
         seasons = []
-        for season in dict(opgg_data['seasonsById']).values():
+        for season in dict(page_props['seasonsById']).values():
             seasons.append(SeasonInfo(
                 id = season["id"],
                 value = season["value"],
@@ -293,12 +397,23 @@ class OPGG:
         
         return seasons
 
+
     @staticmethod
-    def get_season_by(by: By, value: int | str | list, opgg_data: dict = None) -> SeasonInfo | list[SeasonInfo]:
-        # Currently kwargs only handles "currency" for the cost of a champion,
-        # but I might introduce other metrics of getting champ objs later, idk...
+    def get_season_by(by: By, value: int | str | list) -> SeasonInfo | list[SeasonInfo]:
+        """
+        Get a season by a specific metric.
         
-        # TODO: REDO THIS, THIS IS WRONG. SEASONINFO is the obejct that stores the display value
+        ### Args:
+            by : `By`
+                Pass a By enum to specify how you want to get the season(s).
+            
+            value : `int | str | list`
+                Pass the value(s) you want to search by. (id, display_value, etc.)
+        
+        ### Returns:
+            `SeasonInfo | list[SeasonInfo]` : A single or list of SeasonInfo objects.
+        """
+        
         all_seasons = OPGG.get_all_seasons()
         result_set = []
         
@@ -310,22 +425,41 @@ class OPGG:
                             result_set.append(season)
             else:
                 for season in all_seasons:
-                    if season.i == int(value):
+                    if season.id == int(value):
                         result_set.append(season)
+        
+        # TODO: perhaps add more ways to get season objs, like by is_preseason, or display_name, etc.           
+        
+        return result_set if len(result_set) > 1 else result_set[0]
+    
     
     @staticmethod
-    def get_all_champions(region = Regions.NA, opgg_data: dict = None) -> list[Champion]:
+    def get_all_champions(region = Region.NA, page_props: dict = None) -> list[Champion]:
+        """
+        Get all champion info from OPGG.
+
+        ### Args:
+            region : `Region, optional`
+                Pass the region you want to search in. Defaults to "NA".
+                
+            page_props : `dict, optional`
+                Pass the page props if the program has queried them once before.\n
+                Note: Defaults to None, but if you pass them it reduces the overhead of another request out to OPGG.
+
+        Returns:
+            `list[Champion]` : A list of Champion objects.
+        """
         # TODO: Revisit this caching logic, pretty sure there's a better way to do this
-        if opgg_data is None:
+        if page_props is None:
             # pass any valid username here, it doesnt matter.
             # we just need the page props, and we dont get them without an actual user
-            opgg_data = OPGG.get_page_props(region)
-            OPGG.cached_page_props = opgg_data
+            page_props = OPGG.get_page_props(region)
+            OPGG.cached_page_props = page_props
         
         champions = []
         
-        for champion in dict(opgg_data["championsById"]).values():
-            # reinit per iteration
+        for champion in dict(page_props["championsById"]).values():
+            # reset per iteration
             _spells = []
             _skins = []
             
@@ -382,8 +516,26 @@ class OPGG:
         
         return champions
     
+    
     @staticmethod
     def get_champion_by(by: By, value: int | str | list, **kwargs) -> Champion | list[Champion]:
+        """
+        Get a single or list of champions by a specific metric.
+        
+        ### Args:
+            by : `By`
+                Pass a By enum to specify how you want to get the champion(s).
+                
+            value : `int | str | list`
+                Pass the value(s) you want to search by. (id, key, name, etc.)
+                
+            **kwargs : `any`
+                Pass any additional keyword arguments to narrow down the search.\n
+                Note: Currently only supports "currency" for the cost of a champion.\n
+                
+                Example: 
+                    `get_champion_by(By.COST, 450, currency=By.BLUE_ESSENCE)`
+        """
         # Currently kwargs only handles "currency" for the cost of a champion,
         # but I might introduce other metrics of getting champ objs later, idk...
         all_champs = OPGG.get_all_champions()
@@ -423,10 +575,12 @@ class OPGG:
                         result_set.append(champ)
         
         elif by == By.COST:
-                for champ in all_champs:
-                    if champ.skins[0].prices:
-                        for price in champ.skins[0].prices:
-                            if str(kwargs["currency"]).upper() == price.currency and price.cost in value:
-                                result_set.append(champ)
+            for champ in all_champs:
+                if champ.skins[0].prices:
+                    for price in champ.skins[0].prices:
+                        if str(kwargs["currency"]).upper() == price.currency and price.cost in value:
+                            result_set.append(champ)
                 
-        return result_set
+        
+        # if the result set is larger than one, return the whole list, otherwise just return the object itself.
+        return result_set if len(result_set) > 1 else result_set[0]

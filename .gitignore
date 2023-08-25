@@ -161,3 +161,6 @@ cython_debug/
 
 .vscode
 main.py
+
+setup.cfg
+setup.py
