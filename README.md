@@ -85,3 +85,6 @@ Recent Game Stats          (Game) | [List (10)]
                                   | Game(champion=Champion(name=Zed), kill=13, death=5, assist=5, position=MID, is_win=False)
                                   | Game(champion=Champion(name=Pyke), kill=10, death=4, assist=12, position=SUPPORT, is_win=True)
 ```
+
+## Join the Discussion
+Here's a link to the [Support Discord](https://discord.gg/fzRK2Sb)
