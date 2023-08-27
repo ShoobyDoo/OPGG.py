@@ -29,6 +29,10 @@ Alternatively, you can use the provided requirements.txt to install the required
 py -m pip install -r requirements.txt
 ```
 
+## Active Development
+
+#### You can view the current active developments on the [OPGG.py Project](https://github.com/users/ShoobyDoo/projects/2) page
+
 ## Usage / Basic Example
 
 #### Importing the library
