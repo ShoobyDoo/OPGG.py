@@ -31,7 +31,7 @@ py -m pip install -r requirements.txt
 
 ## Usage / Basic Example
 
-#### Importing the library
+### Importing the library
 ```python
 from opgg.opgg import OPGG
 from opgg.summoner import Summoner
@@ -49,7 +49,9 @@ if __name__ == "__main__":
     main()
 ```
 
-#### Output
+### Output
+**Important Note:** The information returned below is a summary view with the most important parts of each object shown "at a glance". 
+Many of the objects have several additional properties that can be accessed by referencing the object in code.
 ```
 [Summoner: ColbyFaulkn1]
 --------------------------------------------------------------------------------
@@ -87,6 +89,10 @@ Recent Game Stats          (Game) | [List (10)]
                                   | Game(champion=Champion(name=Zed), kill=13, death=5, assist=5, position=MID, is_win=False)
                                   | Game(champion=Champion(name=Pyke), kill=10, death=4, assist=12, position=SUPPORT, is_win=True)
 ```
+
+## Active Development
+
+#### You can view the current active developments on the [OPGG.py Project](https://github.com/users/ShoobyDoo/projects/2) page
 
 ## Join the Discussion
 Here's a link to the [Support Discord](https://discord.gg/fzRK2Sb)
