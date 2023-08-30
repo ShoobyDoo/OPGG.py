@@ -2,7 +2,6 @@
 
 # Author  : ShoobyDoo
 # Date    : 2023-07-05
-# Edit    : 2023-08-24
 # License : BSD-3-Clause
 
 from datetime import datetime

@@ -2,13 +2,13 @@
 
 # Author  : ShoobyDoo
 # Date    : 2023-07-05
-# Edit    : 2023-08-24
 # License : BSD-3-Clause
 
 
 from datetime import datetime
+from opgg.params import Queue
 from opgg.season import Season
-from opgg.league_stats import LeagueStats
+from opgg.league_stats import LeagueStats, Tier
 from opgg.champion import ChampionStats
 from opgg.game import Game
 
@@ -222,6 +222,29 @@ class Summoner:
     def recent_game_stats(self, value: Game | list[Game]) -> None:
         self._recent_game_stats = value
 
+    def get_tier_from_queue(self, queue: Queue = Queue.SOLO) -> Tier:
+        """
+        A method to get the summoners current tier in a given queue type.
+        
+        ### Args:
+            queue : `Queue`
+                The queue type to get the tier from. Defaults to `Queue.SOLO`.
+        
+        ### Returns:
+            `Tier` : The tier object which contains the rank, division, and lp.
+        """
+        
+        league_stat: LeagueStats
+        for league_stat in self.league_stats:
+            if league_stat.queue_info.game_type == queue:
+                return league_stat.tier_info
+        else:
+            return None
+    
+    def get_top_champ(self) -> ChampionStats:
+        return self.most_champions[0]
+        
+    
     def __repr__(self) -> str:
         previous_seasons_fmt, league_stats_fmt, champion_stats_fmt, game_fmt = "", "", "", ""
         

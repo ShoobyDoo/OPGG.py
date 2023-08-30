@@ -2,7 +2,6 @@
 
 # Author  : ShoobyDoo
 # Date    : 2023-07-05
-# Edit    : 2023-08-24
 # License : BSD-3-Clause
 
 from datetime import datetime
@@ -292,5 +291,15 @@ class LeagueStats:
     def updated_at(self, value: datetime) -> None:
         self._updated_at = value
     
+    @property
+    def win_rate(self) -> float | None:
+        """
+        A `float` representing the win rate of the champion.
+        """
+        if self._win and self._lose:
+            return round(float((self._win / (self._win + self._lose)) * 100), 2) if (self._win + self._lose) != 0 else 0
+        return None
+    
+    
     def __repr__(self) -> str:
-        return f"LeagueStats(queue_info={self.queue_info}, tier_info={self.tier_info}, win={self.win}, lose={self.lose})"
+        return f"LeagueStats(queue_info={self.queue_info}, tier_info={self.tier_info}, win={self.win} / lose={self.lose} (winrate: {self.win_rate}%))"

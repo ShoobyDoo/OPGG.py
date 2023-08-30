@@ -2,7 +2,6 @@
 
 # Author  : ShoobyDoo
 # Date    : 2023-07-05
-# Edit    : 2023-08-24
 # License : BSD-3-Clause
 
 
@@ -56,4 +55,19 @@ class By:
     COST = "cost"
     BLUE_ESSENCE = "BE"
     RIOT_POINTS = "RP"
+    
+
+class Queue:
+    """
+    Struct for queue types.
+    
+    ### Options:
+        `SOLO` - SoloQueue\n
+        `FLEX` - FlexQueue\n
+        `ARENA` - Arena
+    """
+    
+    SOLO = "SOLORANKED"
+    FLEX = "FLEXRANKED"
+    ARENA = "ARENA"
     

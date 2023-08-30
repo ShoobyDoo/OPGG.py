@@ -2,7 +2,6 @@
 
 # Author  : ShoobyDoo
 # Date    : 2023-07-05
-# Edit    : 2023-08-24
 # License : BSD-3-Clause
 
 import os
@@ -18,15 +17,13 @@ from opgg.champion import ChampionStats, Champion, Spell, Passive, Skin, Price
 from opgg.league_stats import LeagueStats, Tier, QueueInfo
 from opgg.game import Game
 from opgg.params import Region, By
+from opgg.cacher import Cacher
 
 
 __author__ = 'ShoobyDoo'
 __license__ = 'BSD-3-Clause'
 
 # ===== SETUP STR =====
-if not os.path.exists('./logs'):
-    os.mkdir('./logs')
-
 logging.root.name = 'OPGG.py'
 
 logging.basicConfig(
@@ -34,8 +31,18 @@ logging.basicConfig(
     filemode='a+', 
     format='[%(asctime)s][%(name)-22s][%(levelname)-7s] : %(message)s', 
     datefmt='%d-%b-%y %H:%M:%S',
-    level=logging.CRITICAL
+    level=logging.INFO
 )
+
+if not os.path.exists('./logs'):
+    logging.info("Creating logs directory...")
+    os.mkdir('./logs')
+else:
+    # remove empty log files
+    for file in os.listdir('./logs'):
+        if os.stat(f"./logs/{file}").st_size == 0 and file != f'opgg_{datetime.now().strftime("%Y-%m-%d")}.log':
+            logging.info(f"Removing empty log file: {file}")
+            os.remove(f"./logs/{file}")
 # ===== SETUP END =====
 
 
@@ -43,8 +50,15 @@ class OPGG:
     """
     ### OPGG.py
     A simple library to access and structure the data from OP.GG's Website & API.
+    
+    Copyright (c) 2023, ShoobyDoo
+    License: BSD-3-Clause, See LICENSE for more details.
     """
-    cached_page_props = None # todo: fix this later.
+    cached_page_props = None
+    
+    # Todo: Add support for the following endpoint(s):
+    # https://op.gg/api/v1.0/internal/bypass/games/na/summoners/<summoner_id?>/?&limit=20&hl=en_US&game_type=total
+    
     
     def __init__(self, summoner_id: str | None = None, region = Region.NA) -> None:
         self._summoner_id = summoner_id
@@ -62,6 +76,9 @@ class OPGG:
             f"all_champions={self.all_champions}, " \
             f"all_seasons={self.all_seasons})"
         )
+        
+        self._cacher = Cacher()
+        self._cacher.setup()
     
     @property
     def summoner_id(self) -> str:
@@ -131,6 +148,12 @@ class OPGG:
     def all_seasons(self, value: list[SeasonInfo]) -> None:
         self._all_seasons = value
     
+    @property
+    def cacher(self) -> Cacher:
+        """
+        A `Cacher` object representing the summoner_id cacher.
+        """
+        return self._cacher
     
     def refresh_api_url(self) -> None:
         """
@@ -269,7 +292,7 @@ class OPGG:
                     created_at = game["created_at"]
                 ))
         except Exception as e:
-            logging.error(f"Error parsing summoner data... (Could be that they just come in as nulls): {e}")
+            logging.warn(f"Error parsing some summoner data... (Could be that they just come in as nulls): {e}")
             pass
         
         
@@ -310,22 +333,54 @@ class OPGG:
             page_props = OPGG.cached_page_props
             logging.info("Using cached page props...")
         else:
-            page_props = self.get_page_props(summoner_names, region)
+            # no comma here would result in bug, no ',' found in str
+            if isinstance(summoner_names, str): summoner_names = summoner_names.split(",")
+            
+            # General flow of cache retrieval:
+            # 1. Pull from cache db
+            # -> If found, add to list of cached summoner ids, and below iterate over and set the summoner id property
+            #    -> As an extension of the above, these requests would go directly to the api to pull summary/full data
+            # -> If not found, add to list of summoner names to query
+            # 2. Build the summoner objects accordingly
+            cached_summoner_ids = []
+            uncached_summoners = []
+            
+            for summoner_name in summoner_names:
+                cached_id = self.cacher.get_summoner_id(summoner_name)
+                if cached_id:
+                    cached_summoner_ids.append(cached_id)
+                else:
+                    uncached_summoners.append(summoner_name)
+            
+            # pass only uncached summoners to get_page_props()
+            page_props = self.get_page_props(uncached_summoners, region)
             OPGG.cached_page_props = page_props
-            logging.info("No cached page props found, fetching...")
-        
-        self.all_seasons = self.get_all_seasons(self.region, page_props)
-        self.all_champions = self.get_all_champions(self.region, page_props)
+            logging.info(f"No cache for {len(uncached_summoners)} summoners: {uncached_summoners}, fetching... (using get_page_props() site scraper)")
+            logging.info(f"Cache found for {len(cached_summoner_ids)} summoners: {cached_summoner_ids}, fetching... (using get_summoner() api)")
+            
+        # i'm not sure why i put this in here, going to comment out for now.
+        # you can get this info by doing a opgg.get_all_seasons()/opgg.get_all_champions() call
+        # self.all_seasons = self.get_all_seasons(self.region, page_props)
+        # self.all_champions = self.get_all_champions(self.region, page_props)
         
         # todo: if more than 5 summoners are passed, break into 5s and iterate over each set
-        # note: this would require calls to the refresh_api_url() method each iteration
+        # note: this would require calls to the refresh_api_url() method each iteration?
         summoners = []
         for id in page_props['summoners']:
             self.summoner_id = id["summoner_id"]
             summoner = self.get_summoner()
             summoners.append(summoner) 
-            logging.info(summoner)
+            logging.info(f"Summoner object built for: {summoner.name} ({summoner.summoner_id}), caching...")
+            result = self.cacher.insert(summoner.name, summoner.summoner_id, True)
+            logging.info(result)
             
+        # cached summoners go straight to api
+        for cached_id in cached_summoner_ids:
+            self.summoner_id = cached_id
+            summoner = self.get_summoner()
+            summoners.append(summoner)
+            logging.info(f"Summoner object built for: {summoner.name} ({summoner.summoner_id})")
+        
         return summoners
 
 
@@ -366,6 +421,7 @@ class OPGG:
     
     @staticmethod
     def get_all_seasons(region = Region.NA, page_props: dict = None) -> list[SeasonInfo]:
+        # TODO: SummonerFull might have this info, which would reduce the call out to get_page_props()
         """
         Get all seasons from OPGG.
 
@@ -382,9 +438,12 @@ class OPGG:
         """
         
         # TODO: Revisit this caching logic, pretty sure there's a better way to do this
-        if page_props is None:
+        if page_props == None and not OPGG.cached_page_props:
             page_props = OPGG.get_page_props(region)
             OPGG.cached_page_props = page_props
+            
+        elif OPGG.cached_page_props:
+            page_props = OPGG.cached_page_props
         
         seasons = []
         for season in dict(page_props['seasonsById']).values():
@@ -436,7 +495,8 @@ class OPGG:
     @staticmethod
     def get_all_champions(region = Region.NA, page_props: dict = None) -> list[Champion]:
         """
-        Get all champion info from OPGG.
+        Get all champion info from OPGG.\n
+        Page props method will be deprecated very soon in favour of simply pinging a champion endpoint I found.
 
         ### Args:
             region : `Region, optional`
@@ -450,12 +510,15 @@ class OPGG:
             `list[Champion]` : A list of Champion objects.
         """
         # TODO: Revisit this caching logic, pretty sure there's a better way to do this
-        if page_props is None:
+        if page_props == None and not OPGG.cached_page_props:
             # pass any valid username here, it doesnt matter.
             # we just need the page props, and we dont get them without an actual user
             page_props = OPGG.get_page_props(region)
             OPGG.cached_page_props = page_props
-        
+            
+        elif OPGG.cached_page_props:
+            page_props = OPGG.cached_page_props
+            
         champions = []
         
         for champion in dict(page_props["championsById"]).values():
