@@ -20,32 +20,6 @@ from opgg.params import Region, By
 from opgg.cacher import Cacher
 
 
-__author__ = 'ShoobyDoo'
-__license__ = 'BSD-3-Clause'
-
-# ===== SETUP STR =====
-logging.root.name = 'OPGG.py'
-
-logging.basicConfig(
-    filename=f'./logs/opgg_{datetime.now().strftime("%Y-%m-%d")}.log',
-    filemode='a+', 
-    format='[%(asctime)s][%(name)-22s][%(levelname)-7s] : %(message)s', 
-    datefmt='%d-%b-%y %H:%M:%S',
-    level=logging.INFO
-)
-
-if not os.path.exists('./logs'):
-    logging.info("Creating logs directory...")
-    os.mkdir('./logs')
-else:
-    # remove empty log files
-    for file in os.listdir('./logs'):
-        if os.stat(f"./logs/{file}").st_size == 0 and file != f'opgg_{datetime.now().strftime("%Y-%m-%d")}.log':
-            logging.info(f"Removing empty log file: {file}")
-            os.remove(f"./logs/{file}")
-# ===== SETUP END =====
-
-
 class OPGG:
     """
     ### OPGG.py
@@ -54,21 +28,63 @@ class OPGG:
     Copyright (c) 2023, ShoobyDoo
     License: BSD-3-Clause, See LICENSE for more details.
     """
+    
+    __author__ = 'ShoobyDoo'
+    __license__ = 'BSD-3-Clause'
+    
     cached_page_props = None
     
     # Todo: Add support for the following endpoint(s):
     # https://op.gg/api/v1.0/internal/bypass/games/na/summoners/<summoner_id?>/?&limit=20&hl=en_US&game_type=total
+    # https://www.op.gg/_next/data/MU383OsSMb6hg5che0Y88/en_US/multisearch/na.json?summoners=Handofthecouncil%2CTired%2Bmid%2Blaner%2Cabc%2CColbyfaulkn1%2Ccolbyfaulkn%2Cabcd%2Cabcde%2Cabcdef%26region%3Dna&region=na
     
     
     def __init__(self, summoner_id: str | None = None, region = Region.NA) -> None:
         self._summoner_id = summoner_id
         self._region = region
         self._api_url = f"https://op.gg/api/v1.0/internal/bypass/summoners/{self.region}/{self.summoner_id}/summary"
-        self._headers = { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36" }
+        self._headers = { 
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36" 
+        }
         self._all_champions = None
         self._all_seasons = None
+
+        # ===== SETUP START =====
+        logging.root.name = 'OPGG.py'
+
+        logging.basicConfig(
+            filename=f'./logs/opgg_{datetime.now().strftime("%Y-%m-%d")}.log',
+            filemode='a+', 
+            format='[%(asctime)s][%(name)-22s][%(levelname)-7s] : %(message)s', 
+            datefmt='%d-%b-%y %H:%M:%S',
+            level=logging.INFO
+        )
+
+        if not os.path.exists('./logs'):
+            logging.info("Creating logs directory...")
+            os.mkdir('./logs')
+        else:
+            # remove empty log files
+            for file in os.listdir('./logs'):
+                if os.stat(f"./logs/{file}").st_size == 0 and file != f'opgg_{datetime.now().strftime("%Y-%m-%d")}.log':
+                    logging.info(f"Removing empty log file: {file}")
+                    os.remove(f"./logs/{file}")
+        # ===== SETUP END =====
         
-        logging.debug(
+        # allow the user to interact with the logger
+        self._logger = logging.getLogger("OPGG.py")        
+        
+        # at object creation, setup and query the cache
+        self._cacher = Cacher()
+        self._cacher.setup()
+        
+        # check if champions are cached, if they are, populate self.all_champions
+        
+        
+        # check if seasons are cached, if they are, populate self.all_seasons
+        
+        
+        self.logger.info(
             f"OPGG.__init__(summoner_id={self.summoner_id}, " \
             f"region={self.region}, " \
             f"api_url={self.api_url}, " \
@@ -77,8 +93,15 @@ class OPGG:
             f"all_seasons={self.all_seasons})"
         )
         
-        self._cacher = Cacher()
-        self._cacher.setup()
+    
+    @property
+    def logger(self) -> logging.Logger:
+        """
+        A `Logger` object representing the logger instance.
+        
+        The logging level is set to `INFO` by default.
+        """
+        return self._logger
     
     @property
     def summoner_id(self) -> str:
@@ -161,7 +184,7 @@ class OPGG:
         """
         self.api_url = f"https://op.gg/api/v1.0/internal/bypass/summoners/{self.region}/{self.summoner_id}/summary"
         
-        logging.debug(f"self.refresh_api_url() called... self.api_url = {self.api_url}")
+        self.logger.debug(f"self.refresh_api_url() called... self.api_url = {self.api_url}")
     
     
     def get_summoner(self) -> Summoner:
@@ -176,7 +199,7 @@ class OPGG:
         ### Returns:
             `Summoner`: A Summoner object representing the summoner.
         """
-        logging.info(f"Sending request to OPGG API... (API_URL = {self.api_url}, HEADERS = {self.headers})")
+        self.logger.info(f"Sending request to OPGG API... (API_URL = {self.api_url}, HEADERS = {self.headers})")
         req = requests.get(self.api_url, headers=self.headers)
         
         previous_seasons: list[Season] = []
@@ -185,7 +208,7 @@ class OPGG:
         recent_game_stats: list[Game] = []
         
         if req.status_code == 200:
-            logging.info(f"Request to OPGG API was successful, parsing data (Content Length: {len(req.text)})...")
+            self.logger.info(f"Request to OPGG API was successful, parsing data (Content Length: {len(req.text)})...")
             content = json.loads(req.text)["data"]
         else:
             req.raise_for_status()
@@ -292,7 +315,7 @@ class OPGG:
                     created_at = game["created_at"]
                 ))
         except Exception as e:
-            logging.warn(f"Error parsing some summoner data... (Could be that they just come in as nulls): {e}")
+            self.logger.warn(f"Error parsing some summoner data... (Could be that they just come in as nulls): {e}")
             pass
         
         
@@ -331,16 +354,16 @@ class OPGG:
         
         if OPGG.cached_page_props:
             page_props = OPGG.cached_page_props
-            logging.info("Using cached page props...")
+            self.logger.info("Using cached page props...")
         else:
             # no comma here would result in bug, no ',' found in str
             if isinstance(summoner_names, str): summoner_names = summoner_names.split(",")
             
             # General flow of cache retrieval:
             # 1. Pull from cache db
-            # -> If found, add to list of cached summoner ids, and below iterate over and set the summoner id property
-            #    -> As an extension of the above, these requests would go directly to the api to pull summary/full data
-            # -> If not found, add to list of summoner names to query
+            #   -> If found, add to list of cached summoner ids, and below iterate over and set the summoner id property
+            #   -> As an extension of the above, these requests would go directly to the api to pull summary/full data
+            #   -> If not found, add to list of summoner names to query
             # 2. Build the summoner objects accordingly
             cached_summoner_ids = []
             uncached_summoners = []
@@ -353,15 +376,22 @@ class OPGG:
                     uncached_summoners.append(summoner_name)
             
             # pass only uncached summoners to get_page_props()
-            page_props = self.get_page_props(uncached_summoners, region)
-            OPGG.cached_page_props = page_props
-            logging.info(f"No cache for {len(uncached_summoners)} summoners: {uncached_summoners}, fetching... (using get_page_props() site scraper)")
-            logging.info(f"Cache found for {len(cached_summoner_ids)} summoners: {cached_summoner_ids}, fetching... (using get_summoner() api)")
+            # todo: DEBUG, THIS IS GOIGN TO PING OUT EACH TIME FOR NOW
+            # page_props = self.get_page_props(uncached_summoners, region)
+            page_props = self.get_page_props(summoner_names, region)
+            self.logger.debug(page_props)
             
-        # i'm not sure why i put this in here, going to comment out for now.
-        # you can get this info by doing a opgg.get_all_seasons()/opgg.get_all_champions() call
-        # self.all_seasons = self.get_all_seasons(self.region, page_props)
-        # self.all_champions = self.get_all_champions(self.region, page_props)
+            OPGG.cached_page_props = page_props
+            self.logger.info(f"No cache for {len(uncached_summoners)} summoners: {uncached_summoners}, fetching... (using get_page_props() site scraper)")
+            self.logger.info(f"Cache found for {len(cached_summoner_ids)} summoners: {cached_summoner_ids}, fetching... (using get_summoner() api)")
+            
+        # these cross reference the page prop season/champ ids to build out season/champ objects
+        # todo: build this into caching system
+        self.all_seasons = self.get_all_seasons(self.region, page_props)
+        self.all_champions = self.get_all_champions(self.region, page_props)
+        
+        # TODO: this is just for testing, cache the champs.
+        self.cacher.insert_all_champs(self.all_champions)
         
         # todo: if more than 5 summoners are passed, break into 5s and iterate over each set
         # note: this would require calls to the refresh_api_url() method each iteration?
@@ -370,16 +400,15 @@ class OPGG:
             self.summoner_id = id["summoner_id"]
             summoner = self.get_summoner()
             summoners.append(summoner) 
-            logging.info(f"Summoner object built for: {summoner.name} ({summoner.summoner_id}), caching...")
-            result = self.cacher.insert(summoner.name, summoner.summoner_id, True)
-            logging.info(result)
+            self.logger.info(f"Summoner object built for: {summoner.name} ({summoner.summoner_id}), caching...")
+            self.cacher.insert_summoner(summoner.name, summoner.summoner_id)
             
         # cached summoners go straight to api
-        for cached_id in cached_summoner_ids:
-            self.summoner_id = cached_id
-            summoner = self.get_summoner()
-            summoners.append(summoner)
-            logging.info(f"Summoner object built for: {summoner.name} ({summoner.summoner_id})")
+        # for cached_id in cached_summoner_ids:
+        #     self.summoner_id = cached_id
+        #     summoner = self.get_summoner()
+        #     summoners.append(summoner)
+        #     self.logger.info(f"Summoner object built for: {summoner.name} ({summoner.summoner_id})")
         
         return summoners
 
@@ -410,11 +439,6 @@ class OPGG:
 
         req = requests.get(url, headers=headers)
         soup = BeautifulSoup(req.content, "html.parser")
-        
-        # One request out to OPGG is done here. 
-        # Therefore, build out the all_champions and all_seasons properties here as well.
-        # This will reduce the overhead of multiple requests out, and just do it all in one go.
-        # TODO: Build out the champion and season objects here (?)
         
         return json.loads(soup.select_one("#__NEXT_DATA__").text)['props']['pageProps']
     

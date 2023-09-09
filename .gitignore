@@ -164,3 +164,5 @@ main.py
 opgg.db
 setup.cfg
 setup.py
+
+tests/requirements.txt
