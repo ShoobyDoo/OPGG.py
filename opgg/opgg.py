@@ -37,14 +37,17 @@ class OPGG:
     # Todo: Add support for the following endpoint(s):
     # https://op.gg/api/v1.0/internal/bypass/games/na/summoners/<summoner_id?>/?&limit=20&hl=en_US&game_type=total
     # https://www.op.gg/_next/data/MU383OsSMb6hg5che0Y88/en_US/multisearch/na.json?summoners=Handofthecouncil%2CTired%2Bmid%2Blaner%2Cabc%2CColbyfaulkn1%2Ccolbyfaulkn%2Cabcd%2Cabcde%2Cabcdef%26region%3Dna&region=na
-    
+
+    # METADATA FOR CHAMPIONS -- USE THIS OVER PAGE_PROPS.
+    # https://op.gg/api/v1.0/internal/bypass/meta/champions?hl=en_US
+
     
     def __init__(self, summoner_id: str | None = None, region = Region.NA) -> None:
         self._summoner_id = summoner_id
         self._region = region
         self._api_url = f"https://op.gg/api/v1.0/internal/bypass/summoners/{self.region}/{self.summoner_id}/summary"
         self._headers = { 
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36" 
+            "User-Agent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 7_2_8; en-US) AppleWebKit/602.31 (KHTML, like Gecko) Chrome/55.0.2384.172 Safari/600" 
         }
         self._all_champions = None
         self._all_seasons = None
@@ -337,28 +340,31 @@ class OPGG:
         )
     
     
-    def search(self, summoner_names: str | list[str], region = Region.NA) -> list[Summoner]:
+    def search(self, summoner_names: str | list[str], region = Region.NA) -> Summoner | list[Summoner] | str:
         """
         Search for a single or multiple summoner(s) on OPGG.
 
         ### Args:
-            summoner_names : `str | list[str]`
-                Pass either a `str` (comma seperated or single) or `str` list of summoner names.
+            summoner_names : `str` | `list[str]`
+                Pass either a `str` (comma seperated) or `list[str]` of summoner names.
                 
             region : `Region, optional`
                 Pass the region you want to search in. Defaults to "NA".
 
         ### Returns:
-            `list[Summoner]` : A list of summoner objects.
+            `list[Summoner]` | `str` : A single or list of Summoner objects, or a string if no summoner(s) were found.
         """
         
+        # This internal instance cache works for when the object is instantiated a single time to be used multiple times.
         if OPGG.cached_page_props:
             page_props = OPGG.cached_page_props
             self.logger.info("Using cached page props...")
         else:
-            # no comma here would result in bug, no ',' found in str
-            if isinstance(summoner_names, str): summoner_names = summoner_names.split(",")
-            
+            if isinstance(summoner_names, str) and "," in summoner_names:
+                summoner_names = summoner_names.split(",")
+            elif isinstance(summoner_names, str):
+                summoner_names = [summoner_names]
+                
             # General flow of cache retrieval:
             # 1. Pull from cache db
             #   -> If found, add to list of cached summoner ids, and below iterate over and set the summoner id property
@@ -376,41 +382,62 @@ class OPGG:
                     uncached_summoners.append(summoner_name)
             
             # pass only uncached summoners to get_page_props()
-            # todo: DEBUG, THIS IS GOIGN TO PING OUT EACH TIME FOR NOW
-            # page_props = self.get_page_props(uncached_summoners, region)
-            page_props = self.get_page_props(summoner_names, region)
-            self.logger.debug(page_props)
-            
+            page_props = self.get_page_props(uncached_summoners, region)
             OPGG.cached_page_props = page_props
-            self.logger.info(f"No cache for {len(uncached_summoners)} summoners: {uncached_summoners}, fetching... (using get_page_props() site scraper)")
-            self.logger.info(f"Cache found for {len(cached_summoner_ids)} summoners: {cached_summoner_ids}, fetching... (using get_summoner() api)")
+            
+            self.logger.debug(f"\n********PAGE_PROPS_START********\n{page_props}\n********PAGE_PROPS_STOP********")
+            
+            if len(uncached_summoners) > 0:
+                self.logger.info(f"No cache for {len(uncached_summoners)} summoners: {uncached_summoners}, fetching... (using get_page_props() site scraper)")
+            if len(cached_summoner_ids) > 0:
+                self.logger.info(f"Cache found for {len(cached_summoner_ids)} summoners: {cached_summoner_ids}, fetching... (using get_summoner() api)")
             
         # these cross reference the page prop season/champ ids to build out season/champ objects
         # todo: build this into caching system
-        self.all_seasons = self.get_all_seasons(self.region, page_props)
-        self.all_champions = self.get_all_champions(self.region, page_props)
+        # todo: metric for when you cache vs not, each run get length of seasons/champs, if they changed, update cache.
+        cached_seasons = self.cacher.get_all_seasons()
+        cached_champions = self.cacher.get_all_champs()
         
-        # TODO: this is just for testing, cache the champs.
-        self.cacher.insert_all_champs(self.all_champions)
+        # If we found some cached seasons/champs, use them, otherwise fetch and cache them.
+        if cached_seasons:
+            self.all_seasons = cached_seasons
+        else:
+            self.all_seasons = self.get_all_seasons(self.region, page_props)
+            self.cacher.insert_all_seasons(self.all_seasons)
+            
+        if cached_champions:
+            self.all_champions = cached_champions
+        else:
+            self.all_champions = self.get_all_champions(self.region, page_props)
+            self.cacher.insert_all_champs(self.all_champions)
         
         # todo: if more than 5 summoners are passed, break into 5s and iterate over each set
         # note: this would require calls to the refresh_api_url() method each iteration?
+        
+        # bit of weirdness around generic usernames. If you pass "abc" for example, it will return multiple summoners in the page props.
+        # To help, we will check against opgg's "internal_name" property, which seems to be the username.lower() with spaces removed.        
         summoners = []
-        for id in page_props['summoners']:
-            self.summoner_id = id["summoner_id"]
+        for summoner_name in summoner_names:
+            internal_name = ''.join(summoner_name.split()).lower()
+            self.summoner_id = [props["summoner_id"] for props in page_props['summoners'] if props["internal_name"] == internal_name][0]
             summoner = self.get_summoner()
-            summoners.append(summoner) 
+            summoners.append(summoner)
             self.logger.info(f"Summoner object built for: {summoner.name} ({summoner.summoner_id}), caching...")
             self.cacher.insert_summoner(summoner.name, summoner.summoner_id)
             
         # cached summoners go straight to api
-        # for cached_id in cached_summoner_ids:
-        #     self.summoner_id = cached_id
-        #     summoner = self.get_summoner()
-        #     summoners.append(summoner)
-        #     self.logger.info(f"Summoner object built for: {summoner.name} ({summoner.summoner_id})")
+        for _cached_summoner_id in cached_summoner_ids:
+            self.summoner_id = _cached_summoner_id
+            summoner = self.get_summoner()
+            summoners.append(summoner)
+            self.logger.info(f"Summoner object built for: {summoner.name} ({summoner.summoner_id})")
         
-        return summoners
+        # todo: add custom exceptions instead of this.
+        # todo: raise SummonerNotFound exception
+        if len(summoners) == 0: 
+            return f"No summoner(s) matching {summoner_names} were found..."
+        
+        return summoners if len(summoners) > 1 else summoners[0]
 
 
     @staticmethod
@@ -434,10 +461,10 @@ class OPGG:
         
         url = f"https://op.gg/multisearch/{region}?summoners={summoner_names}"
         headers = { 
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36" 
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.1; en-US) AppleWebKit/602.14 (KHTML, like Gecko) Chrome/55.0.2575.244 Safari/603.4 Edge/11.82011",
         }
 
-        req = requests.get(url, headers=headers)
+        req = requests.get(url, headers=headers, allow_redirects=True)
         soup = BeautifulSoup(req.content, "html.parser")
         
         return json.loads(soup.select_one("#__NEXT_DATA__").text)['props']['pageProps']
@@ -445,7 +472,6 @@ class OPGG:
     
     @staticmethod
     def get_all_seasons(region = Region.NA, page_props: dict = None) -> list[SeasonInfo]:
-        # TODO: SummonerFull might have this info, which would reduce the call out to get_page_props()
         """
         Get all seasons from OPGG.
 
@@ -460,8 +486,11 @@ class OPGG:
         ### Returns:
             `list[SeasonInfo]` : A list of SeasonInfo objects.
         """
+        # Check cache first, and if found return that instead of querying.
+        cached_seasons = Cacher().get_all_seasons()
+        if cached_seasons:
+            return cached_seasons
         
-        # TODO: Revisit this caching logic, pretty sure there's a better way to do this
         if page_props == None and not OPGG.cached_page_props:
             page_props = OPGG.get_page_props(region)
             OPGG.cached_page_props = page_props
@@ -533,7 +562,11 @@ class OPGG:
         Returns:
             `list[Champion]` : A list of Champion objects.
         """
-        # TODO: Revisit this caching logic, pretty sure there's a better way to do this
+        # Check cache, if found, return it, otherwise continue to below logic.
+        cached_champions = Cacher().get_all_champs()
+        if cached_champions:
+            return cached_champions
+        
         if page_props == None and not OPGG.cached_page_props:
             # pass any valid username here, it doesnt matter.
             # we just need the page props, and we dont get them without an actual user
