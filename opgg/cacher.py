@@ -2,7 +2,8 @@ import sqlite3
 import logging
 import os
 
-from opgg.champion import Champion, Spell
+from opgg.champion import Champion, Passive, Skin, Spell
+from opgg.season import Season, SeasonInfo
 
 
 class Cacher:
@@ -34,7 +35,7 @@ class Cacher:
         self.cursor = self.conn.cursor()
         
         # Create summoner table if it doesn't exist
-        self.logger.debug("Creating summoner table if it doesn't exist...")        
+        self.logger.debug("Creating summoner table if it doesn't exist...")
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS tblSummoners (summoner_name PRIMARY KEY, summoner_id);""")
         
         # Create champions table if it doesn't exist
@@ -47,6 +48,19 @@ class Cacher:
                 champion_name,
                 champion_image_url,
                 champion_evolve_list
+            );
+            """
+        )
+        
+        # Create seasons table if it doesn't exist
+        self.logger.debug("Creating seasons table if it doesn't exist...")
+        self.cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS tblSeasonInfo (
+                season_id PRIMARY KEY,
+                season_value,
+                season_display_name,
+                season_is_preseason
             );
             """
         )
@@ -102,7 +116,7 @@ class Cacher:
         
         self.conn.commit()
         self.conn.close()
-        
+    
     
     def insert_summoner(self, summoner_name: str, summoner_id: str, return_result: bool = False) -> None | str:
         """
@@ -136,11 +150,77 @@ class Cacher:
         
         return_msg = f"You have made changes to the database. Table: tblSummoners | Rows affected: {self.cursor.rowcount}"
         
-        if return_result: 
+        if return_result:
             return return_msg
         else:
             self.logger.info(return_msg)
         
+        
+    def get_summoner_id(self, summoner_name: str) -> str | None:
+        """
+        Gets a summoner id from the cache database by a provided summoner name.
+        
+        ### Args:
+            summoner_name : `str`
+                Summoner name.
+        
+        ### Returns:
+            `str | None` : Returns a `str` with the summoner id, if found. Otherwise returns `None`.
+        """
+        self.conn = self.connect()
+        self.cursor = self.conn.cursor()
+        
+        self.logger.info(f"Getting {summoner_name}'s summoner id from cache database...")
+        
+        self.cursor.execute("""
+            SELECT summoner_id
+            FROM tblSummoners
+            WHERE summoner_name = ?;
+        """, (summoner_name,))
+        
+        result = self.cursor.fetchone()
+        self.conn.close()
+        
+        if result is None:
+            self.logger.info(f"{summoner_name}'s summoner_id not found in cache database.")
+            return None
+        
+        self.logger.info(f"{summoner_name}'s summoner_id found in cache database. ({result[0]})")
+        return result[0]
+    
+    
+    def get_summoner_name(self, summoner_id: str) -> str | None:
+        """
+        Gets a summoner name from the cache database by a provided summoner id.
+        
+        ### Args:
+            summoner_id : `str`
+                Summoner ID.
+        
+        ### Returns:
+            `str | None` : Returns a `str` with the summoner name, if found. Otherwise returns `None`.
+        """
+        self.conn = self.connect()
+        self.cursor = self.conn.cursor()
+        
+        self.logger.info(f"Getting associated summoner name from summoner_id: {summoner_id}...")
+        
+        self.cursor.execute("""
+            SELECT summoner_name
+            FROM tblSummoners
+            WHERE summoner_id = ?;
+        """, (summoner_id,))
+        
+        result = self.cursor.fetchone()
+        self.conn.close()
+        
+        if result is None:
+            self.logger.info(f"Could not find an associated summoner_name for summoner_id: {summoner_id}")
+            return None
+        
+        self.logger.info(f"Found associated summoner_name for summoner_id: {summoner_id} ({result[0]})")
+        return result[0]
+    
     
     def insert_all_champs(self, champions: list[Champion], return_result: bool = False) -> None | str:
         """
@@ -151,7 +231,7 @@ class Cacher:
                 A list of Champion objects to be cached.
         
         ### Returns:
-            `None | str, optional` : Returns a string with the amount of rows affected if requested.
+            `None` | `str, optional` : Returns a string with the amount of rows affected if requested.
         """
         self.conn = self.connect()
         self.cursor = self.conn.cursor()
@@ -160,10 +240,10 @@ class Cacher:
         
         self.logger.debug(f"Attempting to insert {len(champions)} champions into cache database...")
         
-        batch_champion_insert: list[tuple] = []
-        batch_passives_insert: list[tuple] = []
-        batch_spells_insert: list[tuple] = []
-        batch_skins_insert: list[tuple] = []
+        batch_champion_insert:  list[tuple] = []
+        batch_passives_insert:  list[tuple] = []
+        batch_spells_insert:    list[tuple] = []
+        batch_skins_insert:     list[tuple] = []
         
         for champion in champions:
             # champion
@@ -262,78 +342,269 @@ class Cacher:
         self.conn.commit()
         self.conn.close()
         
-        return_msg = f"You've made several changes to the database. Total rows affected87541: {total_rc}"
+        return_msg = f"You've made several changes to the database. Total rows affected: {total_rc}"
         
         if return_result: 
             return return_msg
         else:
             self.logger.info(return_msg)
             
-    
-    def get_summoner_id(self, summoner_name: str) -> str | None:
+            
+    def get_all_champs(self) -> list[Champion] | None:
         """
-        Gets a summoner name from the cache database by a provided summoner name.
+        Gets all champions from the cache database and returns a list of Champion objects.
+
+        ### Returns:
+            `list[Champion]` | `None` : Returns a list of Champion objects if found. Otherwise returns `None`.
+        """
+        self.conn = self.connect()
+        self.cursor = self.conn.cursor()
+        all_champs = []
+        
+        self.logger.info("Getting all champions from cache database...")
+        self.cursor.execute("SELECT * FROM tblChampions;")
+        result = self.cursor.fetchall()
+        
+        if result is None:
+            self.logger.info("No champions found in cache database.")
+            return None
+        else:
+            self.logger.info(f"Found {len(result)} champions in cache database.")
+            cached_champ: tuple[str, str, str, str, str]
+            for i, cached_champ in enumerate(result):
+                # In order to restore a champion object, we need the following:
+                # PASSIVE FROM PASSIVES TABLE
+                # SPELLS FROM SPELLS TABLE
+                # SKINS FROM SKINS TABLE
+                # TODO: Make this more efficient by using a single query to get ALL related data. Currently, each get_* function call is getting data for each champion PER query. Instead, we should get all related data for all champions in a single query.
+                champ_passive = self.get_passive(cached_champ[0])
+                champ_spells = self.get_spells(cached_champ[0])
+                champ_skins = self.get_skins(cached_champ[0])
+                
+                champ_obj = Champion(
+                    id=cached_champ[0],
+                    key=cached_champ[1],
+                    name=cached_champ[2],
+                    image_url=cached_champ[3],
+                    evolve=cached_champ[4].split(',') if cached_champ[4] else None,
+                    passive=champ_passive,
+                    spells=champ_spells,
+                    skins=champ_skins
+                )
+                all_champs.append(champ_obj)
+                self.logger.info(f"Successfully rebuilt the \"{champ_obj.name}\" champion object from cache. ({i+1}/{len(result)})")
+                
+            return all_champs
+                
+            
+    def get_passive(self, champion_id: int) -> Passive | None:
+        """
+        Gets a champion's passive from the cache database.
         
         ### Args:
-            summoner_name : `str`
-                Summoner name.
+            champion_id : `int`
+                Champion ID.
         
         ### Returns:
-            `str | None` : Returns a `str` with the summoner id, if found. Otherwise returns `None`.
+            `Passive | None` : Returns a `Passive` object if found. Otherwise returns `None`.
         """
         self.conn = self.connect()
         self.cursor = self.conn.cursor()
         
-        self.logger.info(f"Getting {summoner_name}'s summoner id from cache database...")
+        self.logger.debug(f"Getting passive for champion_id: {champion_id}...")
         
-        self.cursor.execute("""
-            SELECT summoner_id
-            FROM tblSummoners
-            WHERE summoner_name = ?;
-        """, (summoner_name,))
+        self.cursor.execute(
+            """
+            SELECT *
+            FROM tblPassives
+            WHERE champion_id = ?;
+            """, (champion_id,)
+        )
         
         result = self.cursor.fetchone()
         self.conn.close()
         
         if result is None:
-            self.logger.info(f"{summoner_name}'s summoner_id not found in cache database.")
+            self.logger.debug(f"Passive not found for champion_id: {champion_id}.")
             return None
         
-        self.logger.info(f"{summoner_name}'s summoner_id found in cache database. ({result[0]})")
-        return result[0]
-    
-    
-    def get_summoner_name(self, summoner_id: str) -> str | None:
+        self.logger.debug(f"Passive \"{result[1]}\" found for champion_id: {champion_id}.")
+        return Passive(
+            name=result[1],
+            description=result[2],
+            image_url=result[3],
+            video_url=result[4]
+        )    
+         
+            
+    def get_spells(self, champion_id: int) -> list[Spell] | None:
         """
-        Gets a summoner name from the cache database by a provided summoner id.
+        Gets a champion's spells from the cache database.
         
         ### Args:
-            summoner_id : `str`
-                Summoner ID.
+            champion_id : `int`
+                Champion ID.
         
         ### Returns:
-            `str | None` : Returns a `str` with the summoner name, if found. Otherwise returns `None`.
+            `list[Spell] | None` : Returns a list of `Spell` objects if found. Otherwise returns `None`.
         """
         self.conn = self.connect()
         self.cursor = self.conn.cursor()
         
-        self.logger.info(f"Getting associated summoner name from summoner_id: {summoner_id}...")
+        self.logger.debug(f"Getting spells for champion_id: {champion_id}...")
         
-        self.cursor.execute("""
-            SELECT summoner_name
-            FROM tblSummoners
-            WHERE summoner_id = ?;
-        """, (summoner_id,))
+        self.cursor.execute(
+            """
+            SELECT *
+            FROM tblSpells
+            WHERE champion_id = ?;
+            """, (champion_id,)
+        )
         
-        result = self.cursor.fetchone()
+        result = self.cursor.fetchall()
         self.conn.close()
         
         if result is None:
-            self.logger.info(f"Could not find an associated summoner_name for summoner_id: {summoner_id}")
+            self.logger.debug(f"No spells found for champion_id: {champion_id}.")
             return None
         
-        self.logger.info(f"Found associated summoner_name for summoner_id: {summoner_id} ({result[0]})")
-        return result[0]
+        self.logger.debug(f"Found spells for champion_id: {champion_id}.")
+        return [Spell(
+            key=spell[1],
+            name=spell[2],
+            description=spell[3],
+            max_rank=spell[4],
+            range_burn=spell[5].split(',') if spell[5] else None,
+            cooldown_burn=spell[6].split(',') if spell[5] else None,
+            cost_burn=spell[7].split(',') if spell[5] else None,
+            tooltip=spell[8],
+            image_url=spell[9],
+            video_url=spell[10]
+        ) for spell in result]
+    
+    
+    def get_skins(self, champion_id: int) -> list[Skin] | None:
+        """
+        Gets a champion's skins from the cache database.
+        
+        ### Args:
+            champion_id : `int`
+                Champion ID.
+        
+        ### Returns:
+            `list[Skin] | None` : Returns a list of `Skin` objects if found. Otherwise returns `None`.
+        """
+        self.conn = self.connect()
+        self.cursor = self.conn.cursor()
+        
+        self.logger.debug(f"Getting skins for champion_id: {champion_id}...")
+        
+        self.cursor.execute(
+            """
+            SELECT *
+            FROM tblSkins
+            WHERE champion_id = ?;
+            """, (champion_id,)
+        )
+        
+        result = self.cursor.fetchall()
+        self.conn.close()
+        
+        if result is None:
+            self.logger.debug(f"No skins found for champion_id: {champion_id}.")
+            return None
+        
+        self.logger.debug(f"Found skins for champion_id: {champion_id}.")
+        return [Skin(
+            id=skin[1],
+            name=skin[2],
+            centered_image=skin[3],
+            skin_video_url=skin[4],
+            prices=skin[5].split(',') if skin[5] else None
+        ) for skin in result] 
+    
+    
+    def insert_all_seasons(self, seasons: list[SeasonInfo], return_result: bool = False) -> None | str:
+        """
+        Inserts a list of seasons and their related attributes into the database.
+        
+        ### Args:
+            seasons : `list[SeasonInfo]`
+                A list of SeasonInfo objects to be cached.
+        
+        ### Returns:
+            `None` | `str, optional` : Returns a string with the amount of rows affected if requested.
+        """
+        self.conn = self.connect()
+        self.cursor = self.conn.cursor()
+        total_rc = 0
+        return_msg = "You've made changes to the database. Table: {table} | Rows affected: {count}"
+        
+        self.logger.debug(f"Attempting to insert {len(seasons)} seasons into cache database...")
+        
+        batch_seasons_insert: list[tuple] = []
+        
+        for season_info in seasons:
+            batch_seasons_insert.append((
+                season_info.id,
+                season_info.value,
+                season_info.display_value,
+                season_info.is_preseason
+            ))
+        
+        self.cursor.executemany(
+            """
+            INSERT OR IGNORE INTO tblSeasonInfo (season_id, season_value, season_display_name, season_is_preseason)
+            VALUES (:1, :2, :3, :4)
+            """,
+            batch_seasons_insert
+        )
+        
+        total_rc += self.cursor.rowcount
+        self.logger.debug(return_msg.format(table="tblSeasonInfo", count=self.cursor.rowcount))
+        
+        self.conn.commit()
+        self.conn.close()
+        
+        return_msg = f"You've made several changes to the database. Total rows affected: {total_rc}"
+        
+        if return_result:
+            return return_msg
+        else:
+            self.logger.info(return_msg)
+        
+    
+    def get_all_seasons(self) -> list[SeasonInfo] | None:
+        """
+        Gets all seasons from the cache database and returns a list of SeasonInfo objects.
+        
+        ### Returns:
+            `list[SeasonInfo]` | `None` : Returns a list of SeasonInfo objects if found. Otherwise returns `None`.
+        """
+        self.conn = self.connect()
+        self.cursor = self.conn.cursor()
+        all_seasons = []
+        
+        self.logger.info("Getting all seasons from cache database...")
+        self.cursor.execute("SELECT * FROM tblSeasonInfo;")
+        result = self.cursor.fetchall()
+        
+        if result is None:
+            self.logger.info("No seasons found in cache database.")
+            return None
+        else:
+            self.logger.info(f"Found {len(result)} seasons in cache database.")
+            for i, season in enumerate(result):
+                season_obj = SeasonInfo(
+                    id=season[0],
+                    value=season[1],
+                    display_value=season[2],
+                    is_preseason=season[3]
+                )
+                all_seasons.append(season_obj)
+                self.logger.debug(f"Successfully rebuilt the \"{season_obj.display_value}\" season object from cache. ({i+1}/{len(result)})")
+                
+            return all_seasons
     
     
     def connect(self) -> sqlite3.Connection:
