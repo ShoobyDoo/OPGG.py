@@ -8,8 +8,10 @@ import os
 import json
 import logging
 import requests
+import traceback
 from datetime import datetime
 from bs4 import BeautifulSoup
+from typing import Literal
 
 from opgg.summoner import Summoner
 from opgg.season import Season, SeasonInfo
@@ -36,7 +38,6 @@ class OPGG:
     
     # Todo: Add support for the following endpoint(s):
     # https://op.gg/api/v1.0/internal/bypass/games/na/summoners/<summoner_id?>/?&limit=20&hl=en_US&game_type=total
-    # https://www.op.gg/_next/data/MU383OsSMb6hg5che0Y88/en_US/multisearch/na.json?summoners=Handofthecouncil%2CTired%2Bmid%2Blaner%2Cabc%2CColbyfaulkn1%2Ccolbyfaulkn%2Cabcd%2Cabcde%2Cabcdef%26region%3Dna&region=na
 
     # METADATA FOR CHAMPIONS -- USE THIS OVER PAGE_PROPS.
     # https://op.gg/api/v1.0/internal/bypass/meta/champions?hl=en_US
@@ -45,7 +46,9 @@ class OPGG:
     def __init__(self, summoner_id: str | None = None, region = Region.NA) -> None:
         self._summoner_id = summoner_id
         self._region = region
-        self._api_url = f"https://op.gg/api/v1.0/internal/bypass/summoners/{self.region}/{self.summoner_id}/summary"
+        self._base_api_url = f"https://lol-web-api.op.gg/api/v1.0/internal/bypass"
+        self._api_url = f"{self._base_api_url}/summoners/{self.region}/{self.summoner_id}/summary"
+        self._games_api_url = f"{self._base_api_url}/games/{self.region}/summoners/{self.summoner_id}"
         self._headers = { 
             "User-Agent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 7_2_8; en-US) AppleWebKit/602.31 (KHTML, like Gecko) Chrome/55.0.2384.172 Safari/600" 
         }
@@ -185,9 +188,12 @@ class OPGG:
         """
         A method to refresh the api url with the current summoner id and region.
         """
-        self.api_url = f"https://op.gg/api/v1.0/internal/bypass/summoners/{self.region}/{self.summoner_id}/summary"
+        self.api_url = f"{self._base_api_url}/summoners/{self.region}/{self.summoner_id}/summary"
+        self._games_api_url = f"{self._base_api_url}/games/{self.region}/summoners/{self.summoner_id}"
         
-        self.logger.debug(f"self.refresh_api_url() called... self.api_url = {self.api_url}")
+        self.logger.debug(f"self.refresh_api_url() called... See URLs:")
+        self.logger.debug(f"self.api_url = {self.api_url}")
+        self.logger.debug(f"self._games_api_url = {self._games_api_url}")
     
     
     def get_summoner(self) -> Summoner:
@@ -203,18 +209,18 @@ class OPGG:
             `Summoner`: A Summoner object representing the summoner.
         """
         self.logger.info(f"Sending request to OPGG API... (API_URL = {self.api_url}, HEADERS = {self.headers})")
-        req = requests.get(self.api_url, headers=self.headers)
+        res = requests.get(self.api_url, headers=self.headers)
         
-        previous_seasons: list[Season] = []
-        league_stats: list[LeagueStats] = []
+        previous_seasons: list[Season]      = []
+        league_stats: list[LeagueStats]     = []
         most_champions: list[ChampionStats] = []
-        recent_game_stats: list[Game] = []
+        recent_game_stats: list[Game]       = []
         
-        if req.status_code == 200:
-            self.logger.info(f"Request to OPGG API was successful, parsing data (Content Length: {len(req.text)})...")
-            content = json.loads(req.text)["data"]
+        if res.status_code == 200:
+            self.logger.info(f"Request to OPGG API was successful, parsing data (Content Length: {len(res.text)})...")
+            content = json.loads(res.text)["data"]
         else:
-            req.raise_for_status()
+            res.raise_for_status()
         
         try:            
             for season in content["summoner"]["previous_seasons"]:
@@ -295,30 +301,39 @@ class OPGG:
                     game_length_second = champion["game_length_second"]
                 ))
             
-            for game in content["recent_game_stats"]:
-                tmp_champ = None
-                if self.all_champions:
-                    for _champion in self.all_champions:
-                        if _champion.id == game["champion_id"]:
-                            tmp_champ = _champion
-                            break
+            # if (len(content["recent_game_stats"]) > 0):
+            #     for game in content["recent_game_stats"]:
+            #         tmp_champ = None
+            #         if self.all_champions:
+            #             for _champion in self.all_champions:
+            #                 if _champion.id == game["champion_id"]:
+            #                     tmp_champ = _champion
+            #                     break
+                        
+            #         recent_game_stats.append(Game(
+            #             game_id = game["game_id"],
+            #             champion = tmp_champ,
+            #             kill = game["kill"],
+            #             death = game["death"],
+            #             assist = game["assist"],
+            #             position = game["position"],
+            #             is_win = game["is_win"],
+            #             is_remake = game["is_remake"],
+            #             op_score = game["op_score"],
+            #             op_score_rank = game["op_score_rank"],
+            #             is_opscore_max_in_team = game["is_opscore_max_in_team"],
+            #             created_at = game["created_at"]
+            #         ))
                     
-                recent_game_stats.append(Game(
-                    game_id = game["game_id"],
-                    champion = tmp_champ,
-                    kill = game["kill"],
-                    death = game["death"],
-                    assist = game["assist"],
-                    position = game["position"],
-                    is_win = game["is_win"],
-                    is_remake = game["is_remake"],
-                    op_score = game["op_score"],
-                    op_score_rank = game["op_score_rank"],
-                    is_opscore_max_in_team = game["is_opscore_max_in_team"],
-                    created_at = game["created_at"]
-                ))
-        except Exception as e:
-            self.logger.warn(f"Error parsing some summoner data... (Could be that they just come in as nulls): {e}")
+            # else:
+            
+            # page props did not return any recent games, lets query the /games endpoint instead
+            # gets the summoner id from the objects internal self._game_api_url's self.summoner_id ref
+            recent_game_stats: Game | list[Game] = self.get_recent_games()
+                
+                
+        except Exception:
+            self.logger.error(f"Error parsing some summoner data... (Could be that they just come in as nulls...): {traceback.format_exc()}")
             pass
         
         
@@ -327,6 +342,8 @@ class OPGG:
             summoner_id = content["summoner"]["summoner_id"],
             acct_id = content["summoner"]["acct_id"],
             puuid = content["summoner"]["puuid"],
+            game_name = content["summoner"]["game_name"],
+            tagline = content["summoner"]["tagline"],
             name = content["summoner"]["name"],
             internal_name = content["summoner"]["internal_name"],
             profile_image_url = content["summoner"]["profile_image_url"],
@@ -354,43 +371,38 @@ class OPGG:
         ### Returns:
             `list[Summoner]` | `str` : A single or list of Summoner objects, or a string if no summoner(s) were found.
         """
+
+        if isinstance(summoner_names, str) and "," in summoner_names:
+            summoner_names = summoner_names.split(",")
+        elif isinstance(summoner_names, str):
+            summoner_names = [summoner_names]
+            
+        # General flow of cache retrieval:
+        # 1. Pull from cache db
+        #   -> If found, add to list of cached summoner ids, and below iterate over and set the summoner id property
+        #   -> As an extension of the above, these requests would go directly to the api to pull summary/full data
+        #   -> If not found, add to list of summoner names to query
+        # 2. Build the summoner objects accordingly
+        cached_summoner_ids = []
+        uncached_summoners = []
         
-        # This internal instance cache works for when the object is instantiated a single time to be used multiple times.
-        if OPGG.cached_page_props:
-            page_props = OPGG.cached_page_props
-            self.logger.info("Using cached page props...")
-        else:
-            if isinstance(summoner_names, str) and "," in summoner_names:
-                summoner_names = summoner_names.split(",")
-            elif isinstance(summoner_names, str):
-                summoner_names = [summoner_names]
-                
-            # General flow of cache retrieval:
-            # 1. Pull from cache db
-            #   -> If found, add to list of cached summoner ids, and below iterate over and set the summoner id property
-            #   -> As an extension of the above, these requests would go directly to the api to pull summary/full data
-            #   -> If not found, add to list of summoner names to query
-            # 2. Build the summoner objects accordingly
-            cached_summoner_ids = []
-            uncached_summoners = []
-            
-            for summoner_name in summoner_names:
-                cached_id = self.cacher.get_summoner_id(summoner_name)
-                if cached_id:
-                    cached_summoner_ids.append(cached_id)
-                else:
-                    uncached_summoners.append(summoner_name)
-            
-            # pass only uncached summoners to get_page_props()
-            page_props = self.get_page_props(uncached_summoners, region)
-            OPGG.cached_page_props = page_props
-            
-            self.logger.debug(f"\n********PAGE_PROPS_START********\n{page_props}\n********PAGE_PROPS_STOP********")
-            
-            if len(uncached_summoners) > 0:
-                self.logger.info(f"No cache for {len(uncached_summoners)} summoners: {uncached_summoners}, fetching... (using get_page_props() site scraper)")
-            if len(cached_summoner_ids) > 0:
-                self.logger.info(f"Cache found for {len(cached_summoner_ids)} summoners: {cached_summoner_ids}, fetching... (using get_summoner() api)")
+        for summoner_name in summoner_names:
+            cached_id = self.cacher.get_summoner_id(summoner_name)
+            if cached_id:
+                cached_summoner_ids.append(cached_id)
+            else:
+                uncached_summoners.append(summoner_name)
+        
+        # pass only uncached summoners to get_page_props()
+        page_props = self.get_page_props(uncached_summoners, region)
+        OPGG.cached_page_props = page_props
+        
+        self.logger.debug(f"\n********PAGE_PROPS_START********\n{page_props}\n********PAGE_PROPS_STOP********")
+        
+        if len(uncached_summoners) > 0:
+            self.logger.info(f"No cache for {len(uncached_summoners)} summoners: {uncached_summoners}, fetching... (using get_page_props() site scraper)")
+        if len(cached_summoner_ids) > 0:
+            self.logger.info(f"Cache found for {len(cached_summoner_ids)} summoners: {cached_summoner_ids}, fetching... (using get_summoner() api)")
             
         # these cross reference the page prop season/champ ids to build out season/champ objects
         # todo: build this into caching system
@@ -414,12 +426,23 @@ class OPGG:
         # todo: if more than 5 summoners are passed, break into 5s and iterate over each set
         # note: this would require calls to the refresh_api_url() method each iteration?
         
+        # set the region to the passed one. this is what get_summoner() relies on
+        self.region = region
+        
         # bit of weirdness around generic usernames. If you pass "abc" for example, it will return multiple summoners in the page props.
         # To help, we will check against opgg's "internal_name" property, which seems to be the username.lower() with spaces removed.        
         summoners = []
         for summoner_name in summoner_names:
-            internal_name = ''.join(summoner_name.split()).lower()
-            self.summoner_id = [props["summoner_id"] for props in page_props['summoners'] if props["internal_name"] == internal_name][0]
+            # if there are multiple search results for a SINGLE summoner_name, query MUST include the regional identifier
+            if (len(page_props["summoners"]) > 1 and '#' in summoner_name):
+                only_summoner_name, only_region = summoner_name.split("#")
+                for summoner in page_props["summoners"]:
+                    if (only_summoner_name.strip() == summoner["game_name"] and only_region.strip() == summoner["tagline"]):
+                        self.summoner_id = summoner["summoner_id"]
+                        break
+            else:
+                raise Exception(f"Multiple search results were returned for \"{summoner_name}\". Please include the identifier as well and try again. (#NA1, #EUW, etc.)")
+            
             summoner = self.get_summoner()
             summoners.append(summoner)
             self.logger.info(f"Summoner object built for: {summoner.name} ({summoner.summoner_id}), caching...")
@@ -435,13 +458,48 @@ class OPGG:
         # todo: add custom exceptions instead of this.
         # todo: raise SummonerNotFound exception
         if len(summoners) == 0: 
-            return f"No summoner(s) matching {summoner_names} were found..."
+            raise Exception(f"No summoner(s) matching {summoner_names} were found...")
         
         return summoners if len(summoners) > 1 else summoners[0]
 
+    
+    def get_recent_games(self, results: int = 10, game_type: Literal["total", "ranked", "normal"] = "total") -> list[Game]:
+        recent_games = []
+        res = requests.get(f"{self._games_api_url}?&limit={results}&game_type={game_type}", headers=self.headers)
+        
+        if res.status_code == 200:
+            self.logger.info(f"Request to OPGG GAME_API was successful, parsing data (Content Length: {len(res.text)})...")
+            game_data = json.loads(res.text)["data"]
+        else:
+            res.raise_for_status()
+        
+        try:
+            for game in game_data:
+                tmp_game = Game(
+                    game_id = game["id"],
+                    champion = next((champion for champion in self.all_champions if champion.id == game["myData"]["champion_id"]), None),
+                    kill = int(game["myData"]["stats"]["kill"]),
+                    death = int(game["myData"]["stats"]["death"]),
+                    assist = int(game["myData"]["stats"]["assist"]),
+                    position = game["myData"]["position"],
+                    is_win = game["myData"]["stats"]["result"] == "WIN",
+                    is_remake = game["is_remake"],
+                    op_score = float(game["myData"]["stats"]["op_score"]),
+                    op_score_rank = int(game["myData"]["stats"]["op_score_rank"]),
+                    is_opscore_max_in_team = game["myData"]["stats"]["is_opscore_max_in_team"],
+                    created_at = datetime.strptime(game["created_at"], r"%Y-%m-%dT%H:%M:%S%z")
+                )
+                recent_games.append(tmp_game)
+                
+            return recent_games
+        
+        except:
+            self.logger.error(f"Unable to create game object, see trace: \n{traceback.format_exc()}")
+            pass
+    
 
     @staticmethod
-    def get_page_props(summoner_names: str | list[str] = "abc", region = Region.NA) -> dict:
+    def get_page_props(summoner_names: str | list[str] = "", region = Region.NA) -> dict:
         """
         Get the page props from OPGG. (Contains data such as summoner info, champions, seasons, etc.)
         
@@ -464,8 +522,8 @@ class OPGG:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.1; en-US) AppleWebKit/602.14 (KHTML, like Gecko) Chrome/55.0.2575.244 Safari/603.4 Edge/11.82011",
         }
 
-        req = requests.get(url, headers=headers, allow_redirects=True)
-        soup = BeautifulSoup(req.content, "html.parser")
+        res = requests.get(url, headers=headers, allow_redirects=True)
+        soup = BeautifulSoup(res.content, "html.parser")
         
         return json.loads(soup.select_one("#__NEXT_DATA__").text)['props']['pageProps']
     
@@ -658,6 +716,7 @@ class OPGG:
         """
         # Currently kwargs only handles "currency" for the cost of a champion,
         # but I might introduce other metrics of getting champ objs later, idk...
+        
         all_champs = OPGG.get_all_champions()
         result_set = []
         

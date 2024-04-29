@@ -3,7 +3,7 @@ import logging
 import os
 
 from opgg.champion import Champion, Passive, Skin, Spell
-from opgg.season import Season, SeasonInfo
+from opgg.season import SeasonInfo
 
 
 class Cacher:
@@ -159,6 +159,10 @@ class Cacher:
     def get_summoner_id(self, summoner_name: str) -> str | None:
         """
         Gets a summoner id from the cache database by a provided summoner name.
+        
+        `Note: I'm now realizing there are quite a few limitations to this method.`\n
+        `There is currently no way to specify region in the search, different regions could have the same summoner name.`
+        `This method's search logic will need to be reworked.`
         
         ### Args:
             summoner_name : `str`

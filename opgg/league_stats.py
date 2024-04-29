@@ -24,9 +24,9 @@ class Tier:
                  lp: int,
                  tier_image_url: str,
                  border_image_url: str) -> None:
-        self._tier = tier
-        self._division = division
-        self._lp = lp
+        self._tier = tier if tier != None else "UNRANKED"
+        self._division = division if division != None else 0
+        self._lp = lp if lp != None else 0
         self._tier_image_url = tier_image_url
         self._border_image_url = border_image_url
         
@@ -172,8 +172,8 @@ class LeagueStats:
                  updated_at: datetime) -> None:
         self._queue_info = queue_info
         self._tier_info = tier_info
-        self._win = win
-        self._lose = lose
+        self._win = win if win != None else 0
+        self._lose = lose if lose != None else 0
         self._is_hot_streak = is_hot_streak
         self._is_fresh_blood = is_fresh_blood 
         self._is_veteran = is_veteran 
@@ -292,13 +292,13 @@ class LeagueStats:
         self._updated_at = value
     
     @property
-    def win_rate(self) -> float | None:
+    def win_rate(self) -> float:
         """
         A `float` representing the win rate of the champion.
         """
         if self._win and self._lose:
             return round(float((self._win / (self._win + self._lose)) * 100), 2) if (self._win + self._lose) != 0 else 0
-        return None
+        return 0
     
     
     def __repr__(self) -> str:

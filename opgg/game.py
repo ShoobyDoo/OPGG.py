@@ -11,7 +11,9 @@ from opgg.champion import Champion
 
 class Game:
     """
-    Represents a game played by a summoner.
+    Represents a game played by a summoner.\n
+    `Note: Major updates to the Game object returned from the OPGG api have been made recently (~2024)`\n
+    `This object will need to be completely overhauled, as well as some new objects for the new fields`
     
     ### Properties:
         `game_id` - Internal game id\n
@@ -45,7 +47,7 @@ class Game:
         self._kill = kill
         self._death = death
         self._assist = assist
-        self._position = position
+        self._position = position if position != None else "ARAM"
         self._is_win = is_win
         self._is_remake = is_remake
         self._op_score = op_score

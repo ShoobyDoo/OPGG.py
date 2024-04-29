@@ -27,6 +27,8 @@ class Summoner:
         `summoner_id` - Summoner id\n
         `acct_id` - Account id\n
         `puuid` - Puuid\n
+        `game_name` - In-game username\n
+        `tagline` - Regional identifier\n
         `name` - Summoner name\n
         `internal_name` - Internal name\n
         `profile_image_url` - Profile image url\n
@@ -43,6 +45,8 @@ class Summoner:
                  summoner_id: str,
                  acct_id: str,
                  puuid: str,
+                 game_name: str,
+                 tagline: str,
                  name: str,
                  internal_name: str,
                  profile_image_url: str,
@@ -57,6 +61,8 @@ class Summoner:
         self._summoner_id = summoner_id
         self._acct_id = acct_id
         self._puuid = puuid
+        self._game_name = game_name
+        self._tagline = tagline
         self._name = name
         self._internal_name = internal_name
         self._profile_image_url = profile_image_url
@@ -111,7 +117,29 @@ class Summoner:
     @puuid.setter
     def puuid(self, value: str) -> None:
         self._puuid = value
-        
+    
+    @property
+    def game_name(self) -> str:
+        """
+        A `str` representing the in-game username
+        """
+        return self._game_name
+    
+    @game_name.setter
+    def game_name(self, value: str) -> None:
+        self._game_name = value
+    
+    @property
+    def tagline(self) -> str:
+        """
+        A `str` representing the tagline
+        """
+        return self._tagline
+    
+    @tagline.setter
+    def tagline(self, value: str) -> None:
+        self._tagline = value
+    
     @property
     def name(self) -> str:
         """
@@ -253,18 +281,20 @@ class Summoner:
         for champ_stat in self.most_champions: champion_stats_fmt += f"{''.ljust(LJF+RJF)}  | {champ_stat}\n"
         for game in self.recent_game_stats: game_fmt += f"{''.ljust(LJF+RJF)}  | {game}\n"
         
-        return  f"[Summoner: {self.name}]\n{'-' * 80}\n" \
+        return  f"[Summoner: {self.game_name}]\n{'-' * 80}\n" \
                 f"{'Id'.ljust(LJF)} {'(int)'.rjust(RJF)} | {self.id}\n" \
                 f"{'Summoner Id'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.summoner_id}\n" \
                 f"{'Account Id'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.acct_id}\n" \
                 f"{'Puuid'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.puuid}\n" \
+                f"{'Game Name'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.game_name}\n" \
+                f"{'Tagline'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.tagline}\n" \
                 f"{'Name'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.name}\n" \
                 f"{'Internal Name'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.internal_name}\n" \
                 f"{'Profile Image Url'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.profile_image_url}\n" \
                 f"{'Level'.ljust(LJF)} {'(int)'.rjust(RJF)} | {self.level}\n" \
                 f"{'Updated At'.ljust(LJF)} {'(datetime)'.rjust(RJF)} | {self.updated_at}\n" \
                 f"{'Renewable At'.ljust(LJF)} {'(datetime)'.rjust(RJF)} | {self.renewable_at}\n" \
-                f"{'Previous Seasons'.ljust(LJF)} {'(SeasonInfo)'.rjust(RJF)} | [List ({len(self.previous_seasons)})] \n{previous_seasons_fmt}" \
+                f"{'Previous Seasons'.ljust(LJF)} {'(Season)'.rjust(RJF)} | [List ({len(self.previous_seasons)})] \n{previous_seasons_fmt}" \
                 f"{'League Stats'.ljust(LJF)} {'(LeagueStats)'.rjust(RJF)} | [List ({len(self.league_stats)})] \n{league_stats_fmt}" \
                 f"{'Most Champions'.ljust(LJF)} {'(ChampStats)'.rjust(RJF)} | [List ({len(self.most_champions)})] \n{champion_stats_fmt}" \
                 f"{'Recent Game Stats'.ljust(LJF)} {'(Game)'.rjust(RJF)} | [List ({len(self.recent_game_stats)})] \n{game_fmt}"
