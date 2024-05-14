@@ -58,14 +58,6 @@ class OPGG:
         # ===== SETUP START =====
         logging.root.name = 'OPGG.py'
 
-        logging.basicConfig(
-            filename=f'./logs/opgg_{datetime.now().strftime("%Y-%m-%d")}.log',
-            filemode='a+', 
-            format='[%(asctime)s][%(name)-22s][%(levelname)-7s] : %(message)s', 
-            datefmt='%d-%b-%y %H:%M:%S',
-            level=logging.INFO
-        )
-
         if not os.path.exists('./logs'):
             logging.info("Creating logs directory...")
             os.mkdir('./logs')
@@ -75,6 +67,14 @@ class OPGG:
                 if os.stat(f"./logs/{file}").st_size == 0 and file != f'opgg_{datetime.now().strftime("%Y-%m-%d")}.log':
                     logging.info(f"Removing empty log file: {file}")
                     os.remove(f"./logs/{file}")
+                    
+        logging.basicConfig(
+            filename=f'./logs/opgg_{datetime.now().strftime("%Y-%m-%d")}.log',
+            filemode='a+', 
+            format='[%(asctime)s][%(name)-22s][%(levelname)-7s] : %(message)s', 
+            datefmt='%d-%b-%y %H:%M:%S',
+            level=logging.INFO
+        )
         # ===== SETUP END =====
         
         # allow the user to interact with the logger
@@ -363,7 +363,7 @@ class OPGG:
 
         ### Args:
             summoner_names : `str` | `list[str]`
-                Pass either a `str` (comma seperated) or `list[str]` of summoner names.
+                Pass either a `str` (comma seperated) or `list[str]` of summoner names + regional identifier (#NA1, #EUW, etc).
                 
             region : `Region, optional`
                 Pass the region you want to search in. Defaults to "NA".
@@ -386,7 +386,10 @@ class OPGG:
         cached_summoner_ids = []
         uncached_summoners = []
         
+        # TODO: Cache get/set logic needs to be reworked to account for regional identifiers. Currently, you could have 2 of the same users on different regions and the cache will just return whatever the first entry that was cached would've been. This is not ideal, perhaps I should force people to append the regional identifiers? This would result in unique entries in the cache...
         for summoner_name in summoner_names:
+            if ('#' not in summoner_name):
+                raise Exception(f"No regional identifier was found for query: \"{summoner_name}\". Please include the identifier as well and try again. (#NA1, #EUW, etc.)")
             cached_id = self.cacher.get_summoner_id(summoner_name)
             if cached_id:
                 cached_summoner_ids.append(cached_id)
@@ -435,13 +438,18 @@ class OPGG:
         for summoner_name in summoner_names:
             # if there are multiple search results for a SINGLE summoner_name, query MUST include the regional identifier
             if (len(page_props["summoners"]) > 1 and '#' in summoner_name):
+                logging.debug(f"MULTI-RESULT | page_props->summoners: {page_props['summoners']}")
                 only_summoner_name, only_region = summoner_name.split("#")
                 for summoner in page_props["summoners"]:
                     if (only_summoner_name.strip() == summoner["game_name"] and only_region.strip() == summoner["tagline"]):
                         self.summoner_id = summoner["summoner_id"]
                         break
-            else:
+            
+            elif (len(page_props["summoners"]) > 1 and '#' not in summoner_name):
                 raise Exception(f"Multiple search results were returned for \"{summoner_name}\". Please include the identifier as well and try again. (#NA1, #EUW, etc.)")
+
+            elif (len(page_props["summoners"]) == 1):
+                self.summoner_id = page_props["summoners"][0]["summoner_id"]
             
             summoner = self.get_summoner()
             summoners.append(summoner)
