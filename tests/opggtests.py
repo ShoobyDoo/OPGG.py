@@ -1,5 +1,7 @@
+import time
 from opgg.opgg import OPGG
 from opgg.season import SeasonInfo
+from opgg.champion import Champion
 
 
 class OPGGTests:
@@ -8,54 +10,117 @@ class OPGGTests:
     """
     
     @staticmethod
-    def verify_seasoninfo(page_props: dict = None) -> bool:
+    def verify_seasoninfo(page_props: dict = None, summoner: str = "ColbyFaulkn1") -> bool:
         """
         Test the properties `SeasonInfo` has against what's returned by `page_props`
         
         ### Returns:
-            `bool` - Returns `True` if test passed. Otherwise, returns `False`
+            `bool` - `True` if test passed. Otherwise, returns `False`
         """
+        test_for = "SeasonInfo"
         
-        print("Running test for SeasonInfo...\n")
+        print(f"Running test for {test_for}...\n")
         
-        if not page_props: page_props = OPGG.get_page_props() # get latest
+        if not page_props: page_props = OPGG.get_page_props(summoner) # get latest
         
         msg = "Test was completed with {_pass} passes and {_fail} fails. See below for details:\n"
         msg_summary = ""
         
         latest_attrs = []
-        seasoninfo_attrs = []
+        obj_attrs = []
         
         pass_count = 0
         fail_count = 0
         
         for attr in dict(list(dict(page_props['seasonsById']).values())[0]).keys():
-            print(f"SeasonInfo has {str(attr).ljust(25)}", end='')
+            print(f"{test_for} has {str(attr).ljust(25)}", end='')
             latest_attrs.append(attr)
             
             if hasattr(SeasonInfo, attr):
                 print(": Pass ✔")
                 pass_count += 1
-                seasoninfo_attrs.append(attr)
+                obj_attrs.append(attr)
             else:
                 print(": FAIL ✘")
                 fail_count += 1
+            
+            # slow print effect
+            time.sleep(0.1)
         
         msg = msg.format(_pass=pass_count, _fail=fail_count)
 
-        msg_summary += f"\nSeasonInfo has {len(seasoninfo_attrs)} attributes:\n"
-        for attr in seasoninfo_attrs:
+        msg_summary += f"\n{test_for} has {len(obj_attrs)} attributes:\n"
+        for attr in obj_attrs:
             msg_summary += f"    -> {attr}\n"
         
         msg_summary += f"\nLatest page_props has {len(latest_attrs)} attributes:\n"
         for attr in latest_attrs:
             msg_summary += f"    -> {attr}\n"
         
-        msg_summary += f"\nLatest page_props has {len(latest_attrs) - len(seasoninfo_attrs)} more attributes than SeasonInfo:\n"
-        for diffs in list(set(latest_attrs) - set(seasoninfo_attrs)):
+        msg_summary += f"\nLatest page_props has {len(latest_attrs) - len(obj_attrs)} more attributes than {test_for}:\n"
+        for diffs in list(set(latest_attrs) - set(obj_attrs)):
             msg_summary += f"    -> {diffs}\n"
         
-        msg_summary += f"\nAll checks have been completed.\nResult: {'PASS ✔' if fail_count == 0 else 'FAIL ✘'}"
+        msg_summary += f"\nAll checks for '{test_for}' have been completed.\nResult: {'PASS ✔' if fail_count == 0 else 'FAIL ✘'}\n\n"
+        
+        print(msg_summary)
+        
+        return True if fail_count == 0 else False
+    
+    
+    @staticmethod
+    def verify_champion(page_props: dict = None, summoner: str = "ColbyFaulkn1") -> bool:
+        """
+        Test the properties `Champion` has against what's returned by `page_props`
+        
+        ### Returns:
+            `bool` - `True` if test passed. Otherwise, returns `False`
+        """
+        test_for = "Champion"
+        
+        print(f"Running test for {test_for}...\n")
+        
+        if not page_props: page_props = OPGG.get_page_props(summoner) # get latest
+        
+        msg = "Test was completed with {_pass} passes and {_fail} fails. See below for details:\n"
+        msg_summary = ""
+        
+        latest_attrs = []
+        obj_attrs = []
+        
+        pass_count = 0
+        fail_count = 0
+        
+        for attr in dict(list(dict(page_props['championsById']).values())[0]).keys():
+            print(f"{test_for} has {str(attr).ljust(25)}", end='')
+            latest_attrs.append(attr)
+            
+            if hasattr(Champion, attr):
+                print(": Pass ✔")
+                pass_count += 1
+                obj_attrs.append(attr)
+            else:
+                print(": FAIL ✘")
+                fail_count += 1
+            
+            # slow print effect
+            time.sleep(0.1)
+        
+        msg = msg.format(_pass=pass_count, _fail=fail_count)
+
+        msg_summary += f"\n{test_for} has {len(obj_attrs)} attributes:\n"
+        for attr in obj_attrs:
+            msg_summary += f"    -> {attr}\n"
+        
+        msg_summary += f"\nLatest page_props has {len(latest_attrs)} attributes:\n"
+        for attr in latest_attrs:
+            msg_summary += f"    -> {attr}\n"
+        
+        msg_summary += f"\nLatest page_props has {len(latest_attrs) - len(obj_attrs)} more attributes than {test_for}:\n"
+        for diffs in list(set(latest_attrs) - set(obj_attrs)):
+            msg_summary += f"    -> {diffs}\n"
+        
+        msg_summary += f"\nAll checks for '{test_for}' have been completed.\nResult: {'PASS ✔' if fail_count == 0 else 'FAIL ✘'}\n\n"
         
         print(msg_summary)
         
