@@ -164,5 +164,6 @@ main.py
 opgg.db
 setup.cfg
 setup.py
+pip-deploy.txt
 
 tests/requirements.txt
