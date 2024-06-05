@@ -36,16 +36,16 @@ py -m pip install -r requirements.txt
 ```python
 from opgg.opgg import OPGG
 from opgg.summoner import Summoner
+from opgg.params import Region
 
 
 def main():    
-    opgg = OPGG()
-    
-    summoner: Summoner
-    for summoner in opgg.search(["ColbyFaulkn1"]):
-        print(summoner)
-        
-    
+    opgg_obj = OPGG()
+
+    summoner: Summoner = opgg_obj.search("Stefty#EUW", Region.EUW)
+    print(summoner)
+
+
 if __name__ == "__main__":
     main()
 ```
