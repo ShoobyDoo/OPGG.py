@@ -167,3 +167,8 @@ setup.py
 pip-deploy.txt
 
 tests/requirements.txt
+pageprops.txt
+
+tests/game.txt
+
+tests/summoner.txt
