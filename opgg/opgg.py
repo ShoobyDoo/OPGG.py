@@ -12,11 +12,11 @@ import traceback
 from datetime import datetime
 from typing import Literal
 
-from opgg.summoner import Summoner
+# from opgg.summoner import 
 from opgg.season import Season, SeasonInfo
 from opgg.champion import ChampionStats, Champion
 from opgg.league_stats import LeagueStats, Tier, QueueInfo
-from opgg.game import Game
+from opgg.summoner import Game, Summoner
 from opgg.params import Region
 from opgg.cacher import Cacher
 
