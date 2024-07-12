@@ -6,16 +6,422 @@
 
 
 from datetime import datetime
+from typing import Any
+from opgg.game import Stats, Team
 from opgg.params import Queue
 from opgg.season import Season
-from opgg.league_stats import LeagueStats, Tier
+from opgg.league_stats import LeagueStats, QueueInfo, Tier
 from opgg.champion import ChampionStats
-from opgg.game import Game
-
 
 # left/right just factor
 LJF = 18
 RJF = 14
+
+
+class Participant:
+    def __init__(self,
+                 summoner: 'Summoner',
+                 participant_id: int,
+                 champion_id: int,
+                 team_key: str,
+                 position: str,
+                 role: str,
+                 items: list,
+                 trinket_item: int,
+                 rune: dict[str, int], # temp. need to see if a Rune object is necessary
+                 spells: list,
+                 stats: Stats,
+                 tier_info: Tier) -> None:
+        self._summoner = summoner
+        self._participant_id = participant_id
+        self._champion_id = champion_id
+        self._team_key = team_key
+        self._position = position
+        self._role = role
+        self._items = items
+        self._trinket_item = trinket_item
+        self._rune = rune
+        self._spells = spells
+        self._stats = stats
+        self._tier_info = tier_info
+    
+    @property
+    def summoner(self) -> 'Summoner':
+        """
+        A `Summoner` object representing a summoner
+        """
+        return self._summoner
+    
+    @summoner.setter
+    def summoner(self, value: 'Summoner') -> None:
+        self._summoner = value
+    
+    @property
+    def participant_id(self) -> int:
+        """
+        A `int` representing the game result
+        """
+        return self._participant_id
+    
+    @participant_id.setter
+    def participant_id(self, value: int) -> None:
+        self._participant_id = value
+        
+    @property
+    def champion_id(self) -> int:
+        """
+        A `int` representing the game result
+        """
+        return self._champion_id
+    
+    @champion_id.setter
+    def champion_id(self, value: int) -> None:
+        self._champion_id = value
+    
+    @property
+    def team_key(self) -> str:
+        """
+        A `str` representing the game result
+        """
+        return self._team_key
+    
+    @team_key.setter
+    def team_key(self, value: str) -> None:
+        self._team_key = value
+    
+    @property
+    def position(self) -> str:
+        """
+        A `str` representing the game result
+        """
+        return self._position
+    
+    @position.setter
+    def position(self, value: str) -> None:
+        self._position = value
+    
+    @property
+    def role(self) -> str:
+        """
+        A `str` representing the game result
+        """
+        return self._role
+    
+    @role.setter
+    def role(self, value: str) -> None:
+        self._role = value
+    
+    @property
+    def items(self) -> list[int]:
+        """
+        A `list[int]` representing the game result
+        """
+        return self._items
+    
+    @items.setter
+    def items(self, value: list[int]) -> None:
+        self._items = value
+    
+    @property
+    def trinket_item(self) -> int:
+        """
+        A `int` representing the game result
+        """
+        return self._trinket_item
+    
+    @trinket_item.setter
+    def trinket_item(self, value: int) -> None:
+        self._trinket_item = value
+    
+    @property
+    def rune(self) -> dict[str, int]:
+        """
+        A `dict[str, int]` representing the game result
+        """
+        return self._rune
+    
+    @rune.setter
+    def rune(self, value: dict[str, int]) -> None:
+        self._rune = value
+    
+    @property
+    def spells(self) -> list:
+        """
+        A `list` representing the game result
+        """
+        return self._spells
+    
+    @spells.setter
+    def spells(self, value: list) -> None:
+        self._spells = value
+    
+    @property
+    def stats(self) -> Stats:
+        """
+        A `Stats` representing the game result
+        """
+        return self._stats
+    
+    @stats.setter
+    def stats(self, value: Stats) -> None:
+        self._stats = value
+    
+    @property
+    def is_win(self) -> bool:
+        """
+        A `bool` representing the game result
+        """
+        return self._is_win
+    
+    @is_win.setter
+    def is_win(self, value: bool) -> None:
+        self._is_win = value
+    
+    @property
+    def is_win(self) -> bool:
+        """
+        A `bool` representing the game result
+        """
+        return self._is_win
+    
+    @is_win.setter
+    def is_win(self, value: bool) -> None:
+        self._is_win = value
+    
+    @property
+    def is_win(self) -> bool:
+        """
+        A `bool` representing the game result
+        """
+        return self._is_win
+    
+    @is_win.setter
+    def is_win(self, value: bool) -> None:
+        self._is_win = value
+    
+
+class Game:
+    """
+    Represents a game played by a summoner.\n
+    
+    ### Properties:
+        `id: str` - Internal game id\n
+        `created_at: datetime` - Date & Time of game\n
+        `game_map: GameMap` - Game map (Summoners Rift, Howling Abyss, etc.)\n
+        `queue_info: QueueInfo` - Queue info\n
+        `version: str` - Game version\n
+        `game_length_second: int` - Length of game in seconds\n
+        `is_remake: bool` - Whether or not the game was a remake\n
+        `is_opscore_active: bool` - Whether or not the opscore was active\n
+        `is_recorded: bool` - Whether or not the game was recorded\n
+        `record_info: Any` - Unknown return value and type\n
+        `average_tier_info: Tier` - Average Tier of the game\n
+        `participants: list[Participant]` - A list of all participant in the game\n
+        `teams: list[Team]` - A list of teams in the game\n
+        `memo: Any` - Unknown return value and type\n
+        `myData: Participant` - User specific participant data
+    """
+    def __init__(self,
+                 id: str,
+                 created_at: datetime,
+                 game_map: str,
+                 queue_info: QueueInfo,
+                 version: str,
+                 game_length_second: int,
+                 is_remake: bool,
+                 is_opscore_active: bool,
+                 is_recorded: bool,
+                 record_info: Any,
+                 average_tier_info: Tier,
+                 participants: list[Participant],
+                 teams: list[Team],
+                 memo: Any,
+                 myData: Participant) -> None:
+        self._id = id
+        self._created_at = created_at
+        self._game_map = game_map
+        self._queue_info = queue_info
+        self._version = version
+        self._game_length_second = game_length_second
+        self._is_remake = is_remake
+        self._is_opscore_active = is_opscore_active
+        self._is_recorded = is_recorded
+        self._record_info = record_info
+        self._average_tier_info = average_tier_info
+        self._participants = participants
+        self._teams = teams
+        self._memo = memo
+        self._myData = myData
+        
+    @property
+    def id(self) -> str:
+        """
+        A `str` representing the Internal game id
+        """
+        return self._id
+    
+    @id.setter
+    def id(self, value: str) -> None:
+        self._id = value
+        
+    @property
+    def created_at(self) -> datetime:
+        """
+        A `datetime` object representing the Date & Time of game played
+        """
+        return self._created_at
+    
+    @created_at.setter
+    def created_at(self, value: datetime) -> None:
+        self._created_at = value
+        
+    @property
+    def game_map(self) -> str:
+        """
+        A `str` representing the game map (Summoners Rift, Howling Abyss, etc.)
+        """
+        return self._game_map
+    
+    @game_map.setter
+    def game_map(self, value: str) -> None:
+        self._game_map = value
+        
+    @property
+    def queue_info(self) -> QueueInfo:
+        """
+        A `QueueInfo` object representing queue information
+        """
+        return self._queue_info
+    
+    @queue_info.setter
+    def queue_info(self, value: QueueInfo) -> None:
+        self._queue_info = value
+        
+    @property
+    def version(self) -> str:
+        """
+        A `str` representing the game version
+        """
+        return self._version
+    
+    @version.setter
+    def version(self, value: str) -> None:
+        self._version = value
+        
+    @property
+    def game_length_second(self) -> int:
+        """
+        An `int` representing the length of the game in seconds
+        """
+        return self._game_length_second
+     
+    @game_length_second.setter
+    def game_length_second(self, value: int) -> None:
+        self._game_length_second = value
+        
+    @property
+    def is_remake(self) -> bool:
+        """
+        A `bool` representing whether the game was a remake
+        """
+        return self._is_remake
+    
+    @is_remake.setter
+    def is_remake(self, value: bool) -> None:
+        self._is_remake = value
+        
+    @property
+    def is_opscore_active(self) -> bool:
+        """
+        A `bool` representing whether the opscore was active
+        """
+        return self._is_opscore_active
+    
+    @is_opscore_active.setter
+    def is_opscore_active(self, value: bool) -> None:
+        self._is_opscore_active = value
+        
+        
+    @property
+    def is_recorded(self) -> bool:
+        """
+        A `bool` representing whether the game was recorded
+        """
+        return self._is_recorded
+    
+    @is_recorded.setter
+    def is_recorded(self, value: bool) -> None:
+        self._is_recorded = value
+        
+    @property
+    def record_info(self) -> Any:
+        """
+        An `Any` object with unknown return value and type
+        """
+        return self._record_info
+    
+    @record_info.setter
+    def record_info(self, value: Any) -> None:
+        self._record_info = value
+        
+    @property
+    def average_tier_info(self) -> Tier:
+        """
+        A `Tier` object representing the average league tier
+        """
+        return self._average_tier_info
+    
+    @average_tier_info.setter
+    def average_tier_info(self, value: Tier) -> None:
+        self._average_tier_info = value
+         
+    @property
+    def participants(self) -> list[Participant]:
+        """
+        A `list[Participant]` object(s) representing all participants of a game
+        """
+        return self._participants
+    
+    @participants.setter
+    def participants(self, value: list[Participant]) -> None:
+        self._participants = value
+    
+    @property
+    def teams(self) -> list[Team]:
+        """
+        A `list[Team]` object(s) representing all teams of a game
+        """
+        return self._teams
+    
+    @teams.setter
+    def teams(self, value: list[Team]) -> None:
+        self._teams = value
+        
+    @property
+    def memo(self) -> Any:
+        """
+        An `Any` object with unknown return value and type
+        """
+        return self._memo
+    
+    @memo.setter
+    def memo(self, value: Any) -> None:
+        self._memo = value
+        
+    @property
+    def myData(self) -> Participant:
+        """
+        A `Participant` object representing personal participant record
+        """
+        return self._myData
+    
+    @myData.setter
+    def myData(self, value: list[Participant]) -> None:
+        self._myData = value
+    
+    def __repr__(self) -> str:
+        return f"Game(champion={self._champion}, kill={self._kill}, death={self._death}, assist={self._assist}, position={self._position}, is_win={self._is_win})"
+
 
 
 class Summoner:
