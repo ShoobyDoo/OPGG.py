@@ -9,8 +9,10 @@ import json
 import logging
 import requests
 import traceback
+
 from datetime import datetime
 from typing import Literal
+from fake_useragent import UserAgent
 
 # from opgg.summoner import 
 from opgg.season import Season, SeasonInfo
@@ -19,6 +21,7 @@ from opgg.league_stats import LeagueStats, Tier, QueueInfo
 from opgg.summoner import Game, Summoner
 from opgg.params import Region
 from opgg.cacher import Cacher
+from opgg.utils import Utils
 
 
 class OPGG:
@@ -40,19 +43,24 @@ class OPGG:
 
     # METADATA FOR CHAMPIONS -- USE THIS OVER PAGE_PROPS.
     # https://op.gg/api/v1.0/internal/bypass/meta/champions?hl=en_US
-
+    
     
     def __init__(self, summoner_id: str | None = None, region = Region.NA) -> None:
         self._summoner_id = summoner_id
         self._region = region
-        self._base_api_url = f"https://lol-web-api.op.gg/api/v1.0/internal/bypass"
+        
+        self._base_api_url = "https://lol-web-api.op.gg/api/v1.0/internal/bypass"
         self._api_url = f"{self._base_api_url}/summoners/{self.region}/{self.summoner_id}/summary"
         self._games_api_url = f"{self._base_api_url}/games/{self.region}/summoners/{self.summoner_id}"
+        
+        self._ua = UserAgent()
         self._headers = { 
-            "User-Agent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 7_2_8; en-US) AppleWebKit/602.31 (KHTML, like Gecko) Chrome/55.0.2384.172 Safari/600" 
+            "User-Agent": self._ua.random
         }
+        
         self._all_champions = None
         self._all_seasons = None
+        
 
         # ===== SETUP START =====
         logging.root.name = 'OPGG.py'
@@ -82,12 +90,6 @@ class OPGG:
         # at object creation, setup and query the cache
         self._cacher = Cacher()
         self._cacher.setup()
-        
-        # check if champions are cached, if they are, populate self.all_champions
-        
-        
-        # check if seasons are cached, if they are, populate self.all_seasons
-        
         
         self.logger.info(
             f"OPGG.__init__(summoner_id={self.summoner_id}, " \
@@ -375,7 +377,7 @@ class OPGG:
                 uncached_summoners.append(summoner_name)
         
         # pass only uncached summoners to get_page_props()
-        page_props = self.get_page_props(uncached_summoners, region)
+        page_props = Utils.get_page_props(uncached_summoners, region)
         OPGG.cached_page_props = page_props
         
         self.logger.debug(f"\n********PAGE_PROPS_START********\n{page_props}\n********PAGE_PROPS_STOP********")
