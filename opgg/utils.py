@@ -7,6 +7,7 @@
 import json
 import requests
 from bs4 import BeautifulSoup
+from fake_useragent import UserAgent
 
 from opgg.cacher import Cacher
 from opgg.champion import Champion, Passive, Price, Skin, Spell
@@ -22,6 +23,51 @@ class Utils:
     Copyright (c) 2023-2024, ShoobyDoo
     License: BSD-3-Clause, See LICENSE for more details.
     """
+    
+    _base_api_url = "https://lol-web-api.op.gg/api/v1.0/internal/bypass"
+    _api_url = f"{_base_api_url}/summoners/{{region}}/{{summoner_id}}/renewal"
+    
+    @staticmethod
+    def update(summoner_id: str, region: Region = Region.NA) -> dict:
+        """
+        Send an update request to fetch the latest details for a given summoner (id).
+        
+        ### Parameters
+            summoner_id : `str`
+                Pass a summoner id as a string to be updated
+            
+            region : `Region, optional`
+                Pass the region you want to perform the update in. Default is "NA".
+
+        ### Returns
+            `dict` : Returns a dictionary with the status response.
+                Example response:
+            ```
+            {
+                'status': 202, 
+                'data': {
+                    'message': 'Already renewed.', 
+                    'last_updated_at': '2024-07-13T10:06:11+09:00', 
+                    'renewable_at': '2024-07-13T10:08:12+09:00'
+                }
+            }
+            ```
+        """
+        
+        ua = UserAgent()
+        headers = { 
+            "User-Agent": ua.random
+        }
+        
+        res = requests.post(
+            Utils._api_url.format(region=region, summoner_id=summoner_id), 
+            headers=headers
+        )
+        
+        if res.status_code in [201, 202]:
+            return res.json()
+        else:
+            res.raise_for_status()
     
     @staticmethod
     def get_page_props(summoner_names: str | list[str] = "", region = Region.NA) -> dict:

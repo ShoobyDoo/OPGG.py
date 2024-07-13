@@ -6,9 +6,9 @@ An unofficial Python library for accessing OPGG data.
 
 ## Prerequisites
 
-* [Python 3.11](https://www.python.org/downloads/) 
+* [Python 3.11+](https://www.python.org/downloads/) 
     
-    *Note: Will likely work on versions slightly older or newer*
+*Note: Will likely work on versions slightly older or newer*
 
 ## Installation
 
@@ -24,6 +24,7 @@ py -m pip install opgg.py
 #### Dependencies
 * [requests](https://pypi.org/project/requests/)
 * [beautifulsoup4](https://pypi.org/project/beautifulsoup4/)
+* [fake-useragent](https://pypi.org/project/fake-useragent/)
 
 Alternatively, you can use the provided requirements.txt to install the required libraries by running the following command: <br>
 ```
