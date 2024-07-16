@@ -15,18 +15,21 @@ class Tier:
         `tier` - Tier name\n
         `division` - Division number\n
         `lp` - League points\n
+        `level` - Unknown level, usually is None/Null\n
         `tier_image_url` - URL to the tier image\n
         `border_image_url` - URL to the border image\n
     """
     def __init__(self,
                  tier: str,
                  division: int,
-                 lp: int,
                  tier_image_url: str,
-                 border_image_url: str) -> None:
+                 border_image_url: str,
+                 lp: int = None,
+                 level: int = None) -> None:
         self._tier = tier if tier != None else "UNRANKED"
         self._division = division if division != None else 0
         self._lp = lp if lp != None else 0
+        self._level = level if level != None else 0
         self._tier_image_url = tier_image_url
         self._border_image_url = border_image_url
         
@@ -62,6 +65,17 @@ class Tier:
     @lp.setter
     def lp(self, value: int) -> None:
         self._lp = value
+    
+    @property
+    def level(self) -> int:
+        """
+        An `int` representing an unknown level value
+        """
+        return self._level
+    
+    @level.setter
+    def level(self, value: int) -> None:
+        self._level = value
         
     @property
     def tier_image_url(self) -> str:

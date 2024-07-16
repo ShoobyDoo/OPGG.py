@@ -8,10 +8,11 @@
 from datetime import datetime
 from typing import Any
 from opgg.game import Stats, Team
-from opgg.params import Queue
+from opgg.params import By, Queue
 from opgg.season import Season
 from opgg.league_stats import LeagueStats, QueueInfo, Tier
 from opgg.champion import ChampionStats
+from opgg.utils import Utils
 
 # left/right just factor
 LJF = 18
@@ -19,6 +20,23 @@ RJF = 14
 
 
 class Participant:
+    """
+    Represents a participant in the game with detailed information about their performance and loadout.\n
+    
+    ### Properties:
+        `summoner: Summoner` - The summoner associated with this participant\n
+        `participant_id: int` - Unique identifier for the participant\n
+        `champion_id: int` - Identifier for the champion used by the participant\n
+        `team_key: str` - Key representing the participant's team\n
+        `position: str` - Position played by the participant (e.g., Top, Mid, Bot)\n
+        `role: str` - Role played by the participant (e.g., Carry, Support)\n
+        `items: list` - List of items acquired by the participant\n
+        `trinket_item: int` - Identifier for the trinket item used by the participant\n
+        `rune: dict[str, int]` - Dictionary of runes used by the participant with their respective values\n
+        `spells: list` - List of spells used by the participant\n
+        `stats: Stats` - Performance statistics of the participant\n
+        `tier_info: Tier` - Tier information of the participant\n
+    """
     def __init__(self,
                  summoner: 'Summoner',
                  participant_id: int,
@@ -416,11 +434,11 @@ class Game:
         return self._myData
     
     @myData.setter
-    def myData(self, value: list[Participant]) -> None:
+    def myData(self, value: Participant) -> None:
         self._myData = value
     
     def __repr__(self) -> str:
-        return f"Game(champion={self._champion}, kill={self._kill}, death={self._death}, assist={self._assist}, position={self._position}, is_win={self._is_win})"
+        return f"Game(champion={Utils.get_champion_by(By.ID, self.myData.champion_id)}, kill={self.myData.stats.kill}, death={self.myData.stats.death}, assist={self.myData.stats.assist}, position={self.myData.position}, is_win={self.myData.stats.result == "WIN"})"
 
 
 
@@ -459,10 +477,10 @@ class Summoner:
                  level: int,
                  updated_at: datetime,
                  renewable_at: datetime,
-                 previous_seasons: Season | list[Season],
-                 league_stats: LeagueStats | list[LeagueStats],
-                 most_champions: list[ChampionStats], 
-                 recent_game_stats: Game | list[Game]) -> None:
+                 previous_seasons: Season | list[Season] = None,
+                 league_stats: LeagueStats | list[LeagueStats] = None,
+                 most_champions: list[ChampionStats] = None, 
+                 recent_game_stats: Game | list[Game] = None) -> None:
         self._id = id
         self._summoner_id = summoner_id
         self._acct_id = acct_id

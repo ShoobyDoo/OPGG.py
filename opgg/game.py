@@ -75,7 +75,7 @@ class Stats:
                  largest_killing_spree: int,
                  minion_kill: int,
                  neutral_minion_kill_team_jungle: int,
-                 neutral_minion_Kill_enemy_jungle: int,
+                 neutral_minion_kill_enemy_jungle: int,
                  neutral_minion_kill: int,
                  gold_earned: int,
                  total_heal: int,
@@ -112,7 +112,7 @@ class Stats:
         self._largest_killing_spree = largest_killing_spree
         self._minion_kill = minion_kill
         self._neutral_minion_kill_team_jungle = neutral_minion_kill_team_jungle
-        self._neutral_minion_kill_enemy_jungle = neutral_minion_Kill_enemy_jungle
+        self._neutral_minion_kill_enemy_jungle = neutral_minion_kill_enemy_jungle
         self._neutral_minion_kill = neutral_minion_kill
         self._gold_earned = gold_earned
         self._total_heal = total_heal
