@@ -78,14 +78,14 @@ class OPGG:
         logging.basicConfig(
             filename=f'./logs/opgg_{datetime.now().strftime("%Y-%m-%d")}.log',
             filemode='a+', 
-            format='[%(asctime)s][%(name)-22s][%(levelname)-7s] : %(message)s', 
+            format='[%(asctime)s][%(name)s->%(module)-10s][%(levelname)-7s] : %(message)s', 
             datefmt='%d-%b-%y %H:%M:%S',
             level=logging.INFO
         )
         # ===== SETUP END =====
         
         # allow the user to interact with the logger
-        self._logger = logging.getLogger("OPGG.py")        
+        self._logger = logging.getLogger("OPGG.py")
         
         # at object creation, setup and query the cache
         self._cacher = Cacher()

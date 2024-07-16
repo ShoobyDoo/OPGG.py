@@ -17,7 +17,6 @@ class Cacher:
     def __init__(self, db_path = "./cache/opgg.db"):
         self.db_path = db_path
         self.logger = logging.getLogger("OPGG.py")
-        self.logger.name = "OPGG.py->Cacher"
     
     
     def setup(self) -> None:
