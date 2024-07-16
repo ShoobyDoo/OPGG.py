@@ -602,7 +602,7 @@ class Cacher:
                     id=season[0],
                     value=season[1],
                     display_value=season[2],
-                    is_preseason=season[3]
+                    is_preseason=season[3] == 1 # boolean values are saved as 0 (false) or 1 (true)
                 )
                 all_seasons.append(season_obj)
                 self.logger.debug(f"Successfully rebuilt the \"{season_obj.display_value}\" season object from cache. ({i+1}/{len(result)})")

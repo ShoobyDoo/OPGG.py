@@ -15,10 +15,11 @@ from typing import Literal
 from fake_useragent import UserAgent
 
 # from opgg.summoner import 
+from opgg.game import GameStats, Stats, Team
 from opgg.season import Season, SeasonInfo
 from opgg.champion import ChampionStats, Champion
 from opgg.league_stats import LeagueStats, Tier, QueueInfo
-from opgg.summoner import Game, Summoner
+from opgg.summoner import Game, Participant, Summoner
 from opgg.params import Region
 from opgg.cacher import Cacher
 from opgg.utils import Utils
@@ -397,13 +398,13 @@ class OPGG:
         if cached_seasons:
             self.all_seasons = cached_seasons
         else:
-            self.all_seasons = self.get_all_seasons(self.region, page_props)
+            self.all_seasons = Utils.get_all_seasons(self.region, page_props)
             self.cacher.insert_all_seasons(self.all_seasons)
             
         if cached_champions:
             self.all_champions = cached_champions
         else:
-            self.all_champions = self.get_all_champions(self.region, page_props)
+            self.all_champions = Utils.get_all_champions(self.region, page_props)
             self.cacher.insert_all_champs(self.all_champions)
         
         # todo: if more than 5 summoners are passed, break into 5s and iterate over each set
@@ -455,9 +456,11 @@ class OPGG:
         recent_games = []
         res = requests.get(f"{self._games_api_url}?&limit={results}&game_type={game_type}", headers=self.headers)
         
+        self.logger.debug(res.text)
+        
         if res.status_code == 200:
             self.logger.info(f"Request to OPGG GAME_API was successful, parsing data (Content Length: {len(res.text)})...")
-            game_data = json.loads(res.text)["data"]
+            game_data: Game = json.loads(res.text)["data"]
         else:
             res.raise_for_status()
         
@@ -465,21 +468,217 @@ class OPGG:
             return game_data
         
         try:
-            for game in game_data:
+            for game in game_data:                
+                participants = []
+                for participant in game["participants"]:
+                    participants.append(Participant(
+                        summoner=Summoner(
+                            id=participant["summoner"]["id"],
+                            summoner_id=participant["summoner"]["summoner_id"],
+                            acct_id=participant["summoner"]["acct_id"],
+                            puuid=participant["summoner"]["puuid"],
+                            game_name=participant["summoner"]["game_name"],
+                            tagline=participant["summoner"]["tagline"],
+                            name=participant["summoner"]["name"],
+                            internal_name=participant["summoner"]["internal_name"],
+                            profile_image_url=participant["summoner"]["profile_image_url"],
+                            level=participant["summoner"]["level"],
+                            updated_at=participant["summoner"]["updated_at"],
+                            renewable_at=participant["summoner"]["renewable_at"]
+                        ),
+                        participant_id=participant["participant_id"],
+                        champion_id=participant["champion_id"],
+                        team_key=participant["team_key"],
+                        position=participant["position"],
+                        role=participant["role"],
+                        items=participant["items"],
+                        trinket_item=participant["trinket_item"],
+                        rune={
+                            participant["rune"]["primary_page_id"],
+                            participant["rune"]["primary_rune_id"],
+                            participant["rune"]["secondary_page_id"]
+                        }, # temp, eventually turn this into an object..?
+                        spells=participant["spells"],
+                        stats=Stats(
+                            champion_level=participant["stats"]["champion_level"],
+                            damage_self_mitigated=participant["stats"]["damage_self_mitigated"],
+                            damage_dealt_to_objectives=participant["stats"]["damage_dealt_to_objectives"],
+                            damage_dealt_to_turrets=participant["stats"]["damage_dealt_to_turrets"],
+                            magic_damage_dealt_player=participant["stats"]["magic_damage_dealt_player"],
+                            physical_damage_taken=participant["stats"]["physical_damage_taken"],
+                            physical_damage_dealt_to_champions=participant["stats"]["physical_damage_dealt_to_champions"],
+                            total_damage_taken=participant["stats"]["total_damage_taken"],
+                            total_damage_dealt=participant["stats"]["total_damage_dealt"],
+                            total_damage_dealt_to_champions=participant["stats"]["total_damage_dealt_to_champions"],
+                            largest_critical_strike=participant["stats"]["largest_critical_strike"],
+                            time_ccing_others=participant["stats"]["time_ccing_others"],
+                            vision_score=participant["stats"]["vision_score"],
+                            vision_wards_bought_in_game=participant["stats"]["vision_wards_bought_in_game"],
+                            sight_wards_bought_in_game=participant["stats"]["sight_wards_bought_in_game"],
+                            ward_kill=participant["stats"]["ward_kill"],
+                            ward_place=participant["stats"]["ward_place"],
+                            turret_kill=participant["stats"]["champion_level"],
+                            barrack_kill=participant["stats"]["barrack_kill"],
+                            kill=participant["stats"]["kill"],
+                            death=participant["stats"]["death"],
+                            assist=participant["stats"]["assist"],
+                            largest_multi_kill=participant["stats"]["largest_multi_kill"],
+                            largest_killing_spree=participant["stats"]["largest_killing_spree"],
+                            minion_kill=participant["stats"]["minion_kill"],
+                            neutral_minion_kill_team_jungle=participant["stats"]["neutral_minion_kill_team_jungle"],
+                            neutral_minion_kill_enemy_jungle=participant["stats"]["neutral_minion_kill_enemy_jungle"],
+                            neutral_minion_kill=participant["stats"]["neutral_minion_kill"],
+                            gold_earned=participant["stats"]["gold_earned"],
+                            total_heal=participant["stats"]["total_heal"],
+                            result=participant["stats"]["result"],
+                            op_score=participant["stats"]["op_score"],
+                            op_score_rank=participant["stats"]["op_score_rank"],
+                            is_opscore_max_in_team=participant["stats"]["is_opscore_max_in_team"],
+                            lane_score=participant["stats"]["lane_score"],
+                            op_score_timeline=participant["stats"]["op_score_timeline"],
+                            op_score_timeline_analysis=participant["stats"]["op_score_timeline_analysis"],
+                        ),
+                        tier_info=Tier(
+                            tier=participant["tier_info"]["tier"],
+                            division=participant["tier_info"]["division"],
+                            lp=participant["tier_info"]["lp"],
+                            level=participant["tier_info"]["level"],
+                            tier_image_url=participant["tier_info"]["tier_image_url"],
+                            border_image_url=participant["tier_info"]["border_image_url"],
+                        )
+                    ))
+                
+                teams = []
+                for team in game["teams"]:
+                    teams.append(Team(
+                        key=team["key"],
+                        game_stat=GameStats(
+                            is_win=team["game_stat"]["is_win"],
+                            champion_kill=team["game_stat"]["champion_kill"],
+                            champion_first=team["game_stat"]["champion_first"],
+                            inhibitor_kill=team["game_stat"]["inhibitor_kill"],
+                            inhibitor_first=team["game_stat"]["inhibitor_first"],
+                            rift_herald_kill=team["game_stat"]["rift_herald_kill"],
+                            rift_herald_first=team["game_stat"]["rift_herald_first"],
+                            dragon_kill=team["game_stat"]["dragon_kill"],
+                            dragon_first=team["game_stat"]["dragon_first"],
+                            baron_kill=team["game_stat"]["baron_kill"],
+                            baron_first=team["game_stat"]["baron_first"],
+                            tower_kill=team["game_stat"]["tower_kill"],
+                            tower_first=team["game_stat"]["tower_first"],
+                            horde_kill=team["game_stat"]["horde_kill"],
+                            horde_first=team["game_stat"]["horde_first"],
+                            is_remake=team["game_stat"]["is_remake"],
+                            death=team["game_stat"]["death"],
+                            assist=team["game_stat"]["assist"],
+                            gold_earned=team["game_stat"]["gold_earned"],
+                            kill=team["game_stat"]["kill"],
+                        ),
+                        banned_champions=team["banned_champions"]
+                    ))
+                
                 tmp_game = Game(
                     id = game["id"],
-                    champion = next((champion for champion in self.all_champions if champion.id == game["myData"]["champion_id"]), None),
-                    kill = int(game["myData"]["stats"]["kill"]),
-                    death = int(game["myData"]["stats"]["death"]),
-                    assist = int(game["myData"]["stats"]["assist"]),
-                    position = game["myData"]["position"],
-                    is_win = game["myData"]["stats"]["result"] == "WIN",
-                    is_remake = game["is_remake"],
-                    op_score = float(game["myData"]["stats"]["op_score"]),
-                    op_score_rank = int(game["myData"]["stats"]["op_score_rank"]),
-                    is_opscore_max_in_team = game["myData"]["stats"]["is_opscore_max_in_team"],
-                    created_at = datetime.strptime(game["created_at"], r"%Y-%m-%dT%H:%M:%S%z")
+                    created_at=game["created_at"],
+                    game_map=game["game_map"],
+                    queue_info=QueueInfo(
+                        id=game["queue_info"]["id"],
+                        queue_translate=game["queue_info"]["queue_translate"],
+                        game_type=game["queue_info"]["game_type"],
+                    ),
+                    version=game["version"],
+                    game_length_second=game["game_length_second"],
+                    is_remake=game["is_remake"],
+                    is_opscore_active=game["is_opscore_active"],
+                    is_recorded=game["is_recorded"],
+                    record_info=game["record_info"],
+                    average_tier_info=Tier(
+                        tier=game["average_tier_info"]["tier"],
+                        division=game["average_tier_info"]["division"],
+                        tier_image_url=game["average_tier_info"]["tier_image_url"],
+                        border_image_url=game["average_tier_info"]["border_image_url"],
+                    ),
+                    participants=participants,
+                    teams=teams,
+                    memo=game["memo"],
+                    myData=Participant(
+                        summoner=Summoner(
+                            id=game["myData"]["summoner"]["id"],
+                            summoner_id=game["myData"]["summoner"]["summoner_id"],
+                            acct_id=game["myData"]["summoner"]["acct_id"],
+                            puuid=game["myData"]["summoner"]["puuid"],
+                            game_name=game["myData"]["summoner"]["game_name"],
+                            tagline=game["myData"]["summoner"]["tagline"],
+                            name=game["myData"]["summoner"]["name"],
+                            internal_name=game["myData"]["summoner"]["internal_name"],
+                            profile_image_url=game["myData"]["summoner"]["profile_image_url"],
+                            level=game["myData"]["summoner"]["level"],
+                            updated_at=game["myData"]["summoner"]["updated_at"],
+                            renewable_at=game["myData"]["summoner"]["renewable_at"]
+                        ),
+                        participant_id=game["myData"]["participant_id"],
+                        champion_id=game["myData"]["champion_id"],
+                        team_key=game["myData"]["team_key"],
+                        position=game["myData"]["position"],
+                        role=game["myData"]["role"],
+                        items=game["myData"]["items"],
+                        trinket_item=game["myData"]["trinket_item"],
+                        rune={
+                            game["myData"]["rune"]["primary_page_id"],
+                            game["myData"]["rune"]["primary_rune_id"],
+                            game["myData"]["rune"]["secondary_page_id"]
+                        }, # temp, eventually turn this into an object..?
+                        spells=game["myData"]["spells"],
+                        stats=Stats(
+                            champion_level=game["myData"]["stats"]["champion_level"],
+                            damage_self_mitigated=game["myData"]["stats"]["damage_self_mitigated"],
+                            damage_dealt_to_objectives=game["myData"]["stats"]["damage_dealt_to_objectives"],
+                            damage_dealt_to_turrets=game["myData"]["stats"]["damage_dealt_to_turrets"],
+                            magic_damage_dealt_player=game["myData"]["stats"]["magic_damage_dealt_player"],
+                            physical_damage_taken=game["myData"]["stats"]["physical_damage_taken"],
+                            physical_damage_dealt_to_champions=game["myData"]["stats"]["physical_damage_dealt_to_champions"],
+                            total_damage_taken=game["myData"]["stats"]["total_damage_taken"],
+                            total_damage_dealt=game["myData"]["stats"]["total_damage_dealt"],
+                            total_damage_dealt_to_champions=game["myData"]["stats"]["total_damage_dealt_to_champions"],
+                            largest_critical_strike=game["myData"]["stats"]["largest_critical_strike"],
+                            time_ccing_others=game["myData"]["stats"]["time_ccing_others"],
+                            vision_score=game["myData"]["stats"]["vision_score"],
+                            vision_wards_bought_in_game=game["myData"]["stats"]["vision_wards_bought_in_game"],
+                            sight_wards_bought_in_game=game["myData"]["stats"]["sight_wards_bought_in_game"],
+                            ward_kill=game["myData"]["stats"]["ward_kill"],
+                            ward_place=game["myData"]["stats"]["ward_place"],
+                            turret_kill=game["myData"]["stats"]["champion_level"],
+                            barrack_kill=game["myData"]["stats"]["barrack_kill"],
+                            kill=game["myData"]["stats"]["kill"],
+                            death=game["myData"]["stats"]["death"],
+                            assist=game["myData"]["stats"]["assist"],
+                            largest_multi_kill=game["myData"]["stats"]["largest_multi_kill"],
+                            largest_killing_spree=game["myData"]["stats"]["largest_killing_spree"],
+                            minion_kill=game["myData"]["stats"]["minion_kill"],
+                            neutral_minion_kill_team_jungle=game["myData"]["stats"]["neutral_minion_kill_team_jungle"],
+                            neutral_minion_kill_enemy_jungle=game["myData"]["stats"]["neutral_minion_kill_enemy_jungle"],
+                            neutral_minion_kill=game["myData"]["stats"]["neutral_minion_kill"],
+                            gold_earned=game["myData"]["stats"]["gold_earned"],
+                            total_heal=game["myData"]["stats"]["total_heal"],
+                            result=game["myData"]["stats"]["result"],
+                            op_score=game["myData"]["stats"]["op_score"],
+                            op_score_rank=game["myData"]["stats"]["op_score_rank"],
+                            is_opscore_max_in_team=game["myData"]["stats"]["is_opscore_max_in_team"],
+                            lane_score=game["myData"]["stats"]["lane_score"],
+                            op_score_timeline=game["myData"]["stats"]["op_score_timeline"],
+                            op_score_timeline_analysis=game["myData"]["stats"]["op_score_timeline_analysis"],
+                        ),
+                        tier_info=Tier(
+                            tier=game["myData"]["tier_info"]["tier"],
+                            division=game["myData"]["tier_info"]["division"],
+                            lp=game["myData"]["tier_info"]["lp"],
+                            level=game["myData"]["tier_info"]["level"],
+                            tier_image_url=game["myData"]["tier_info"]["tier_image_url"],
+                            border_image_url=game["myData"]["tier_info"]["border_image_url"],
+                        )
+                    )
                 )
+                
                 recent_games.append(tmp_game)
                 
             return recent_games
