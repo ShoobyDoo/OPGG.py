@@ -9,21 +9,21 @@ from datetime import datetime
 
 class Tier:
     """
-    Represents a tier in a league.
+    Represents a tier in a league.\n
     
     ### Properties:
-        `tier` - Tier name\n
-        `division` - Division number\n
-        `lp` - League points\n
-        `level` - Unknown level, usually is None/Null\n
-        `tier_image_url` - URL to the tier image\n
-        `border_image_url` - URL to the border image\n
+        `tier: str` - Tier name\n
+        `division: int` - Division number\n
+        `lp: int` - League points. Defaults to 0 if None\n
+        `level: int` - Unknown level, usually is None/Null. Defaults to 0 if None\n
+        `tier_image_url: str` - URL to the tier image. Defaults to None\n
+        `border_image_url: str` - URL to the border image. Defaults to None\n
     """
     def __init__(self,
                  tier: str,
                  division: int,
-                 tier_image_url: str,
-                 border_image_url: str,
+                 tier_image_url: str = None,
+                 border_image_url: str = None,
                  lp: int = None,
                  level: int = None) -> None:
         self._tier = tier if tier != None else "UNRANKED"
@@ -105,12 +105,12 @@ class Tier:
 
 class QueueInfo:
     """
-    Represents a queue in a league.
+    Represents a queue in a league.\n
     
     ### Properties:
-        `id` - Queue ID\n
-        `queue_translate` - Game type in KOREAN\n
-        `game_type` - Queue/Game type\n
+        `id: int` - Queue ID\n
+        `queue_translate: str` - Game type in KOREAN\n
+        `game_type: str` - Queue/Game type\n
     """
     def __init__(self,
                  id: int,
@@ -159,19 +159,19 @@ class QueueInfo:
 
 class LeagueStats:
     """
-    Represents a users league stats.
+    Represents a user's league stats.\n
     
     ### Properties:
-        `queue_info` - QueueInfo object\n
-        `tier_info` - Tier object\n
-        `win` - Number of wins\n
-        `lose` - Number of losses\n
-        `is_hot_streak` - Whether or not the user is on a hot streak (3+ winstreak)\n
-        `is_fresh_blood` - Whether or not the user is fresh blood\n
-        `is_veteran` - Whether or not the user is a veteran\n
-        `is_inactive` - Whether or not the user is inactive\n
-        `series` - Series object\n
-        `updated_at` - Datetime object representing the last time the stats were updated\n
+        `queue_info: QueueInfo` - QueueInfo object\n
+        `tier_info: Tier` - Tier object\n
+        `win: int` - Number of wins. Defaults to 0 if None\n
+        `lose: int` - Number of losses. Defaults to 0 if None\n
+        `is_hot_streak: bool` - Whether or not the user is on a hot streak (3+ win streak)\n
+        `is_fresh_blood: bool` - Whether or not the user is fresh blood\n
+        `is_veteran: bool` - Whether or not the user is a veteran\n
+        `is_inactive: bool` - Whether or not the user is inactive\n
+        `series: bool` - Series object\n
+        `updated_at: datetime` - Datetime object representing the last time the stats were updated\n
     """
     def __init__(self,
                  queue_info: QueueInfo,

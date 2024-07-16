@@ -77,7 +77,7 @@ class Participant:
     @property
     def participant_id(self) -> int:
         """
-        A `int` representing the game result
+        An `int` representing the participant id
         """
         return self._participant_id
     
@@ -88,7 +88,7 @@ class Participant:
     @property
     def champion_id(self) -> int:
         """
-        A `int` representing the game result
+        An `int` representing the champion id
         """
         return self._champion_id
     
@@ -99,7 +99,7 @@ class Participant:
     @property
     def team_key(self) -> str:
         """
-        A `str` representing the game result
+        A `str` representing the team (BLUE, RED)
         """
         return self._team_key
     
@@ -110,7 +110,7 @@ class Participant:
     @property
     def position(self) -> str:
         """
-        A `str` representing the game result
+        A `str` representing the position the participant was playing
         """
         return self._position
     
@@ -121,7 +121,7 @@ class Participant:
     @property
     def role(self) -> str:
         """
-        A `str` representing the game result
+        A `str` representing the role the participant was playing
         """
         return self._role
     
@@ -132,7 +132,7 @@ class Participant:
     @property
     def items(self) -> list[int]:
         """
-        A `list[int]` representing the game result
+        A `list[int]` representing the participants items
         """
         return self._items
     
@@ -143,7 +143,7 @@ class Participant:
     @property
     def trinket_item(self) -> int:
         """
-        A `int` representing the game result
+        An `int` representing the trinket item
         """
         return self._trinket_item
     
@@ -154,7 +154,7 @@ class Participant:
     @property
     def rune(self) -> dict[str, int]:
         """
-        A `dict[str, int]` representing the game result
+        A `dict[str, int]` representing the rune configuration of the participant
         """
         return self._rune
     
@@ -165,7 +165,7 @@ class Participant:
     @property
     def spells(self) -> list:
         """
-        A `list` representing the game result
+        A `list` representing the spell configuration of the participant
         """
         return self._spells
     
@@ -176,7 +176,7 @@ class Participant:
     @property
     def stats(self) -> Stats:
         """
-        A `Stats` representing the game result
+        A `Stats` object representing the participants game stats
         """
         return self._stats
     
@@ -185,37 +185,15 @@ class Participant:
         self._stats = value
     
     @property
-    def is_win(self) -> bool:
+    def tier_info(self) -> Tier:
         """
-        A `bool` representing the game result
+        A `Tier` object representing the participants league tier
         """
-        return self._is_win
+        return self._tier_info
     
-    @is_win.setter
-    def is_win(self, value: bool) -> None:
-        self._is_win = value
-    
-    @property
-    def is_win(self) -> bool:
-        """
-        A `bool` representing the game result
-        """
-        return self._is_win
-    
-    @is_win.setter
-    def is_win(self, value: bool) -> None:
-        self._is_win = value
-    
-    @property
-    def is_win(self) -> bool:
-        """
-        A `bool` representing the game result
-        """
-        return self._is_win
-    
-    @is_win.setter
-    def is_win(self, value: bool) -> None:
-        self._is_win = value
+    @tier_info.setter
+    def tier_info(self, value: Tier) -> None:
+        self._tier_info = value
     
 
 class Game:
@@ -444,25 +422,25 @@ class Game:
 
 class Summoner:
     """
-    Represents a summoner.
+    Represents a summoner.\n
     
     ### Properties:
-        `id` - Summoner id\n
-        `summoner_id` - Summoner id\n
-        `acct_id` - Account id\n
-        `puuid` - Puuid\n
-        `game_name` - In-game username\n
-        `tagline` - Regional identifier\n
-        `name` - Summoner name\n
-        `internal_name` - Internal name\n
-        `profile_image_url` - Profile image url\n
-        `level` - Summoner level\n
-        `updated_at` - When the summoner was last updated\n
-        `renewable_at` - When the summoner can be renewed\n
-        `previous_seasons` - Previous seasons\n
-        `league_stats` - League stats\n
-        `most_champions` - Most champions\n
-        `recent_game_stats` - Recent game stats
+        `id: int` - Summoner id\n
+        `summoner_id: str` - Summoner id\n
+        `acct_id: str` - Account id\n
+        `puuid: str` - Puuid\n
+        `game_name: str` - In-game username\n
+        `tagline: str` - Regional identifier\n
+        `name: str` - Summoner name\n
+        `internal_name: str` - Internal name\n
+        `profile_image_url: str` - Profile image URL\n
+        `level: int` - Summoner level\n
+        `updated_at: datetime` - When the summoner was last updated\n
+        `renewable_at: datetime` - When the summoner can be renewed\n
+        `previous_seasons: Season | list[Season]` - Previous seasons\n
+        `league_stats: LeagueStats | list[LeagueStats]` - League stats\n
+        `most_champions: list[ChampionStats]` - Most champions\n
+        `recent_game_stats: Game | list[Game]` - Recent game stats\n
     """
     def __init__(self,
                  id: int,

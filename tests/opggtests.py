@@ -43,7 +43,7 @@ class OPGGTests:
                     fail_count += 1
                 
                 # slow print effect
-                time.sleep(0.025)
+                time.sleep(0.015)
 
             msg_summary += f"\n-> {test_cls.__name__} has {len(obj_attrs)} attributes"
             msg_summary += f"\n-> OPGG response has {len(latest_attrs)} attributes\n"
