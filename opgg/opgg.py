@@ -16,7 +16,7 @@ from fake_useragent import UserAgent
 
 # from opgg.summoner import 
 from opgg.game import GameStats, Stats, Team
-from opgg.season import Season, SeasonInfo
+from opgg.season import RankEntry, Season, SeasonInfo
 from opgg.champion import ChampionStats, Champion
 from opgg.league_stats import LeagueStats, Tier, QueueInfo
 from opgg.summoner import Game, Participant, Summoner
@@ -198,7 +198,7 @@ class OPGG:
         self.logger.debug(f"self._games_api_url = {self._games_api_url}")
     
     
-    def get_summoner(self, return_content_only = False) -> Summoner:
+    def get_summoner(self, return_content_only = False) -> Summoner | dict:
         """
         A method to get data from the OPGG API and form a Summoner object.
         
@@ -238,6 +238,18 @@ class OPGG:
                             tmp_season_info = _season
                             break
                 
+                tmp_rank_entries = []
+                for rank_entry in season["rank_entries"]:
+                    tmp_rank_entries.append(RankEntry(
+                        game_type = rank_entry["game_type"],
+                        rank_info = Tier(
+                            tier=rank_entry["rank_info"]["tier"],
+                            division=rank_entry["rank_info"]["division"],
+                            lp=rank_entry["rank_info"]["lp"],
+                        ),
+                        created_at = datetime.fromisoformat(rank_entry["created_at"]) if rank_entry["created_at"] else None,
+                    ))
+                
                 previous_seasons.append(Season(
                     season_id = tmp_season_info,
                     tier_info = Tier(
@@ -247,7 +259,8 @@ class OPGG:
                         tier_image_url = season["tier_info"]["tier_image_url"],
                         border_image_url = season["tier_info"]["border_image_url"]
                     ),
-                    created_at = season["created_at"]
+                    rank_entries = tmp_rank_entries,
+                    created_at = datetime.fromisoformat(season["created_at"]) if season["created_at"] else None
                 ))
             
             for league in content["summoner"]["league_stats"]:
@@ -262,7 +275,8 @@ class OPGG:
                         division = league["tier_info"]["division"],
                         lp = league["tier_info"]["lp"],
                         tier_image_url = league["tier_info"]["tier_image_url"],
-                        border_image_url = league["tier_info"]["border_image_url"]
+                        border_image_url = league["tier_info"]["border_image_url"],
+                        level = league["tier_info"]["level"]
                     ),
                     win = league["win"],
                     lose = league["lose"],
@@ -284,6 +298,7 @@ class OPGG:
                 
                 most_champions.append(ChampionStats(
                     champion = tmp_champ,
+                    id = champion["id"],
                     play = champion["play"],
                     win = champion["win"],
                     lose = champion["lose"],
@@ -305,7 +320,29 @@ class OPGG:
                     triple_kill = champion["triple_kill"],
                     quadra_kill = champion["quadra_kill"],
                     penta_kill = champion["penta_kill"],
-                    game_length_second = champion["game_length_second"]
+                    game_length_second = champion["game_length_second"],
+                    inhibitor_kills = champion["inhibitor_kills"],
+                    sight_wards_bought_in_game = champion["sight_wards_bought_in_game"],
+                    vision_wards_bought_in_game = champion["vision_wards_bought_in_game"],
+                    vision_score = champion["vision_score"],
+                    wards_placed = champion["wards_placed"],
+                    wards_killed = champion["wards_killed"],
+                    heal = champion["heal"],
+                    time_ccing_others = champion["time_ccing_others"],
+                    op_score = champion["op_score"],
+                    is_max_in_team_op_score = champion["is_max_in_team_op_score"],
+                    physical_damage_taken = champion["physical_damage_taken"],
+                    damage_dealt_to_champions = champion["damage_dealt_to_champions"],
+                    physical_damage_dealt_to_champions = champion["physical_damage_dealt_to_champions"],
+                    magic_damage_dealt_to_champions = champion["magic_damage_dealt_to_champions"],
+                    damage_dealt_to_objectives = champion["damage_dealt_to_objectives"],
+                    damage_dealt_to_turrets = champion["damage_dealt_to_turrets"],
+                    damage_self_mitigated = champion["damage_self_mitigated"],
+                    max_largest_multi_kill = champion["max_largest_multi_kill"],
+                    max_largest_critical_strike = champion["max_largest_critical_strike"],
+                    max_largest_killing_spree = champion["max_largest_killing_spree"],
+                    snowball_throws = champion["snowball_throws"],
+                    snowball_hits = champion["snowball_hits"],
                 ))
             
             # page props did not return any recent games, lets query the /games endpoint instead
