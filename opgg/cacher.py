@@ -1,6 +1,7 @@
 import sqlite3
 import logging
 import os
+from datetime import datetime
 
 from opgg.champion import Champion, Passive, Skin, Spell
 from opgg.season import SeasonInfo
@@ -14,7 +15,7 @@ class Cacher:
         `db_path` - Path to the database file.\n
         `logger` - Logger instance.
     """
-    def __init__(self, db_path = "./cache/opgg.db"):
+    def __init__(self, db_path = f"./cache/opgg-{datetime.now().timestamp()}.db"):
         self.db_path = db_path
         self.logger = logging.getLogger("OPGG.py")
     
@@ -46,7 +47,8 @@ class Cacher:
                 champion_key,
                 champion_name,
                 champion_image_url,
-                champion_evolve_list
+                champion_evolve_list,
+                champion_partype
             );
             """
         )
@@ -59,6 +61,7 @@ class Cacher:
                 season_id PRIMARY KEY,
                 season_value,
                 season_display_name,
+                season_split,
                 season_is_preseason
             );
             """
@@ -90,6 +93,7 @@ class Cacher:
                 spell_max_rank,
                 spell_range_burn_list,
                 spell_cooldown_burn_list,
+                spell_cooldown_burn_float_list,
                 spell_cost_burn_list,
                 spell_tooltip,
                 spell_image_url,
@@ -108,7 +112,9 @@ class Cacher:
                 skin_name,
                 skin_centered_image,
                 skin_video_url,
-                skin_prices
+                skin_prices,
+                skin_sales,
+                skin_release_date
             )
             """
         )
@@ -255,7 +261,8 @@ class Cacher:
                 champion.key,
                 champion.name,
                 champion.image_url,
-                ','.join([f"{_evolve}" for _evolve in champion.evolve])
+                ','.join([f"{_evolve}" for _evolve in champion.evolve]),
+                champion.partype
             ))
             
             # passive (champ id to map passive to champion)
@@ -277,6 +284,7 @@ class Cacher:
                     spell.max_rank,
                     ','.join([f"{_range}" for _range in spell.range_burn]),
                     ','.join([f"{_cooldown}" for _cooldown in spell.cooldown_burn]),
+                    ','.join([f"{_cooldown_float}" for _cooldown_float in spell.cooldown_burn_float]),
                     ','.join([f"{_cost}" for _cost in spell.cost_burn]),
                     spell.tooltip,
                     spell.image_url,
@@ -291,14 +299,16 @@ class Cacher:
                     skin.name,
                     skin.centered_image,
                     skin.skin_video_url,
-                    ','.join([f"{price.currency}: {price.cost}" for price in skin.prices]) if skin.prices else None
+                    ','.join([f"{price.currency}: {price.cost}" for price in skin.prices]) if skin.prices else None,
+                    skin.release_date,
+                    ','.join([f"{_price}" for _price in skin.prices]) if skin.prices else str(skin.prices)
                 ))
         
         # insert into champion table
         self.cursor.executemany(
             """
-            INSERT OR IGNORE INTO tblChampions (champion_id, champion_key, champion_name, champion_image_url, champion_evolve_list)
-            VALUES (:1, :2, :3, :4, :5)
+            INSERT OR IGNORE INTO tblChampions (champion_id, champion_key, champion_name, champion_image_url, champion_evolve_list, champion_partype)
+            VALUES (:1, :2, :3, :4, :5, :6)
             """,
             batch_champion_insert
         )
@@ -321,8 +331,8 @@ class Cacher:
         # insert into skins table
         self.cursor.executemany(
             """
-            INSERT OR IGNORE INTO tblSkins (champion_id, skin_id, skin_name, skin_centered_image, skin_video_url, skin_prices)
-            VALUES (:1, :2, :3, :4, :5, :6)
+            INSERT OR IGNORE INTO tblSkins (champion_id, skin_id, skin_name, skin_centered_image, skin_video_url, skin_prices, skin_release_date, skin_sales)
+            VALUES (:1, :2, :3, :4, :5, :6, :7, :8)
             """,
             batch_skins_insert
         )
@@ -333,8 +343,8 @@ class Cacher:
         # insert into spells table
         self.cursor.executemany(
             """
-            INSERT OR IGNORE INTO tblSpells (champion_id, spell_key, spell_name, spell_description, spell_max_rank, spell_range_burn_list, spell_cooldown_burn_list, spell_cost_burn_list, spell_tooltip, spell_image_url, spell_video_url)
-            VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11)
+            INSERT OR IGNORE INTO tblSpells (champion_id, spell_key, spell_name, spell_description, spell_max_rank, spell_range_burn_list, spell_cooldown_burn_list, spell_cooldown_burn_float_list, spell_cost_burn_list, spell_tooltip, spell_image_url, spell_video_url)
+            VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12)
             """,
             batch_spells_insert
         )
@@ -379,7 +389,6 @@ class Cacher:
                 # PASSIVE FROM PASSIVES TABLE
                 # SPELLS FROM SPELLS TABLE
                 # SKINS FROM SKINS TABLE
-                # TODO: Make this more efficient by using a single query to get ALL related data. Currently, each get_* function call is getting data for each champion PER query. Instead, we should get all related data for all champions in a single query.
                 champ_passive = self.get_passive(cached_champ[0])
                 champ_spells = self.get_spells(cached_champ[0])
                 champ_skins = self.get_skins(cached_champ[0])
@@ -390,6 +399,7 @@ class Cacher:
                     name=cached_champ[2],
                     image_url=cached_champ[3],
                     evolve=cached_champ[4].split(',') if cached_champ[4] else None,
+                    partype=cached_champ[5],
                     passive=champ_passive,
                     spells=champ_spells,
                     skins=champ_skins
@@ -478,11 +488,12 @@ class Cacher:
             description=spell[3],
             max_rank=spell[4],
             range_burn=spell[5].split(',') if spell[5] else None,
-            cooldown_burn=spell[6].split(',') if spell[5] else None,
-            cost_burn=spell[7].split(',') if spell[5] else None,
-            tooltip=spell[8],
-            image_url=spell[9],
-            video_url=spell[10]
+            cooldown_burn=spell[6].split(',') if spell[6] else None,
+            cooldown_burn_float=spell[7].split(',') if spell[7] else None,
+            cost_burn=spell[8].split(',') if spell[8] else None,
+            tooltip=spell[9],
+            image_url=spell[10],
+            video_url=spell[11]
         ) for spell in result]
     
     
@@ -519,11 +530,13 @@ class Cacher:
         
         self.logger.debug(f"Found skins for champion_id: {champion_id}.")
         return [Skin(
+            champion_id=skin[0],
             id=skin[1],
             name=skin[2],
             centered_image=skin[3],
             skin_video_url=skin[4],
-            prices=skin[5].split(',') if skin[5] else None
+            prices=skin[5].split(',') if skin[5] else None,
+            release_date=skin[6]
         ) for skin in result] 
     
     
@@ -552,13 +565,14 @@ class Cacher:
                 season_info.id,
                 season_info.value,
                 season_info.display_value,
+                season_info.split,
                 season_info.is_preseason
             ))
         
         self.cursor.executemany(
             """
-            INSERT OR IGNORE INTO tblSeasonInfo (season_id, season_value, season_display_name, season_is_preseason)
-            VALUES (:1, :2, :3, :4)
+            INSERT OR IGNORE INTO tblSeasonInfo (season_id, season_value, season_display_name, season_split, season_is_preseason)
+            VALUES (:1, :2, :3, :4, :5)
             """,
             batch_seasons_insert
         )
@@ -602,13 +616,33 @@ class Cacher:
                     id=season[0],
                     value=season[1],
                     display_value=season[2],
-                    is_preseason=season[3] == 1 # boolean values are saved as 0 (false) or 1 (true)
+                    split=season[3],
+                    is_preseason=season[4] == 1 # boolean values are saved as 0 (false) or 1 (true)
                 )
                 all_seasons.append(season_obj)
                 self.logger.debug(f"Successfully rebuilt the \"{season_obj.display_value}\" season object from cache. ({i+1}/{len(result)})")
                 
             return all_seasons
     
+    
+    def drop_tables(self, tables: list[str]) -> None:
+        """
+        Drops all specified tables.
+        
+        ### Args:
+            tables : `str`
+                A list of table names to be deleted/dropped
+        """
+        self.conn = self.connect()
+        self.cursor = self.conn.cursor()
+        
+        for table in tables:
+            self.logger.debug(f"Dropping table \"{table}\" ...")
+            self.cursor.execute(f"DROP TABLE IF EXISTS {table}")
+        
+        self.conn.commit()
+        self.conn.close()
+        
     
     def connect(self) -> sqlite3.Connection:
         """
