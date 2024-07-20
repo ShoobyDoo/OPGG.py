@@ -1,6 +1,7 @@
 import sqlite3
 import logging
 import os
+import glob
 from datetime import datetime
 
 from opgg.champion import Champion, Passive, Skin, Spell
@@ -15,7 +16,7 @@ class Cacher:
         `db_path` - Path to the database file.\n
         `logger` - Logger instance.
     """
-    def __init__(self, db_path = f"./cache/opgg-{datetime.now().timestamp()}.db"):
+    def __init__(self, db_path = f"./cache/opgg-{datetime.now().strftime("%Y-%m-%d")}.db"):
         self.db_path = db_path
         self.logger = logging.getLogger("OPGG.py")
     
@@ -30,6 +31,43 @@ class Cacher:
             self.logger.info("Creating cache directory...")
             os.mkdir('./cache')
             self.logger.info("Setting up cache database...")
+        
+        # Do all this cleanup and verification in the connect function to minimize work required
+        # to enforce this. Anytime a function needs to connect to the database, this check should
+        # be performed and the data base structure should be verified. 
+        # 
+        # It should also then query out to pull the necessary data as if this is called on a 
+        # get_<whatever> type function the database will have no data following a cache rebuild.
+        cache_db = glob.glob("./cache/opgg*.db")
+        
+        if (len(cache_db) > 0 and "-" in cache_db[0]):
+            old_path = cache_db[0]
+            cache_last_updated = datetime.strptime(old_path.split("-", 1)[-1].replace(".db", ""), "%Y-%m-%d")
+            
+            if (datetime.now() - cache_last_updated).days >= 7:
+                self.logger.info("Cache is older than 1 week, rebuilding...")
+                
+                # set db_path to the old cache for a second
+                new_path = self.db_path
+                
+                self.logger.info("Deleting old cache data...")
+                self.db_path = old_path
+                self.drop_tables([
+                    "tblChampions",
+                    "tblPassives",
+                    "tblSeasonInfo",
+                    "tblSkins",
+                    "tblSpells",
+                ])
+                
+                self.logger.info(f"Updating filename with current date {old_path} -> {new_path}")
+                os.rename(old_path, new_path)
+                self.db_path = new_path
+                
+                self.logger.info("🎉 Cache has been rebuilt! The immediate request following a cache rebuild might take slightly longer as new data is fetched and the cache is updated.")
+                
+        elif (len(cache_db) > 0):
+            os.remove(cache_db[0])
         
         self.conn = self.connect()
         self.cursor = self.conn.cursor()
@@ -379,8 +417,10 @@ class Cacher:
         result = self.cursor.fetchall()
         
         if result is None:
-            self.logger.info("No champions found in cache database.")
-            return None
+            self.logger.error("No champions found in cache database.")
+            raise Exception("Multiple levels of data fetching have failed to result in this event.\n \
+                            1. There were no champions returned in the request to opgg (?) See debug logs...\n \
+                            2. There were no champions found in the cache database.")
         else:
             self.logger.info(f"Found {len(result)} champions in cache database.")
             cached_champ: tuple[str, str, str, str, str]
@@ -652,4 +692,3 @@ class Cacher:
             `sqlite3.Connection` : Returns a connection object.
         """
         return sqlite3.connect(self.db_path)
-    

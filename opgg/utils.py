@@ -4,6 +4,7 @@
 # Date    : 2024-07-10
 # License : BSD-3-Clause
 
+from datetime import datetime
 import json
 import requests
 from bs4 import BeautifulSoup
@@ -26,6 +27,11 @@ class Utils:
     
     _base_api_url = "https://lol-web-api.op.gg/api/v1.0/internal/bypass"
     _api_url = f"{_base_api_url}/summoners/{{region}}/{{summoner_id}}/renewal"
+    
+    ua = UserAgent()
+    headers = { 
+        "User-Agent": ua.random
+    }
     
     @staticmethod
     def update(summoner_id: str, region: Region = Region.NA) -> dict:
@@ -54,14 +60,9 @@ class Utils:
             ```
         """
         
-        ua = UserAgent()
-        headers = { 
-            "User-Agent": ua.random
-        }
-        
         res = requests.post(
             Utils._api_url.format(region=region, summoner_id=summoner_id), 
-            headers=headers
+            headers=Utils.headers
         )
         
         if res.status_code in [201, 202]:
@@ -69,8 +70,9 @@ class Utils:
         else:
             res.raise_for_status()
     
+    
     @staticmethod
-    def get_page_props(summoner_names: str | list[str] = "", region = Region.NA) -> dict:
+    def get_page_props(summoner_names: str | list[str] = "ColbyFaulkn1", region = Region.NA) -> dict:
         """
         Get the page props from OPGG. (Contains data such as summoner info, champions, seasons, etc.)
         
@@ -86,21 +88,19 @@ class Utils:
             `dict` : Returns a dictionary with the page props.
         """
         
-        if isinstance(summoner_names, list): summoner_names = ",".join(summoner_names)
+        if isinstance(summoner_names, list) and len(summoner_names) > 0: 
+            summoner_names = ",".join(summoner_names)
         
-        url = f"https://op.gg/multisearch/{region}?summoners={summoner_names}"
-        headers = { 
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.1; en-US) AppleWebKit/602.14 (KHTML, like Gecko) Chrome/55.0.2575.244 Safari/603.4 Edge/11.82011",
-        }
+        url = f"https://www.op.gg/multisearch/{region}?summoners={summoner_names}"
 
-        res = requests.get(url, headers=headers, allow_redirects=True)
+        res = requests.get(url, headers=Utils.headers, allow_redirects=True)
         soup = BeautifulSoup(res.content, "html.parser")
         
         return json.loads(soup.select_one("#__NEXT_DATA__").text)['props']['pageProps']
     
     
     @staticmethod
-    def get_all_seasons(region = Region.NA, page_props: dict = None) -> list[SeasonInfo]:
+    def get_all_seasons(region = Region.NA, page_props = None) -> list[SeasonInfo]:
         """
         Get all seasons from OPGG.
 
@@ -115,17 +115,24 @@ class Utils:
         ### Returns:
             `list[SeasonInfo]` : A list of SeasonInfo objects.
         """
-        # Check cache first, and if found return that instead of querying.
+        # Check cache, if found, return it, otherwise continue to below logic.
         cached_seasons = Cacher().get_all_seasons()
         if cached_seasons:
             return cached_seasons
         
         seasons = []
+        
+        # For seasons specifically, if page_props is not passed, we MUST use it.
+        # I have not been able to find a seasons endpoint on the api yet.
+        if page_props == None:
+            page_props = Utils.get_page_props()
+        
         for season in dict(page_props['seasonsById']).values():
             seasons.append(SeasonInfo(
                 id = season["id"],
                 value = season["value"],
                 display_value = season["display_value"],
+                split = season["split"],
                 is_preseason = season["is_preseason"]
             ))
         
@@ -147,7 +154,6 @@ class Utils:
         ### Returns:
             `SeasonInfo | list[SeasonInfo]` : A single or list of SeasonInfo objects.
         """
-        
         all_seasons = Utils.get_all_seasons()
         result_set = []
         
@@ -168,7 +174,7 @@ class Utils:
     
     
     @staticmethod
-    def get_all_champions(region = Region.NA, page_props: dict = None) -> list[Champion]:
+    def get_all_champions(region = Region.NA, page_props = None) -> list[Champion]:
         """
         Get all champion info from OPGG.
 
@@ -183,14 +189,21 @@ class Utils:
         Returns:
             `list[Champion]` : A list of Champion objects.
         """
-        # Check cache, if found, return it, otherwise continue to below logic.
-        cached_champions = Cacher().get_all_champs()
-        if cached_champions:
-            return cached_champions
-            
+        # Check cache, if found, return it, otherwise continue to below logic.        
         champions = []
         
-        for champion in dict(page_props["championsById"]).values():
+        if not page_props:
+            cached_champions = Cacher().get_all_champs()
+            if cached_champions: 
+                return cached_champions
+            
+            res = requests.get(f"{Utils._base_api_url}/meta/champions?hl=en_US", headers=Utils.headers)
+            raw_champs_data = json.loads(res.text)["data"]
+            
+        else:
+            raw_champs_data = dict(page_props['championsById']).values()
+        
+        for champion in raw_champs_data:
             # reset per iteration
             _spells = []
             _skins = []
@@ -209,10 +222,12 @@ class Utils:
                 
                 _skins.append(Skin(
                     id = skin["id"],
+                    champion_id = skin["champion_id"],
                     name = skin["name"],
                     centered_image = skin["centered_image"],
                     skin_video_url = skin["skin_video_url"],
                     prices = _prices,
+                    release_date = datetime.fromisoformat(skin["release_date"]) if skin["release_date"] else None,
                     sales = skin["sales"]
                 ))
                     
@@ -224,6 +239,7 @@ class Utils:
                     max_rank = spell["max_rank"],
                     range_burn = spell["range_burn"],
                     cooldown_burn = spell["cooldown_burn"],
+                    cooldown_burn_float = spell["cooldown_burn_float"],
                     cost_burn = spell["cost_burn"],
                     tooltip = spell["tooltip"],
                     image_url = spell["image_url"],
@@ -236,6 +252,7 @@ class Utils:
                 name = champion["name"],
                 image_url = champion["image_url"],
                 evolve = champion["evolve"],
+                partype = champion["partype"],
                 passive = Passive(
                     name = champion["passive"]["name"],
                     description = champion["passive"]["description"],
@@ -271,7 +288,11 @@ class Utils:
         # Currently kwargs only handles "currency" for the cost of a champion,
         # but I might introduce other metrics of getting champ objs later, idk...
         
-        all_champs = Utils.get_all_champions()
+        if ("page_props" in kwargs):
+            all_champs = Utils.get_all_champions(page_props=kwargs["page_props"])
+        else:
+            all_champs = Utils.get_all_champions()
+        
         result_set = []
         
         if by == By.ID:
