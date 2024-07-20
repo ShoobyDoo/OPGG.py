@@ -11,7 +11,7 @@ from opgg.game import Stats, Team
 from opgg.params import By, Queue
 from opgg.season import Season
 from opgg.league_stats import LeagueStats, QueueInfo, Tier
-from opgg.champion import ChampionStats
+from opgg.champion import Champion, ChampionStats
 from opgg.utils import Utils
 
 # left/right just factor
@@ -416,8 +416,7 @@ class Game:
         self._myData = value
     
     def __repr__(self) -> str:
-        return f"Game(champion={Utils.get_champion_by(By.ID, self.myData.champion_id)}, kill={self.myData.stats.kill}, death={self.myData.stats.death}, assist={self.myData.stats.assist}, position={self.myData.position}, is_win={self.myData.stats.result == "WIN"})"
-
+        return f"Game(champion_id={self.myData.champion_id}, kill={self.myData.stats.kill}, death={self.myData.stats.death}, assist={self.myData.stats.assist}, position={self.myData.position}, result={self.myData.stats.result})"
 
 
 class Summoner:

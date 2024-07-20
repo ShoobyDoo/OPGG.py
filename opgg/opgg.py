@@ -42,6 +42,9 @@ class OPGG:
     # Todo: Add support for the following endpoint(s):
     # https://op.gg/api/v1.0/internal/bypass/games/na/summoners/<summoner_id?>/?&limit=20&hl=en_US&game_type=total
 
+    # HUGE find. Incorporate the following endpoint:
+    # https://op.gg/api/v1.0/internal/bypass/meta/champions/<champion_id>?hl=<lang_code>
+    
     # METADATA FOR CHAMPIONS -- USE THIS OVER PAGE_PROPS.
     # https://op.gg/api/v1.0/internal/bypass/meta/champions?hl=en_US
     
@@ -79,7 +82,7 @@ class OPGG:
         logging.basicConfig(
             filename=f'./logs/opgg_{datetime.now().strftime("%Y-%m-%d")}.log',
             filemode='a+', 
-            format='[%(asctime)s][%(name)s->%(module)-10s][%(levelname)-7s] : %(message)s', 
+            format='[%(asctime)s][%(name)s->%(module)s:%(lineno)-10d][%(levelname)-7s] : %(message)s', 
             datefmt='%d-%b-%y %H:%M:%S',
             level=logging.INFO
         )
@@ -416,7 +419,6 @@ class OPGG:
         
         # pass only uncached summoners to get_page_props()
         page_props = Utils.get_page_props(uncached_summoners, region)
-        OPGG.cached_page_props = page_props
         
         self.logger.debug(f"\n********PAGE_PROPS_START********\n{page_props}\n********PAGE_PROPS_STOP********")
         
@@ -424,10 +426,8 @@ class OPGG:
             self.logger.info(f"No cache for {len(uncached_summoners)} summoners: {uncached_summoners}, fetching... (using get_page_props() site scraper)")
         if len(cached_summoner_ids) > 0:
             self.logger.info(f"Cache found for {len(cached_summoner_ids)} summoners: {cached_summoner_ids}, fetching... (using get_summoner() api)")
-            
-        # these cross reference the page prop season/champ ids to build out season/champ objects
-        # todo: build this into caching system
-        # todo: metric for when you cache vs not, each run get length of seasons/champs, if they changed, update cache.
+        
+        # Query cache for champs and seasons
         cached_seasons = self.cacher.get_all_seasons()
         cached_champions = self.cacher.get_all_champs()
         
