@@ -16,7 +16,7 @@ class Cacher:
         `db_path` - Path to the database file.\n
         `logger` - Logger instance.
     """
-    def __init__(self, db_path = f"./cache/opgg-{datetime.now().strftime("%Y-%m-%d")}.db"):
+    def __init__(self, db_path = f'./cache/opgg-{datetime.now().strftime("%Y-%m-%d")}.db'):
         self.db_path = db_path
         self.logger = logging.getLogger("OPGG.py")
     
