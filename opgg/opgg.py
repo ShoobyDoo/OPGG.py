@@ -243,6 +243,8 @@ class OPGG:
                 
                 tmp_rank_entries = []
                 for rank_entry in season["rank_entries"]:
+                    if rank_entry["rank_info"] is None:
+                        continue
                     tmp_rank_entries.append(RankEntry(
                         game_type = rank_entry["game_type"],
                         rank_info = Tier(
