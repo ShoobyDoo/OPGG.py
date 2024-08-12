@@ -223,6 +223,7 @@ class OPGG:
         
         if res.status_code == 200:
             self.logger.info(f"Request to OPGG API was successful, parsing data (Content Length: {len(res.text)})...")
+            self.logger.debug(f"SUMMONER DATA AT /SUMMARY ENDPOINT:\n{res.text}\n")
             content = json.loads(res.text)["data"]
         else:
             res.raise_for_status()

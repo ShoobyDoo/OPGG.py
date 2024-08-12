@@ -44,6 +44,8 @@ class Cacher:
             old_path = cache_db[0]
             cache_last_updated = datetime.strptime(old_path.split("-", 1)[-1].replace(".db", ""), "%Y-%m-%d")
             
+            self.logger.info(f"Cache found! Was last built: {cache_last_updated}")
+            
             if (datetime.now() - cache_last_updated).days >= 7:
                 self.logger.info("Cache is older than 1 week, rebuilding...")
                 
@@ -64,7 +66,7 @@ class Cacher:
                 os.rename(old_path, new_path)
                 self.db_path = new_path
                 
-                self.logger.info("🎉 Cache has been rebuilt! The immediate request following a cache rebuild might take slightly longer as new data is fetched and the cache is updated.")
+                self.logger.info("Cache has been rebuilt! The immediate request following a cache rebuild might take slightly longer as new data is fetched and the cache is updated.")
                 
         elif (len(cache_db) > 0):
             os.remove(cache_db[0])
