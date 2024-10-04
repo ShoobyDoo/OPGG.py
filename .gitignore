@@ -172,3 +172,6 @@ pageprops.txt
 tests/game.txt
 
 tests/summoner.txt
+
+# IDE STUFF
+.idea/
