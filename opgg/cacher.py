@@ -53,20 +53,12 @@ class Cacher:
                 new_path = self.db_path
                 
                 self.logger.info("Deleting old cache data...")
-                self.db_path = old_path
-                self.drop_tables([
-                    "tblChampions",
-                    "tblPassives",
-                    "tblSeasonInfo",
-                    "tblSkins",
-                    "tblSpells",
-                ])
+                os.remove(old_path)
                 
                 self.logger.info(f"Updating filename with current date {old_path} -> {new_path}")
-                os.rename(old_path, new_path)
                 self.db_path = new_path
                 
-                self.logger.info("Cache has been rebuilt! The immediate request following a cache rebuild might take slightly longer as new data is fetched and the cache is updated.")
+                self.logger.info("Cache has been removed! The immediate request following a cache rebuild might take slightly longer as new data is fetched and the cache is updated.")
                 
         elif (len(cache_db) > 0):
             os.remove(cache_db[0])
