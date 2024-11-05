@@ -1,3 +1,4 @@
+import json
 from enum import Enum
 
 
@@ -10,3 +11,7 @@ class Utils:
     License: BSD-3-Clause, See LICENSE for more details.
     """
 
+    @staticmethod
+    def read_local_json(file: str) -> dict[str, any]:
+        with open(file, "r") as f:
+            return json.loads(f.read())

@@ -2,7 +2,12 @@ import sqlite3
 import logging
 import os
 import glob
+
+
 from datetime import datetime
+from typing import Literal
+
+from opgg.v2.search_result import SearchResult
 
 
 class Cacher:
@@ -13,10 +18,9 @@ class Cacher:
         `db_path` - Path to the database file.\n
         `logger` - Logger instance.
     """
-    def __init__(self, db_path = f'./cache/opgg-{datetime.now().strftime("%Y-%m-%d")}.db'):
+    def __init__(self, db_path = f'./cache/opgg.py.db'):
         self.db_path = db_path
         self.logger = logging.getLogger("OPGG.py")
-
 
     def setup(self) -> None:
         """
@@ -29,93 +33,53 @@ class Cacher:
             os.mkdir('./cache')
             self.logger.info("Setting up cache database...")
 
-        self.conn = self.connect()
+        self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
 
         # Create summoner table if it doesn't exist
         self.logger.debug("Creating summoner table if it doesn't exist...")
-        self.cursor.execute("""CREATE TABLE IF NOT EXISTS tblSummoners (summoner_name PRIMARY KEY, summoner_id);""")
-
-        # Create champions table if it doesn't exist
-        self.logger.debug("Creating champions table if it doesn't exist...")
         self.cursor.execute(
             """
-            CREATE TABLE IF NOT EXISTS tblChampions (
-                champion_id PRIMARY KEY,
-                champion_key,
-                champion_name,
-                champion_image_url,
-                champion_evolve_list,
-                champion_partype
+            CREATE TABLE IF NOT EXISTS tblSummoners (
+                summoner_id PRIMARY KEY,
+                game_name,
+                tagline
             );
             """
         )
 
-        # Create seasons table if it doesn't exist
-        self.logger.debug("Creating seasons table if it doesn't exist...")
+        # Create index on game_name
         self.cursor.execute(
             """
-            CREATE TABLE IF NOT EXISTS tblSeasonInfo (
-                season_id PRIMARY KEY,
-                season_value,
-                season_display_name,
-                season_split,
-                season_is_preseason
-            );
+            CREATE INDEX IF NOT EXISTS idx_game_name ON tblSummoners (game_name);
             """
         )
 
-        # Create passives table if it doesn't exist
-        self.logger.debug("Creating passives table if it doesn't exist...")
+        # Create composite index on game_name and tagline
         self.cursor.execute(
             """
-            CREATE TABLE IF NOT EXISTS tblPassives (
-                champion_id PRIMARY KEY,
-                passive_name,
-                passive_description,
-                passive_image_url,
-                passive_video_url
-            );
-            """
-        )
-
-        # Create spells table if it doesn't exist
-        self.logger.debug("Creating spells table if it doesn't exist...")
-        self.cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS tblSpells (
-                champion_id,
-                spell_key,
-                spell_name PRIMARY KEY,
-                spell_description,
-                spell_max_rank,
-                spell_range_burn_list,
-                spell_cooldown_burn_list,
-                spell_cooldown_burn_float_list,
-                spell_cost_burn_list,
-                spell_tooltip,
-                spell_image_url,
-                spell_video_url
-            );
-            """
-        )
-
-        # Create skins table if it doesn't exist
-        self.logger.debug("Creating skins table if it doesn't exist...")
-        self.cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS tblSkins (
-                champion_id,
-                skin_id PRIMARY KEY,
-                skin_name,
-                skin_centered_image,
-                skin_video_url,
-                skin_prices,
-                skin_sales,
-                skin_release_date
-            )
+            CREATE INDEX IF NOT EXISTS idx_game_name_tagline ON tblSummoners (game_name, tagline);
             """
         )
 
         self.conn.commit()
         self.conn.close()
+
+
+    def is_search_result_cached(self, search_result: SearchResult) -> bool:
+        search_result.game_name
+
+
+        self.cursor.execute("")
+
+
+    def cache_search_results(self, search_results: list[SearchResult]) -> None:
+        # General flow of caching:
+        # Take a given array of search results, and
+        # 1. Check if summoner_id exists in cache table
+        # 2. If it does, verify the game_name and taglines match and update them if they dont (update existing WITH changes)
+        # 3. If it doesn't, simply cache it in place. Cache everything that comes through the program to speed up subsequent requests.
+        # 4. The summoner_id is the bread and butter of the other endpoints, so really thats what we want.
+
+        for result in search_results:
+            self.logger.debug(f"Processing SearchResult object: {result}")

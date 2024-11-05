@@ -1,0 +1,153 @@
+{
+    "data": {
+        "summoner": {
+            "id": 51054747,
+            "summoner_id": "M8ozvN6xC1ZfZ8fMimly5Mf0paW9o33SzMSZ38nSZA7Iia0",
+            "acct_id": "4WyghUeG7cyYv9C_4Kmen4yDtgtzuZVSsqcflZ7L-JJP0L0",
+            "puuid": "ot5fFmAkGmrnc7fDiKowG35rjEvF-uVGQZtnmpTCwhuRn1bDzoNrNAACPN3HXNcT08iQqSaZCn-qLQ",
+            "game_name": "Doomlad",
+            "tagline": "NA1",
+            "name": "Doomlad",
+            "internal_name": "doomlad",
+            "profile_image_url": "https://opgg-static.akamaized.net/meta/images/profile_icons/profileIcon1628.jpg",
+            "level": 30,
+            "updated_at": "2024-11-03T04:57:26+09:00",
+            "renewable_at": "2024-11-03T04:59:26+09:00",
+            "revision_at": "2017-05-26T17:35:51+09:00",
+            "previous_seasons": [
+                {
+                    "season_id": 7,
+                    "tier_info": {
+                        "tier": "GOLD",
+                        "division": 1,
+                        "lp": 41,
+                        "level": null,
+                        "tier_image_url": "https://opgg-static.akamaized.net/images/medals_new/gold.png",
+                        "border_image_url": "https://opgg-static.akamaized.net/images/border_new/gold.png"
+                    },
+                    "rank_entries": [
+                        {
+                            "game_type": "SOLORANKED",
+                            "rank_info": {
+                                "tier": "GOLD",
+                                "division": 1,
+                                "lp": 41
+                            },
+                            "created_at": "2017-11-08T21:58:22+09:00"
+                        },
+                        {
+                            "game_type": "FLEXRANKED",
+                            "rank_info": null,
+                            "created_at": null
+                        }
+                    ],
+                    "created_at": "2017-11-08T21:58:22+09:00"
+                },
+                {
+                    "season_id": 6,
+                    "tier_info": {
+                        "tier": "PLATINUM",
+                        "division": 4,
+                        "lp": 7,
+                        "level": null,
+                        "tier_image_url": "https://opgg-static.akamaized.net/images/medals_new/platinum.png",
+                        "border_image_url": "https://opgg-static.akamaized.net/images/border_new/platinum.png"
+                    },
+                    "rank_entries": [
+                        {
+                            "game_type": "SOLORANKED",
+                            "rank_info": {
+                                "tier": "PLATINUM",
+                                "division": 4,
+                                "lp": 7
+                            },
+                            "created_at": "2016-11-16T02:12:29+09:00"
+                        },
+                        {
+                            "game_type": "FLEXRANKED",
+                            "rank_info": null,
+                            "created_at": null
+                        }
+                    ],
+                    "created_at": "2016-11-16T02:12:29+09:00"
+                }
+            ],
+            "league_stats": [
+                {
+                    "queue_info": {
+                        "id": 4,
+                        "queue_translate": "개인/2인 랭크 게임",
+                        "game_type": "SOLORANKED"
+                    },
+                    "game_type": "SOLORANKED",
+                    "tier_info": {
+                        "tier": null,
+                        "division": null,
+                        "lp": null,
+                        "level": null,
+                        "tier_image_url": "https://opgg-static.akamaized.net/images/medals_new/default_unranked.svg",
+                        "border_image_url": null
+                    },
+                    "win": null,
+                    "lose": null,
+                    "is_hot_streak": false,
+                    "is_fresh_blood": false,
+                    "is_veteran": false,
+                    "is_inactive": false,
+                    "series": null,
+                    "updated_at": null
+                },
+                {
+                    "queue_info": {
+                        "id": 440,
+                        "queue_translate": "자유 랭크 게임",
+                        "game_type": "FLEXRANKED"
+                    },
+                    "game_type": "FLEXRANKED",
+                    "tier_info": {
+                        "tier": null,
+                        "division": null,
+                        "lp": null,
+                        "level": null,
+                        "tier_image_url": "https://opgg-static.akamaized.net/images/medals_new/default_unranked.svg",
+                        "border_image_url": null
+                    },
+                    "win": null,
+                    "lose": null,
+                    "is_hot_streak": false,
+                    "is_fresh_blood": false,
+                    "is_veteran": false,
+                    "is_inactive": false,
+                    "series": null,
+                    "updated_at": null
+                },
+                {
+                    "queue_info": {
+                        "id": 1700,
+                        "queue_translate": "아레나",
+                        "game_type": "ARENA"
+                    },
+                    "game_type": "ARENA",
+                    "tier_info": {
+                        "tier": null,
+                        "division": null,
+                        "lp": null,
+                        "level": null,
+                        "tier_image_url": "https://opgg-static.akamaized.net/images/medals_new/default_unranked.svg",
+                        "border_image_url": null
+                    },
+                    "win": null,
+                    "lose": null,
+                    "is_hot_streak": false,
+                    "is_fresh_blood": false,
+                    "is_veteran": false,
+                    "is_inactive": false,
+                    "series": null,
+                    "updated_at": null
+                }
+            ],
+            "most_champions": null
+        },
+        "recent_game_stats": []
+    }
+}
