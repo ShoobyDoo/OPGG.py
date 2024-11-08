@@ -30,6 +30,15 @@ class OPGG():
 
     def __init__(self) -> None:
         self.BYPASS_API_URL = "https://lol-web-api.op.gg/api/v1.0/internal/bypass"
+        self.SEARCH_API_URL = "{bypass}/summoners/v2/{region}/autocomplete?gameName={summoner_name}&tagline={tagline}".format(bypass=self.BYPASS_API_URL)
+
+        # DOUBLELIFT
+        # https://lol-web-api.op.gg/api/v1.0/internal/bypass/spectates/na/AVCaop7DsXMxYghWRgonI__cn6cKD9EssfdNn-A8NhKvW2U?hl=en_US
+
+        # THEBAUSFFS
+        # https://lol-web-api.op.gg/api/v1.0/internal/bypass/spectates/euw/q0Oe1wEGx4s84dr8xfeZ3E28MH5HerwL-Y0r_i8PBPhotPF6?hl=en_US
+
+        #  In game? If 404 then not in game, otherwise is in game?
 
         self._ua = UserAgent()
         self._headers = {
@@ -104,11 +113,7 @@ class OPGG():
 
 
     async def _search_region(self, session: aiohttp.ClientSession, query: str, region: Region) -> List[dict]:
-        """
-        Helper method to search a specific region
-        """
-        search_url = "{bypass}/summoners/v2/{region}/autocomplete?gameName={summoner_name}&tagline={tagline}"
-
+        """Helper method to search a specific region"""
         data = {
             "summoner_name": query,
             "bypass": self.BYPASS_API_URL,
@@ -121,6 +126,7 @@ class OPGG():
             data["summoner_name"] = summoner_name
             data["tagline"] = tagline
 
+        search_url = "{bypass}/summoners/v2/{region}/autocomplete?gameName={summoner_name}&tagline={tagline}"
         search_url = search_url.format_map(data)
         self.logger.info(f"Sending search request to OPGG API... (API_URL = {search_url}, HEADERS = {self.headers})")
 
@@ -159,7 +165,7 @@ class OPGG():
 
     def search(self, query: str, region=Region.ANY):
         """
-        ### Search for summoners across one or all regions.
+        Search for summoners across one or all regions.
 
         This method searches for League of Legends summoners by name and region. When region is set to
         `Region.ANY` (default), it performs concurrent searches across all available regions, which is
@@ -171,39 +177,35 @@ class OPGG():
             >>> opgg = OPGG()
             >>> # Search specific region (recommended)
             >>> results = opgg.search("faker", Region.KR)
-            >>> # Search all regions (resource-intensive, searches ALL regions)
+            >>> # Search all regions (resource-intensive)
             >>> all_results = opgg.search("faker")
         """
+
+        # Common data structure used for URL formatting
+        data = {
+            "summoner_name": query,
+            "bypass": self.BYPASS_API_URL,
+            "region": str(region),
+            "tagline": ""
+        }
+
+        # Handle tagline if present
+        if '#' in query:
+            summoner_name, tagline = query.split("#")
+            data["summoner_name"] = summoner_name
+            data["tagline"] = tagline
+
         if region == Region.ANY:
             # Run async search across all regions
             return asyncio.run(self._search_all_regions(query))
         else:
-            # Original single-region synchronous search
-            search_url = "{bypass}/summoners/v2/{region}/autocomplete?gameName={summoner_name}&tagline={tagline}"
-
-            data = {
-                "summoner_name": query,
-                "bypass": self.BYPASS_API_URL,
-                "region": str(region),
-                "tagline": ""
-            }
-
-            if '#' in query:
-                summoner_name, tagline = query.split("#")
-                data["summoner_name"] = summoner_name
-                data["tagline"] = tagline
-
-            search_url = search_url.format_map(data)
-            self.logger.info(f"Sending search request to OPGG API... (API_URL = {search_url}, HEADERS = {self.headers})")
-
-            res = requests.get(search_url, headers=self.headers)
-
-            if res.status_code == 200:
-                self.logger.info(f"Request to OPGG API was successful, parsing data (Content Length: {len(res.text)})...")
-                self.logger.debug(f"Search payload:\n{res.text}")
-                content = dict(res.json()).get("data", {})
-            else:
-                res.raise_for_status()
-
-            return content
+            # Run single region search
+            async def _single_region_search():
+                async with aiohttp.ClientSession() as session:
+                    search_url = search_url.format_map(data)
+                    self.logger.info(f"Sending search request to OPGG API... (API_URL = {search_url}, HEADERS = {self.headers})")
+                    
+                    return await self._search_region(session, query, region)
+            
+            return asyncio.run(_single_region_search())
 
