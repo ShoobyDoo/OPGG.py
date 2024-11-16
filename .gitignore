@@ -160,7 +160,7 @@ cython_debug/
 #.idea/
 
 .vscode
-main.py
+main*.py
 opgg*.db
 setup.cfg
 setup.py
@@ -172,3 +172,5 @@ pageprops.txt
 tests/game.txt
 
 tests/summoner.txt
+
+opgg/data/*
