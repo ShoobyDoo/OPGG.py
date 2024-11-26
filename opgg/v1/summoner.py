@@ -7,12 +7,12 @@
 
 from datetime import datetime
 from typing import Any
-from opgg.game import Stats, Team
-from opgg.params import By, Queue
-from opgg.season import Season
-from opgg.league_stats import LeagueStats, QueueInfo, Tier
-from opgg.champion import Champion, ChampionStats
-from opgg.utils import Utils
+from opgg.v1.game import Stats, Team
+from opgg.v1.params import By, Queue
+from opgg.v1.season import Season
+from opgg.v1.league_stats import LeagueStats, QueueInfo, Tier
+from opgg.v1.champion import Champion, ChampionStats
+from opgg.v1.utils import Utils
 
 # left/right just factor
 LJF = 18

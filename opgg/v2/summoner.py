@@ -1,4 +1,4 @@
-from typing import Any, Optional, List
+from typing import Any, Optional
 from box import Box
 
 from opgg.v2.league import League
@@ -28,13 +28,13 @@ class Summoner(Box):
     revision_at: str  # TODO: datetime object conversion?
 
     # Search result specific attributes
-    solo_tier_info: Optional[Any] = None  # unsure of type...
-    team_info: Optional[Any] = None
+    solo_tier_info: Optional[Any]  # unsure of type...
+    team_info: Optional[Any]
 
     # Full profile specific attributes
-    previous_seasons: Optional[List[Season]] = None
-    league_stats: Optional[List[League]] = None
-    most_champions: Optional[MostChampions] = None
+    previous_seasons: Optional[list[Season]]
+    league_stats: Optional[list[League]]
+    most_champions: Optional[MostChampions]
 
     @property
     def is_full_profile(self) -> bool:
@@ -44,8 +44,10 @@ class Summoner(Box):
         Returns:
             `bool`: True if this is a full profile, False if it's just a search result
         """
-        return all([
-            self.previous_seasons is not None,
-            self.league_stats is not None,
-            self.most_champions is not None
-        ])
+        return all(
+            [
+                self.previous_seasons is not None,
+                self.league_stats is not None,
+                self.most_champions is not None,
+            ]
+        )

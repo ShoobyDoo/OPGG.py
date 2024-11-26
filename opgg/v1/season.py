@@ -5,7 +5,7 @@
 # License : BSD-3-Clause
 
 from datetime import datetime
-from opgg.league_stats import Tier
+from opgg.v1.league_stats import Tier
 
 
 class RankEntry:

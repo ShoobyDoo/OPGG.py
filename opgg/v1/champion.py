@@ -6,7 +6,7 @@
 
 
 from datetime import datetime
-from opgg.params import By
+from opgg.v1.params import By
 
 
 class Passive:

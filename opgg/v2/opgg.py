@@ -3,8 +3,11 @@ import logging
 import asyncio
 
 from datetime import datetime
+import pprint
+from typing import Literal
 from fake_useragent import UserAgent
 
+from opgg.v2.summoner import Summoner
 from opgg.v2.utils import Utils
 from opgg.v2.cacher import Cacher
 from opgg.v2.params import *
@@ -113,10 +116,12 @@ class OPGG:
     def headers(self, value: dict) -> None:
         self._headers = value
 
+    # /AUTOCOMPLETE
     def search(
         self,
         query: str,
         region: Region = Region.ANY,
+        returns: Literal["search_result", "profile"] = "search_result",
     ) -> list[SearchResult]:
         """
         Search for League of Legends summoners by name across one or all regions.
@@ -148,55 +153,92 @@ class OPGG:
 
         self.logger.info(f"Starting summoner search for '{query}' in region '{region}'")
 
-        # Common data structure used for URL formatting
-        data = {
-            "summoner_name": query,
-            "region": str(region),
-            "tagline": "",
-        }
-
-        # Handle tagline if present
-        if "#" in query:
-            summoner_name, tagline = query.split("#")
-            data["summoner_name"] = summoner_name
-            data["tagline"] = tagline
-
         if region == Region.ANY:
             self.logger.info("Searching all regions...")
             results = asyncio.run(
                 Utils._search_all_regions(query, self.SEARCH_API_URL, self.headers)
             )
-
         else:
             self.logger.info(f"Searching specific region: {region}")
-
-            # Run single region search
             results = asyncio.run(
                 Utils._single_region_search(
                     query, region, self.SEARCH_API_URL, self.headers
                 )
             )
 
-        self.logger.debug(f"Final results before conversion: {results}")
-        search_results = [SearchResult(result) for result in results]
-        self.logger.info(f"Returning {len(search_results)} SearchResult objects")
+        # Inner object instantiation BEFORE SearchResult wrapper
+        search_results = [
+            SearchResult(
+                {"summoner": Summoner(result["summoner"]), "region": result["region"]}
+            )
+            for result in results
+        ]
+
+        if returns == "profile":
+            search_results = self.get_summoner_multiple(search_results)
 
         return search_results
 
-    def fetch_profile(self, summoner_id: str, region: Region):
-        self.logger.info(f"Fetching profile for summoner ID: {summoner_id}")
+    # /SUMMARY
+    def get_summoner(
+        self,
+        search_result: SearchResult = None,
+        summoner_id: str = None,
+        region: Region = None,
+    ):
+        if search_result is None and summoner_id is not None and region is not None:
+            search_result = SearchResult(
+                {"summoner": Summoner({"summoner_id": summoner_id}), "region": region}
+            )
+
+        self.logger.info(f"Fetching profile for summoner result: {search_result}")
 
         profile_data = asyncio.run(
             Utils._fetch_profile(
-                summoner_id,
+                search_result.summoner.summoner_id,
                 self.SUMMARY_API_URL.format_map(
-                    {"region": region, "summoner_id": summoner_id}
+                    {
+                        "region": search_result.region,
+                        "summoner_id": search_result.summoner.summoner_id,
+                    }
                 ),
                 self.headers,
             )
         )
 
-        print(profile_data)
+        return Summoner(profile_data["summoner"])
+
+    def get_summoner_multiple(
+        self,
+        search_results: list[SearchResult] = None,
+        summoner_ids: list[str] = None,
+        regions: list[Region] = None,
+    ):
+        if search_results is None and summoner_ids is not None and regions is not None:
+            search_results = [
+                SearchResult(
+                    {
+                        "summoner": Summoner({"summoner_id": summoner_id}),
+                        "region": region,
+                    }
+                )
+                for summoner_id, region in zip(summoner_ids, regions)
+            ]
+
+        self.logger.info(
+            f"Fetching profiles for {len(search_results)} summoner results"
+        )
+        self.logger.debug(f"Raw summoner results: \n{pprint.pformat(search_results)}")
+
+        profile_data = asyncio.run(
+            Utils._fetch_profile_multiple(
+                self.SUMMARY_API_URL,
+                self.headers,
+                search_results,
+            )
+        )
+
+        return [Summoner(profile["summoner"]) for profile in profile_data]
 
     def fetch_games(self, summoner_id: str, count: int = 10):
         pass

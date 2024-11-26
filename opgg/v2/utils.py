@@ -2,10 +2,11 @@ import json
 import logging
 import asyncio
 import aiohttp
-from typing import List, Tuple
-from enum import Enum
+from typing import Tuple, Any
 
 from opgg.v2.params import Region
+from opgg.v2.search_result import SearchResult
+from opgg.v2.summoner import Summoner
 
 logger = logging.getLogger("OPGG.py")
 
@@ -20,7 +21,7 @@ class Utils:
     """
 
     @staticmethod
-    def read_local_json(file: str) -> dict[str, any]:
+    def read_local_json(file: str) -> dict[str, Any]:
         """
         Read and parse a local JSON file.
 
@@ -28,11 +29,20 @@ class Utils:
             `file` (`str`): Path to the JSON file
 
         Returns:
-            `dict[str, any]`: Parsed JSON data as a dictionary
+            `dict[str, Any]`: Parsed JSON data as a dictionary
         """
         with open(file, "r") as f:
             return json.loads(f.read())
 
+    @staticmethod
+    def safe_get(obj, *attrs):
+        for attr in attrs:
+            try:
+                obj = getattr(obj, attr)
+            except AttributeError:
+                return None
+        return obj
+    
     @staticmethod
     async def _search_region(
         session: aiohttp.ClientSession,
@@ -40,7 +50,7 @@ class Utils:
         region: Region,
         search_api_url: str,
         headers: dict,
-    ) -> Tuple[Region, List[dict]]:
+    ) -> Tuple[Region, list[dict]]:
         """
         `[Internal Helper Method]` Search for a summoner in a specific region using the OP.GG API.
 
@@ -48,12 +58,11 @@ class Utils:
             `session` (`aiohttp.ClientSession`): Active session for making requests
             `query` (`str`): Summoner name to search for
             `region` (`Region`): Region to search in
-            `bypass_api_url` (`str`): Base API URL for bypass requests
             `search_api_url` (`str`): Full search API URL template
             `headers` (`dict`): Headers to use for the request
 
         Returns:
-            `Tuple[Region, List[dict]]`: Region and list of found summoners
+            `Tuple[Region, list[dict]]`: Region and list of found summoners
         """
         data = {
             "summoner_name": query,
@@ -92,18 +101,17 @@ class Utils:
     @staticmethod
     async def _search_all_regions(
         query: str, search_api_url: str, headers: dict
-    ) -> List[dict]:
+    ) -> list[dict]:
         """
         `[Internal Helper Method]` Concurrently searches for a summoner across all available regions.
 
         Args:
             `query` (`str`): Summoner name to search for
-            `bypass_api_url` (`str`): Base API URL for bypass requests
             `search_api_url` (`str`): Full search API URL template
             `headers` (`dict`): Headers to use for the request
 
         Returns:
-            `List[dict]`: List of unique summoner results across all regions
+            `list[dict]`: list of unique summoner results across all regions
         """
         logger.info(f"Starting concurrent search across all regions for query: {query}")
 
@@ -129,21 +137,21 @@ class Utils:
                     unique_id = result.get("summoner_id")
                     if unique_id not in seen:
                         seen.add(unique_id)
-                        all_results.append(
-                            {"region": region, "summoner_result": result}
-                        )
+                        all_results.append({"region": str(region), "summoner": result})
 
             logger.info(f"Found {len(all_results)} unique results across all regions")
             return all_results
 
     @staticmethod
-    async def _single_region_search(query: str, region: Region, search_api_url: str, headers: dict):
+    async def _single_region_search(
+        query: str, region: Region, search_api_url: str, headers: dict
+    ):
         async with aiohttp.ClientSession() as session:
             region, data = await Utils._search_region(
                 session, query, region, search_api_url, headers
             )
             # Format results the same way as _search_all_regions
-            return [{"region": region, "summoner_result": result} for result in data]
+            return [{"region": str(region), "summoner": result} for result in data]
 
     @staticmethod
     async def _fetch_profile(summoner_id: str, summary_api_url: str, headers: dict):
@@ -164,3 +172,38 @@ class Utils:
                     return content["data"]
 
                 res.raise_for_status()
+
+    @staticmethod
+    async def _fetch_profile_multiple(
+        base_summary_api_url: str,
+        headers: dict,
+        search_results: list[SearchResult] = None,
+        summoner_ids: list[str] = None,
+        regions: list[Region] = None,
+    ):
+        if search_results is None and summoner_ids is not None and regions is not None:
+            search_results = [
+                SearchResult(
+                    {
+                        "summoner": Summoner({"summoner_id": summoner_id}),
+                        "region": region,
+                    }
+                )
+                for summoner_id, region in zip(summoner_ids, regions)
+            ]
+        
+        tasks = [
+            Utils._fetch_profile(
+                search_result.summoner.summoner_id,
+                base_summary_api_url.format_map(
+                    {
+                        "summoner_id": search_result.summoner.summoner_id,
+                        "region": search_result.region,
+                    }
+                ),
+                headers,
+            )
+            for search_result in search_results
+        ]
+
+        return await asyncio.gather(*tasks)

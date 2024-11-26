@@ -33,13 +33,3 @@ class MostChampions(Box):
     win: int
     lose: int
     champion_stats: list[ChampionStats]
-    
-    @property
-    def winrate(self) -> float:
-        """
-        `[Computed Property]` Calculate the winrate as a percentage.
-
-        Returns:
-            `float`: Winrate percentage (0-100), or 0 if no games played
-        """
-        return round((self.win / self.play) * 100, 2) if self.play > 0 else 0.0
