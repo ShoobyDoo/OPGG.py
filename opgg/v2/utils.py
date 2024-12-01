@@ -247,3 +247,29 @@ class Utils:
         tasks = [Utils._fetch_recent_games(params) for params in params_list]
 
         return await asyncio.gather(*tasks)
+
+    @staticmethod
+    async def _update(search_result: SearchResult, params: GenericReqParams):
+        update_api_url = params["base_api_url"].format_map(
+            {
+                "region": search_result.region,
+                "summoner_id": search_result.summoner.summoner_id,
+            }
+        )
+
+        logger.info(
+            f"Updating profile for summoner ID: {search_result.summoner.summoner_id}"
+        )
+        logger.debug(f"API URL: {update_api_url}")
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                update_api_url,
+                headers=params["headers"],
+            ) as res:
+                logger.debug(f"Response status: {res.status}")
+
+                if res.status in [200, 201, 202]:
+                    return await res.json()
+                else:
+                    res.raise_for_status()

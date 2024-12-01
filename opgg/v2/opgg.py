@@ -9,6 +9,7 @@ from fake_useragent import UserAgent
 
 from opgg.v2.game import Game
 from opgg.v2.summoner import Summoner
+from opgg.v2.types.response import UpdateResponse
 from opgg.v2.utils import Utils
 from opgg.v2.cacher import Cacher
 from opgg.v2.params import LangCode, Region
@@ -30,16 +31,13 @@ class OPGG:
 
     def __init__(self) -> None:
         self.BYPASS_API_URL = "https://lol-web-api.op.gg/api/v1.0/internal/bypass"
-        self.SEARCH_API_URL = "{bypass}/summoners/v2/{region}/autocomplete?gameName={summoner_name}&tagline={tagline}".replace(
-            "{bypass}", self.BYPASS_API_URL
-        )
+        self.SEARCH_API_URL = f"{self.BYPASS_API_URL}/summoners/v2/{{region}}/autocomplete?gameName={{summoner_name}}&tagline={{tagline}}"
         self.SUMMARY_API_URL = (
-            "{bypass}/summoners/{region}/{summoner_id}/summary".replace(
-                "{bypass}", self.BYPASS_API_URL
-            )
+            f"{self.BYPASS_API_URL}/summoners/{{region}}/{{summoner_id}}/summary"
         )
-        self.GAMES_API_URL = "{bypass}/games/{region}/summoners/{summoner_id}?&limit={limit}&game_type={game_type}&hl={hl}".replace(
-            "{bypass}", self.BYPASS_API_URL
+        self.GAMES_API_URL = f"{self.BYPASS_API_URL}/games/{{region}}/summoners/{{summoner_id}}?&limit={{limit}}&game_type={{game_type}}&hl={{hl}}"
+        self.RENEW_API_URL = (
+            f"{self.BYPASS_API_URL}/summoners/{{region}}/{{summoner_id}}/renewal"
         )
 
         # most-champions/rank?game_type=solo&queue=ranked&season_id=29
@@ -106,17 +104,6 @@ class OPGG:
         return self._logger
 
     @property
-    def region(self) -> Region:
-        """
-        A `Region` object representing the region to search for.
-        """
-        return self._region
-
-    @region.setter
-    def region(self, value: Region) -> None:
-        self._region = value
-
-    @property
     def headers(self) -> dict:
         """
         A `dict` representing the headers to send with the request.
@@ -138,8 +125,8 @@ class OPGG:
         Search for League of Legends summoners by name across one or all regions.
 
         #### Args:
-            `query` (`str`): Summoner name to search for. Can include tagline (e.g., "name#tag")
-            `region` (`Region`, optional): Specific region to search in. Defaults to `Region.ANY` which searches all regions concurrently.
+        - `query` (`str`): Summoner name to search for. Can include tagline (e.g., "name#tag")
+        - `region` (`Region`, optional): Specific region to search in. Defaults to `Region.ANY` which searches all regions concurrently.
 
         #### Returns:
             `list[SearchResult]`: List of `SearchResult` objects containing the found summoners.
@@ -337,3 +324,36 @@ class OPGG:
 
         else:
             raise ValueError("Invalid type for search_result")
+
+    def update(self, search_result: SearchResult) -> UpdateResponse:
+        """
+        Send an update request to fetch the latest details for a given summoner (id).
+
+        #### Note: `This can take several seconds to complete. Assuming there is an update to the profile, this function will not return until the update is complete.`
+
+        ### Parameters
+            search_result : `SearchResult`
+                Pass a SearchResult object to be updated
+
+        ### Returns
+            `UpdateResponse` : Returns an object with the update response payload.
+
+            Example response:
+            ```
+            {
+                'status': 202,
+                'data': {
+                    'message': 'Already renewed.',
+                    'last_updated_at': '2024-07-13T10:06:11+09:00',
+                    'renewable_at': '2024-07-13T10:08:12+09:00'
+                }
+            }
+            ```
+        """
+
+        update_params: GenericReqParams = {
+            "base_api_url": self.RENEW_API_URL,
+            "headers": self.headers,
+        }
+
+        return asyncio.run(Utils._update(search_result, update_params))
