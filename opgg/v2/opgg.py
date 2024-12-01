@@ -7,11 +7,13 @@ import pprint
 from typing import Literal
 from fake_useragent import UserAgent
 
+from opgg.v2.game import Game
 from opgg.v2.summoner import Summoner
 from opgg.v2.utils import Utils
 from opgg.v2.cacher import Cacher
-from opgg.v2.params import *
+from opgg.v2.params import LangCode, Region
 from opgg.v2.search_result import SearchResult
+from opgg.v2.types.params import GenericReqParams
 
 
 class OPGG:
@@ -36,6 +38,15 @@ class OPGG:
                 "{bypass}", self.BYPASS_API_URL
             )
         )
+        self.GAMES_API_URL = "{bypass}/games/{region}/summoners/{summoner_id}?&limit={limit}&game_type={game_type}&hl={hl}".replace(
+            "{bypass}", self.BYPASS_API_URL
+        )
+
+        # most-champions/rank?game_type=solo&queue=ranked&season_id=29
+        # https://lol-web-api.op.gg/api/v1.0/internal/bypass/summoners/euw/VmnsmnYFpeTXLmbuhBkecPdz_UVkOt-Job8XDbIBqMZ0doU/most-champions/rank?game_type=RANKED&season_id=29
+
+        # CHAMPS
+        # https://lol-web-api.op.gg/api/v1.0/internal/bypass/champions/na/ranked
 
         # DOUBLELIFT
         # https://lol-web-api.op.gg/api/v1.0/internal/bypass/spectates/na/AVCaop7DsXMxYghWRgonI__cn6cKD9EssfdNn-A8NhKvW2U?hl=en_US
@@ -153,16 +164,21 @@ class OPGG:
 
         self.logger.info(f"Starting summoner search for '{query}' in region '{region}'")
 
+        search_params: GenericReqParams = {
+            "base_api_url": self.SEARCH_API_URL,
+            "headers": self.headers,
+        }
+
         if region == Region.ANY:
             self.logger.info("Searching all regions...")
-            results = asyncio.run(
-                Utils._search_all_regions(query, self.SEARCH_API_URL, self.headers)
-            )
+            results = asyncio.run(Utils._search_all_regions(query, search_params))
         else:
             self.logger.info(f"Searching specific region: {region}")
             results = asyncio.run(
                 Utils._single_region_search(
-                    query, region, self.SEARCH_API_URL, self.headers
+                    query,
+                    region,
+                    search_params,
                 )
             )
 
@@ -179,66 +195,145 @@ class OPGG:
 
         return search_results
 
-    # /SUMMARY
     def get_summoner(
         self,
-        search_result: SearchResult = None,
-        summoner_id: str = None,
-        region: Region = None,
-    ):
+        search_result: SearchResult | list[SearchResult] = None,
+        summoner_id: str | list[str] = None,
+        region: Region | list[Region] = None,
+    ) -> Summoner | list[Summoner]:
         if search_result is None and summoner_id is not None and region is not None:
-            search_result = SearchResult(
-                {"summoner": Summoner({"summoner_id": summoner_id}), "region": region}
-            )
-
-        self.logger.info(f"Fetching profile for summoner result: {search_result}")
-
-        profile_data = asyncio.run(
-            Utils._fetch_profile(
-                search_result.summoner.summoner_id,
-                self.SUMMARY_API_URL.format_map(
-                    {
-                        "region": search_result.region,
-                        "summoner_id": search_result.summoner.summoner_id,
-                    }
-                ),
-                self.headers,
-            )
-        )
-
-        return Summoner(profile_data["summoner"])
-
-    def get_summoner_multiple(
-        self,
-        search_results: list[SearchResult] = None,
-        summoner_ids: list[str] = None,
-        regions: list[Region] = None,
-    ):
-        if search_results is None and summoner_ids is not None and regions is not None:
-            search_results = [
-                SearchResult(
+            if isinstance(summoner_id, str) and isinstance(region, Region):
+                search_result = SearchResult(
                     {
                         "summoner": Summoner({"summoner_id": summoner_id}),
                         "region": region,
                     }
                 )
-                for summoner_id, region in zip(summoner_ids, regions)
-            ]
+            elif isinstance(summoner_id, list) and isinstance(region, list):
+                search_result = [
+                    SearchResult(
+                        {"summoner": Summoner({"summoner_id": sid}), "region": reg}
+                    )
+                    for sid, reg in zip(summoner_id, region)
+                ]
+            else:
+                raise ValueError("Mismatched types for summoner_id and region")
 
-        self.logger.info(
-            f"Fetching profiles for {len(search_results)} summoner results"
-        )
-        self.logger.debug(f"Raw summoner results: \n{pprint.pformat(search_results)}")
-
-        profile_data = asyncio.run(
-            Utils._fetch_profile_multiple(
-                self.SUMMARY_API_URL,
-                self.headers,
-                search_results,
+        if isinstance(search_result, SearchResult):
+            self.logger.info(f"Fetching profile for summoner result: {search_result}")
+            profile_data = asyncio.run(
+                Utils._fetch_profile(
+                    search_result.summoner.summoner_id,
+                    params={
+                        "base_api_url": self.SUMMARY_API_URL.format_map(
+                            {
+                                "region": search_result.region,
+                                "summoner_id": search_result.summoner.summoner_id,
+                            }
+                        ),
+                        "headers": self.headers,
+                    },
+                )
             )
-        )
+            return Summoner(profile_data["summoner"])
 
-        return [Summoner(profile["summoner"]) for profile in profile_data]
+        elif isinstance(search_result, list):
+            self.logger.info(
+                f"Fetching profiles for {len(search_result)} summoner results"
+            )
+            self.logger.debug(
+                f"Raw summoner results: \n{pprint.pformat(search_result)}"
+            )
+            profile_data = asyncio.run(
+                Utils._fetch_profile_multiple(
+                    {
+                        "base_api_url": self.SUMMARY_API_URL,
+                        "headers": self.headers,
+                    },
+                    search_result,
+                )
+            )
+            return [Summoner(profile["summoner"]) for profile in profile_data]
 
-    def fetch_games(self, summoner_id: str, count: int = 10):
-        pass
+        else:
+            raise ValueError("Invalid type for search_result")
+
+    def get_recent_games(
+        self,
+        search_result: SearchResult | list[SearchResult] = None,
+        summoner_id: str | list[str] = None,
+        region: Region | list[Region] = None,
+        results: int = 15,
+        game_type: Literal["total", "ranked", "normal"] = "total",
+        lang_code=LangCode.ENGLISH,
+    ) -> list[Game] | list[list[Game]]:
+
+        if search_result is None and summoner_id is not None and region is not None:
+            if isinstance(summoner_id, str) and isinstance(region, Region):
+                search_result = SearchResult(
+                    {
+                        "summoner": Summoner({"summoner_id": summoner_id}),
+                        "region": region,
+                    }
+                )
+            elif isinstance(summoner_id, list) and isinstance(region, list):
+                search_result = [
+                    SearchResult(
+                        {"summoner": Summoner({"summoner_id": sid}), "region": reg}
+                    )
+                    for sid, reg in zip(summoner_id, region)
+                ]
+            else:
+                raise ValueError("Mismatched types for summoner_id and region")
+
+        if isinstance(search_result, SearchResult):
+            self.logger.info(
+                f'Fetching {results} recent games of type "{game_type}" for summoner result: {search_result}'
+            )
+            game_params: GenericReqParams = {
+                "base_api_url": self.GAMES_API_URL.format_map(
+                    {
+                        "region": search_result.region,
+                        "summoner_id": search_result.summoner.summoner_id,
+                        "limit": results,
+                        "game_type": game_type,
+                        "hl": lang_code,
+                    }
+                ),
+                "headers": self.headers,
+            }
+            game_data = asyncio.run(
+                Utils._fetch_recent_games(
+                    game_params,
+                )
+            )
+            return [Game(game) for game in game_data]
+
+        elif isinstance(search_result, list):
+            self.logger.info(
+                f'Fetching {results} recent games of type "{game_type}" for {len(search_result)} summoner results'
+            )
+            game_params_list = [
+                {
+                    "base_api_url": self.GAMES_API_URL.format_map(
+                        {
+                            "region": sr.region,
+                            "summoner_id": sr.summoner.summoner_id,
+                            "limit": results,
+                            "game_type": game_type,
+                            "hl": lang_code,
+                        }
+                    ),
+                    "headers": self.headers,
+                }
+                for sr in search_result
+            ]
+            game_data_list = asyncio.run(
+                Utils._fetch_recent_games_multiple(
+                    game_params_list,
+                )
+            )
+            return [[Game(game) for game in game_data] for game_data in game_data_list]
+
+        else:
+            raise ValueError("Invalid type for search_result")
