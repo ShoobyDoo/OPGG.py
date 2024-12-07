@@ -51,7 +51,6 @@ class By(Enum):
     """
 
     ID = "id"
-    KEY = "key"
     NAME = "name"
     COST = "cost"
     BLUE_ESSENCE = "BE"

@@ -1,10 +1,12 @@
 import json
 import logging
 import asyncio
+from pprint import pformat
 import aiohttp
-from typing import Literal, Optional, Tuple, Any
+from typing import Optional, Tuple, Any
 
-from opgg.v2.params import Region
+from opgg.v2.champion import Champion
+from opgg.v2.params import LangCode, Region
 from opgg.v2.search_result import SearchResult
 from opgg.v2.summoner import Summoner
 from opgg.v2.types.params import GenericReqParams
@@ -120,8 +122,7 @@ class Utils:
                     session,
                     query,
                     region,
-                    params["base_api_url"],
-                    params["headers"],
+                    params,
                 )
                 for region in Region
                 if region != Region.ANY
@@ -273,3 +274,53 @@ class Utils:
                     return await res.json()
                 else:
                     res.raise_for_status()
+
+    @staticmethod
+    async def _fetch_all_champions(params: GenericReqParams):
+        async with aiohttp.ClientSession() as session:
+
+            logger.debug(f"API URL: {params['base_api_url']}")
+
+            async with session.get(
+                params["base_api_url"], headers=params["headers"]
+            ) as res:
+                logger.debug(f"Response status: {res.status}")
+
+                if res.status == 200:
+                    content = await res.json()
+                    logger.info(
+                        f"Request to OPGG API was successful (Content Length: {len(str(content))})"
+                    )
+                    logger.debug(
+                        f"CHAMPION DATA AT /CHAMPIONS ENDPOINT:\n{pformat(content, sort_dicts=False)}\n"
+                    )
+                    return content["data"]
+
+                res.raise_for_status()
+
+    @staticmethod
+    async def _fetch_champion_by_id(
+        id: int, params: GenericReqParams, lang_code: LangCode
+    ):
+        async with aiohttp.ClientSession() as session:
+            fetch_champ_by_id_url = params["base_api_url"].format_map(
+                {"champion_id": id, "hl": lang_code}
+            )
+
+            logger.debug(f"API URL: {fetch_champ_by_id_url}")
+
+            async with session.get(
+                fetch_champ_by_id_url,
+                headers=params["headers"],
+            ) as res:
+                logger.debug(f"Response status: {res.status}")
+
+                if res.status == 200:
+                    content = await res.json()
+                    logger.info(
+                        f"Request to OPGG API was successful (Content Length: {len(str(content))})"
+                    )
+                    logger.debug(f"CHAMPION DATA AT /CHAMPIONS ENDPOINT:\n{content}\n")
+                    return content["data"]
+
+                res.raise_for_status()

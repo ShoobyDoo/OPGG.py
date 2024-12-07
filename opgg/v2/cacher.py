@@ -7,6 +7,7 @@ import glob
 from datetime import datetime
 from typing import Literal
 
+from opgg.v2.champion import Champion
 from opgg.v2.search_result import SearchResult
 
 
@@ -63,8 +64,96 @@ class Cacher:
             """
         )
 
+        self.logger.debug("Creating champions table if it doesn't exist...")
+        self.cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS tblChampions (
+                champion_id PRIMARY KEY,
+                name
+            );
+            """
+        )
+
         self.conn.commit()
         self.conn.close()
+
+    def get_champ_id_by_name(self, champ_name: str) -> int | None:
+        """
+        Get the ID of a champion by name.
+
+        Args:
+            `champ_name` (`str`): The name of the champion
+
+        Returns:
+            `int | None`: The ID of the champion, or None if not found
+        """
+        self.conn = sqlite3.connect(self.db_path)
+        self.cursor = self.conn.cursor()
+
+        self.cursor.execute(
+            "SELECT * FROM tblChampions WHERE name LIKE ?",
+            (f"%{champ_name}%",),
+        )
+        result = self.cursor.fetchone()
+
+        self.conn.close()
+
+        # if the result is a tuple, return the first element (-> champ_id, name), otherwise return None
+        return result[0] if isinstance(result, tuple) else None
+
+    def cache_champs(self, champs: list[Champion]) -> None:
+        """
+        Cache champions in the database.
+
+        Args:
+            `champs` (`list[Champion]`): List of champions to cache
+        """
+        self.conn = sqlite3.connect(self.db_path)
+        self.cursor = self.conn.cursor()
+
+        # use executemany to bulk insert
+        self.logger.debug(
+            f"Attempting to insert {len(champs)} champions into cache database..."
+        )
+        self.cursor.executemany(
+            """
+            INSERT OR IGNORE INTO tblChampions (champion_id, name)
+            VALUES (?, ?);
+            """,
+            [(champ.id, champ.name) for champ in champs],
+        )
+
+        self.conn.commit()
+        self.conn.close()
+
+        if len(champs) == self.get_cached_champs_count():
+            self.logger.debug(
+                f"Successfully inserted {len(champs)} champions into cache database."
+            )
+        else:
+            self.logger.warning(
+                f"Failed to insert {len(champs) - self.get_cached_champs_count()} champions into cache database."
+            )
+            self.logger.debug("CHAMPS DUMP: ", champs)
+
+    def get_cached_champs_count(self) -> int:
+        """
+        Get the count of cached champions.
+
+        Returns:
+            `int`: The count of cached champions.
+        """
+        self.conn = sqlite3.connect(self.db_path)
+        self.cursor = self.conn.cursor()
+
+        self.cursor.execute("SELECT COUNT(*) FROM tblChampions")
+        count = self.cursor.fetchone()[0]
+
+        self.conn.close()
+
+        self.logger.debug(f"Found {count} cached champions.")
+
+        return count
 
     def cache_search_results(self, search_results: list[SearchResult]) -> None:
         """

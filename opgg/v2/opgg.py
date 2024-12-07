@@ -7,12 +7,13 @@ import pprint
 from typing import Literal
 from fake_useragent import UserAgent
 
+from opgg.v2.champion import Champion
 from opgg.v2.game import Game
 from opgg.v2.summoner import Summoner
 from opgg.v2.types.response import UpdateResponse
 from opgg.v2.utils import Utils
 from opgg.v2.cacher import Cacher
-from opgg.v2.params import LangCode, Region
+from opgg.v2.params import By, LangCode, Region
 from opgg.v2.search_result import SearchResult
 from opgg.v2.types.params import GenericReqParams
 
@@ -38,6 +39,10 @@ class OPGG:
         self.GAMES_API_URL = f"{self.BYPASS_API_URL}/games/{{region}}/summoners/{{summoner_id}}?&limit={{limit}}&game_type={{game_type}}&hl={{hl}}"
         self.RENEW_API_URL = (
             f"{self.BYPASS_API_URL}/summoners/{{region}}/{{summoner_id}}/renewal"
+        )
+        self.CHAMPIONS_API_URL = f"{self.BYPASS_API_URL}/meta/champions?hl={{hl}}"
+        self.CHAMPION_BY_ID_API_URL = (
+            f"{self.BYPASS_API_URL}/meta/champions/{{champion_id}}?hl={{hl}}"
         )
 
         # most-champions/rank?game_type=solo&queue=ranked&season_id=29
@@ -178,7 +183,7 @@ class OPGG:
         ]
 
         if returns == "profile":
-            search_results = self.get_summoner_multiple(search_results)
+            search_results = self.get_summoner(search_results)
 
         return search_results
 
@@ -357,3 +362,77 @@ class OPGG:
         }
 
         return asyncio.run(Utils._update(search_result, update_params))
+
+    def get_all_champions(
+        self, lang_code: LangCode = LangCode.ENGLISH
+    ) -> list[Champion]:
+        get_champs_params: GenericReqParams = {
+            "base_api_url": self.CHAMPIONS_API_URL.format_map({"hl": lang_code}),
+            "headers": self.headers,
+        }
+
+        champions_list = asyncio.run(Utils._fetch_all_champions(get_champs_params))
+        champions_list_objs = [Champion(champ) for champ in champions_list]
+
+        self.logger.info(f"Got {len(champions_list_objs)} champions")
+
+        if (len(champions_list_objs)) != self._cacher.get_cached_champs_count():
+            self.logger.info(
+                "Champ response has more records than are saved. Rebuilding cache..."
+            )
+            self._cacher.cache_champs(champions_list_objs)
+
+        return champions_list_objs
+
+    def get_champion_by(
+        self, by: By, value: str | int, lang_code: LangCode = LangCode.ENGLISH
+    ) -> Champion | list[Champion]:
+        if by == By.ID:
+            get_champ_by_id_params: GenericReqParams = {
+                "base_api_url": self.CHAMPION_BY_ID_API_URL,
+                "headers": self.headers,
+            }
+
+            champ = asyncio.run(
+                Utils._fetch_champion_by_id(value, get_champ_by_id_params, lang_code)
+            )
+
+        elif by == By.NAME:
+            self.logger.info(f"Fetching {value} from cache...")
+
+            champ = self._cacher.get_champ_id_by_name(value)
+
+            if champ == None:
+                self.logger.info(f"Champion {value} not found in cache. Fetching...")
+
+                all_champs = self.get_all_champions()
+
+                # Do a loose search by name
+                champs = [
+                    champ for champ in all_champs if value.lower() in champ.name.lower()
+                ]
+
+                if len(champs) == 0:
+                    raise ValueError(f"Champion {value} not found")
+
+                if len(champs) > 1:
+                    return [Champion(champ) for champ in champs]
+
+                return Champion(champs[0])
+
+            else:
+                get_champ_by_id_params: GenericReqParams = {
+                    "base_api_url": self.CHAMPION_BY_ID_API_URL,
+                    "headers": self.headers,
+                }
+
+                champ = asyncio.run(
+                    Utils._fetch_champion_by_id(
+                        champ, get_champ_by_id_params, lang_code
+                    )
+                )
+
+        else:
+            raise ValueError(f"Invalid value for by: {by}")
+
+        return Champion(champ)
