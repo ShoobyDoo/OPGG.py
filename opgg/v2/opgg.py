@@ -13,9 +13,8 @@ from opgg.v2.summoner import Summoner
 from opgg.v2.types.response import UpdateResponse
 from opgg.v2.utils import Utils
 from opgg.v2.cacher import Cacher
-from opgg.v2.params import By, LangCode, Region
+from opgg.v2.params import By, LangCode, Region, GenericReqParams
 from opgg.v2.search_result import SearchResult
-from opgg.v2.types.params import GenericReqParams
 
 
 class OPGG:
@@ -124,7 +123,7 @@ class OPGG:
         self,
         query: str,
         region: Region = Region.ANY,
-        returns: Literal["search_result", "profile"] = "search_result",
+        returns: Literal["simple", "full"] = "full",
     ) -> list[SearchResult]:
         """
         Search for League of Legends summoners by name across one or all regions.
@@ -177,13 +176,28 @@ class OPGG:
         # Inner object instantiation BEFORE SearchResult wrapper
         search_results = [
             SearchResult(
-                {"summoner": Summoner(result["summoner"]), "region": result["region"]}
+                **{
+                    "summoner": Summoner(**result["summoner"]),
+                    "region": result["region"],
+                }
             )
             for result in results
         ]
 
         if returns == "profile":
-            search_results = self.get_summoner(search_results)
+            # set each summoner property in the search_results array
+            # to the corresponding Summoner object
+            self.logger.info(
+                f"Fetching profiles for {len(search_results)} summoners..."
+            )
+
+            # This call is done passing the array because if there are multiple, we want the benefit of concurrency
+            # provided by the asychonous nature of the call
+            summoners = self.get_summoner(search_results)
+
+            # We then build the search_results array with the Summoner objects
+            for sr, s in zip(search_results, summoners):
+                sr.summoner = s
 
         return search_results
 
@@ -196,15 +210,15 @@ class OPGG:
         if search_result is None and summoner_id is not None and region is not None:
             if isinstance(summoner_id, str) and isinstance(region, Region):
                 search_result = SearchResult(
-                    {
-                        "summoner": Summoner({"summoner_id": summoner_id}),
+                    **{
+                        "summoner": Summoner(**{"summoner_id": summoner_id}),
                         "region": region,
                     }
                 )
             elif isinstance(summoner_id, list) and isinstance(region, list):
                 search_result = [
                     SearchResult(
-                        {"summoner": Summoner({"summoner_id": sid}), "region": reg}
+                        **{"summoner": Summoner(**{"summoner_id": sid}), "region": reg}
                     )
                     for sid, reg in zip(summoner_id, region)
                 ]
@@ -227,7 +241,7 @@ class OPGG:
                     },
                 )
             )
-            return Summoner(profile_data["summoner"])
+            return Summoner(**profile_data["summoner"])
 
         elif isinstance(search_result, list):
             self.logger.info(
@@ -245,7 +259,7 @@ class OPGG:
                     search_result,
                 )
             )
-            return [Summoner(profile["summoner"]) for profile in profile_data]
+            return [Summoner(**profile["summoner"]) for profile in profile_data]
 
         else:
             raise ValueError("Invalid type for search_result")

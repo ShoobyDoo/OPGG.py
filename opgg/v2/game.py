@@ -1,4 +1,5 @@
-from box import Box
+from pydantic import BaseModel
 
-class Game(Box):
+
+class Game(BaseModel):
     pass

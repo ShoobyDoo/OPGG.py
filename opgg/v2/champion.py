@@ -1,9 +1,10 @@
-from typing import Any
-from box import Box
+from pydantic import BaseModel
+
+from typing import Any, Optional
 from datetime import datetime
 
 
-class ChampionStats(Box):
+class ChampionStats(BaseModel):
     id: int
     play: int
     win: int
@@ -17,32 +18,37 @@ class ChampionStats(Box):
     neutral_minion_kill: int
     damage_taken: int
     damage_dealt_to_champions: int
-    double_kill: int
-    triple_kill: int
-    quadra_kill: int
-    penta_kill: int
-    vision_wards_bought_in_game: int
+    double_kill: int = 0
+    triple_kill: int = 0
+    quadra_kill: int = 0
+    penta_kill: int = 0
+    vision_wards_bought_in_game: int = 0
     op_score: int
-    snowball_throws: int
-    snowball_hits: int
+    snowball_throws: Optional[int] = None
+    snowball_hits: Optional[int] = None
+
+    @property
+    def winrate(self) -> int:
+        """`[Computed Property]` Returns the winrate percentage of the champion."""
+        return round(self.win / self.play * 100) if self.play != 0 else 0
 
 
-class MostChampions(Box):
+class MostChampions(BaseModel):
     game_type: str
     season_id: int
-    year: int | None
+    year: Optional[int] = None
     play: int
     win: int
     lose: int
     champion_stats: list[ChampionStats]
 
 
-class Price(Box):
+class Price(BaseModel):
     currency: str
     cost: int
 
 
-class Skin(Box):
+class Skin(BaseModel):
     id: int
     champion_id: int
     name: str
@@ -57,14 +63,14 @@ class Skin(Box):
     release_date: datetime | None
 
 
-class Info(Box):
+class Info(BaseModel):
     attack: int
     defense: int
     magic: int
     difficulty: int
 
 
-class Stats(Box):
+class Stats(BaseModel):
     hp: float
     hpperlevel: float
     mp: float
@@ -87,14 +93,14 @@ class Stats(Box):
     attackspeedperlevel: float
 
 
-class Passive(Box):
+class Passive(BaseModel):
     name: str
     description: str
     image_url: str
     video_url: str
 
 
-class Spell(Box):
+class Spell(BaseModel):
     key: str
     name: str
     description: str
@@ -108,13 +114,13 @@ class Spell(Box):
     video_url: str
 
 
-class Evolve(Box):
+class Evolve(BaseModel):
     key: str
     name: str
     image_url: str
 
 
-class Champion(Box):
+class Champion(BaseModel):
     id: int
     key: str
     name: str

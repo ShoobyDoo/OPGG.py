@@ -1,15 +1,15 @@
 import json
 import logging
 import asyncio
-from pprint import pformat
 import aiohttp
+
 from typing import Optional, Tuple, Any
+from pprint import pformat
 
 from opgg.v2.champion import Champion
-from opgg.v2.params import LangCode, Region
+from opgg.v2.params import LangCode, Region, GenericReqParams
 from opgg.v2.search_result import SearchResult
 from opgg.v2.summoner import Summoner
-from opgg.v2.types.params import GenericReqParams
 
 
 logger = logging.getLogger("OPGG.py")
@@ -91,7 +91,7 @@ class Utils:
 
                 if res.status == 200:
                     content: dict = await res.json()
-                    logger.debug(f"Raw response payload: {content}")
+                    logger.debug(f"Raw response payload: {pformat(content)}")
                     data = content.get("data", [])
                     logger.info(f"Found {len(data)} results for region {region}")
                 res.raise_for_status()
@@ -130,7 +130,7 @@ class Utils:
             logger.debug(f"Created {len(tasks)} search tasks")
 
             results = await asyncio.gather(*tasks)
-            logger.debug(f"Raw results from all regions: {results}")
+            logger.debug(f"Raw results from all regions: {pformat(results)}")
 
             # Flatten results and remove duplicates
             all_results = []
@@ -170,17 +170,17 @@ class Utils:
 
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                params["base_api_url"], headers=params["headers"]
+                params.get("base_api_url"), headers=params.get("headers")
             ) as res:
                 logger.debug(f"Response status: {res.status}")
 
                 if res.status == 200:
-                    content = await res.json()
+                    content: dict = await res.json()
                     logger.info(
                         f"Request to OPGG API was successful (Content Length: {len(str(content))})"
                     )
-                    logger.debug(f"SUMMONER DATA AT /SUMMARY ENDPOINT:\n{content}\n")
-                    return content["data"]
+                    logger.debug(f"SUMMONER DATA AT /SUMMARY ENDPOINT:\n{pformat(content)}\n")
+                    return content.get("data", {})
 
                 res.raise_for_status()
 

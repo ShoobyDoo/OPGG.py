@@ -1,7 +1,7 @@
-from box import Box
+from pydantic import BaseModel
 
 
-class UpdateData(Box):
+class UpdateData(BaseModel):
     message: str
     last_updated_at: str
     renewable_at: str | None
@@ -9,13 +9,6 @@ class UpdateData(Box):
     delay: int | None
 
 
-class UpdateResponse(Box):
-    """
-    A type representing the response from an update request.
-
-    Parameters:
-
-    """
-
+class UpdateResponse(BaseModel):
     status: int
     data: UpdateData

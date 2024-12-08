@@ -1,11 +1,6 @@
+import os
 import sqlite3
 import logging
-import os
-import glob
-
-
-from datetime import datetime
-from typing import Literal
 
 from opgg.v2.champion import Champion
 from opgg.v2.search_result import SearchResult
