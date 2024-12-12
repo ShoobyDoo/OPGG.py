@@ -179,7 +179,9 @@ class Utils:
                     logger.info(
                         f"Request to OPGG API was successful (Content Length: {len(str(content))})"
                     )
-                    logger.debug(f"SUMMONER DATA AT /SUMMARY ENDPOINT:\n{pformat(content)}\n")
+                    logger.debug(
+                        f"SUMMONER DATA AT /SUMMARY ENDPOINT:\n{pformat(content)}\n"
+                    )
                     return content.get("data", {})
 
                 res.raise_for_status()
@@ -224,7 +226,6 @@ class Utils:
     async def _fetch_recent_games(
         params: GenericReqParams,
     ):
-
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 params["base_api_url"], headers=params["headers"]
@@ -232,12 +233,12 @@ class Utils:
                 logger.debug(f"Response status: {res.status}")
 
                 if res.status == 200:
-                    content = await res.json()
+                    content: dict = await res.json()
                     logger.info(
                         f"Request to OPGG API was successful (Content Length: {len(str(content))})"
                     )
-                    logger.debug(f"GAME DATA AT /GAMES ENDPOINT:\n{content}\n")
-                    return content["data"]
+                    logger.debug(f"GAME DATA AT /GAMES ENDPOINT:\n{pformat(content)}\n")
+                    return content.get("data", {})
 
                 res.raise_for_status()
 
@@ -287,14 +288,14 @@ class Utils:
                 logger.debug(f"Response status: {res.status}")
 
                 if res.status == 200:
-                    content = await res.json()
+                    content: dict = await res.json()
                     logger.info(
                         f"Request to OPGG API was successful (Content Length: {len(str(content))})"
                     )
                     logger.debug(
                         f"CHAMPION DATA AT /CHAMPIONS ENDPOINT:\n{pformat(content, sort_dicts=False)}\n"
                     )
-                    return content["data"]
+                    return content.get("data", {})
 
                 res.raise_for_status()
 
@@ -316,11 +317,73 @@ class Utils:
                 logger.debug(f"Response status: {res.status}")
 
                 if res.status == 200:
-                    content = await res.json()
+                    content: dict = await res.json()
                     logger.info(
                         f"Request to OPGG API was successful (Content Length: {len(str(content))})"
                     )
-                    logger.debug(f"CHAMPION DATA AT /CHAMPIONS ENDPOINT:\n{content}\n")
-                    return content["data"]
+                    logger.debug(
+                        f"CHAMPION DATA AT /CHAMPIONS ENDPOINT:\n{pformat(content)}\n"
+                    )
+                    return content.get("data", {})
 
                 res.raise_for_status()
+
+    @staticmethod
+    async def _fetch_live_game(params: GenericReqParams):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                params["base_api_url"], headers=params["headers"]
+            ) as res:
+                logger.debug(f"Response status: {res.status}")
+
+                if res.status == 200:
+                    content: dict = await res.json()
+                    logger.info(
+                        f"Request to OPGG API was successful (Content Length: {len(str(content))})"
+                    )
+                    logger.debug(
+                        f"LIVE GAME DATA AT /spectate ENDPOINT:\n{pformat(content)}\n"
+                    )
+
+                elif res.status == 404:
+                    content: dict = await res.json()
+
+                    detail = content.get("detail", {}).get("detailMessage", "")
+                    code = content.get("code", 404)
+                    message = content.get("message", "Not found")
+
+                    content = {
+                        "status": code,
+                        "detail": (
+                            "Provided summoner is not in a live game!"
+                            if detail == ""
+                            else detail
+                        ),
+                        "message": message,
+                    }
+
+                else:
+                    res.raise_for_status()
+
+                # Success response example:
+                # {
+                #   "status": 200,
+                #   "data": {...},
+                #   "message": "Success"
+                # }
+
+                # Error response example:
+                # {
+                #   "status": 404,
+                #   "message": "Not found",
+                #   "detail": "Provided summoner is not in a live game!"
+                # }
+
+                content = {
+                    "status": res.status,
+                    "message": content.get("message", "Success"),
+                    **({"data": content.get("data")} if res.status == 200 else {}),
+                    **({"detail": content.get("detail")} if res.status != 200 else {}),
+                }
+
+                return content

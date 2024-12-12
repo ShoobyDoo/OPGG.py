@@ -29,6 +29,9 @@ class League(BaseModel):
     is_inactive: bool = False
     series: Optional[dict] = None
     updated_at: Optional[datetime] = None
+    
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
 
 
 class RankInfo(BaseModel):

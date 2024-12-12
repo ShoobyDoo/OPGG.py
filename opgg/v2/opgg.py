@@ -8,9 +8,9 @@ from typing import Literal
 from fake_useragent import UserAgent
 
 from opgg.v2.champion import Champion
-from opgg.v2.game import Game
+from opgg.v2.game import Game, LiveGame
 from opgg.v2.summoner import Summoner
-from opgg.v2.types.response import UpdateResponse
+from opgg.v2.types.response import LiveGameResponse, UpdateResponse
 from opgg.v2.utils import Utils
 from opgg.v2.cacher import Cacher
 from opgg.v2.params import By, LangCode, Region, GenericReqParams
@@ -43,20 +43,13 @@ class OPGG:
         self.CHAMPION_BY_ID_API_URL = (
             f"{self.BYPASS_API_URL}/meta/champions/{{champion_id}}?hl={{hl}}"
         )
+        self.LIVE_GAME_URL = (
+            f"{self.BYPASS_API_URL}/spectates/{{region}}/{{summoner_id}}?hl={{hl}}"
+        )
 
-        # most-champions/rank?game_type=solo&queue=ranked&season_id=29
-        # https://lol-web-api.op.gg/api/v1.0/internal/bypass/summoners/euw/VmnsmnYFpeTXLmbuhBkecPdz_UVkOt-Job8XDbIBqMZ0doU/most-champions/rank?game_type=RANKED&season_id=29
-
-        # CHAMPS
-        # https://lol-web-api.op.gg/api/v1.0/internal/bypass/champions/na/ranked
-
-        # DOUBLELIFT
-        # https://lol-web-api.op.gg/api/v1.0/internal/bypass/spectates/na/AVCaop7DsXMxYghWRgonI__cn6cKD9EssfdNn-A8NhKvW2U?hl=en_US
-
-        # THEBAUSFFS
-        # https://lol-web-api.op.gg/api/v1.0/internal/bypass/spectates/euw/q0Oe1wEGx4s84dr8xfeZ3E28MH5HerwL-Y0r_i8PBPhotPF6?hl=en_US
-
-        #  In game? If 404 then not in game, otherwise is in game?
+        # FIGURE OUT HOW TO FIND THESE PAYLOADS:
+        # - seasonById
+        # - spells
 
         self._ua = UserAgent()
         self._headers = {"User-Agent": self._ua.random}
@@ -278,14 +271,14 @@ class OPGG:
             if isinstance(summoner_id, str) and isinstance(region, Region):
                 search_result = SearchResult(
                     {
-                        "summoner": Summoner({"summoner_id": summoner_id}),
+                        "summoner": Summoner(**{"summoner_id": summoner_id}),
                         "region": region,
                     }
                 )
             elif isinstance(summoner_id, list) and isinstance(region, list):
                 search_result = [
                     SearchResult(
-                        {"summoner": Summoner({"summoner_id": sid}), "region": reg}
+                        {"summoner": Summoner(**{"summoner_id": sid}), "region": reg}
                     )
                     for sid, reg in zip(summoner_id, region)
                 ]
@@ -313,7 +306,8 @@ class OPGG:
                     game_params,
                 )
             )
-            return [Game(game) for game in game_data]
+
+            return [Game(**game) for game in game_data]
 
         elif isinstance(search_result, list):
             self.logger.info(
@@ -339,7 +333,9 @@ class OPGG:
                     game_params_list,
                 )
             )
-            return [[Game(game) for game in game_data] for game_data in game_data_list]
+            return [
+                [Game(**game) for game in game_data] for game_data in game_data_list
+            ]
 
         else:
             raise ValueError("Invalid type for search_result")
@@ -386,7 +382,7 @@ class OPGG:
         }
 
         champions_list = asyncio.run(Utils._fetch_all_champions(get_champs_params))
-        champions_list_objs = [Champion(champ) for champ in champions_list]
+        champions_list_objs = [Champion(**champ) for champ in champions_list]
 
         self.logger.info(f"Got {len(champions_list_objs)} champions")
 
@@ -430,9 +426,9 @@ class OPGG:
                     raise ValueError(f"Champion {value} not found")
 
                 if len(champs) > 1:
-                    return [Champion(champ) for champ in champs]
+                    return [Champion(**champ) for champ in champs]
 
-                return Champion(champs[0])
+                return Champion(**champs[0])
 
             else:
                 get_champ_by_id_params: GenericReqParams = {
@@ -449,4 +445,35 @@ class OPGG:
         else:
             raise ValueError(f"Invalid value for by: {by}")
 
-        return Champion(champ)
+        return Champion(**champ)
+
+    def get_live_game(
+        self, search_result: SearchResult, lang_code: LangCode = LangCode.ENGLISH
+    ) -> LiveGameResponse:
+        """
+        Get the live game data for a given summoner.
+
+        ### Parameters
+            search_result : `SearchResult`
+                Pass a SearchResult object to get the live game data
+
+        ### Returns
+            `LiveGameResponse` : Returns an object with the live game data payload if available.
+        """
+
+        self.logger.info(f"Fetching live game data for {search_result}")
+
+        live_game_params: GenericReqParams = {
+            "base_api_url": self.LIVE_GAME_URL.format_map(
+                {
+                    "region": search_result.region,
+                    "summoner_id": search_result.summoner.summoner_id,
+                    "hl": lang_code,
+                }
+            ),
+            "headers": self.headers,
+        }
+
+        live_game_data = asyncio.run(Utils._fetch_live_game(live_game_params))
+
+        return LiveGameResponse(**live_game_data)
