@@ -10,10 +10,10 @@ import requests
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 
-from opgg.cacher import Cacher
-from opgg.champion import Champion, Passive, Price, Skin, Spell
-from opgg.params import By, Region
-from opgg.season import SeasonInfo
+from opgg.v1.cacher import Cacher
+from opgg.v1.champion import Champion, Passive, Price, Skin, Spell
+from opgg.v1.params import By, Region
+from opgg.v1.season import SeasonInfo
 
 
 class Utils:
