@@ -2,7 +2,7 @@ from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, Field, HttpUrl
 
-from opgg.v2.season import League, Season
+from opgg.v2.season import League, Season, TierInfo
 from opgg.v2.champion import MostChampions
 
 
@@ -50,7 +50,7 @@ class Summoner(BaseModel):
     """When the summoner's data was last revised."""
 
     # Search result specific attributes
-    solo_tier_info: Optional[dict] = Field(default=None)
+    solo_tier_info: Optional[TierInfo] = Field(default=None)
     """Solo tier ranking information."""
 
     team_info: Optional[dict] = Field(default=None)
