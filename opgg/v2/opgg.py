@@ -73,8 +73,8 @@ class OPGG:
         logging.basicConfig(
             filename=f'./logs/opgg_{datetime.now().strftime("%Y-%m-%d")}.log',
             filemode="a+",
-            format="[%(asctime)s][%(name)s->%(module)-15s:%(lineno)10d][%(levelname)-7s] : %(message)s",
-            datefmt="%d-%b-%y %H:%M:%S",
+            format="[%(asctime)s][%(name)s->%(module)-15s:%(lineno)5d][%(levelname)-7s] : %(message)s",
+            datefmt="%b-%d-%Y %H:%M:%S",
             level=logging.INFO,
         )
         # ===== SETUP END =====
@@ -177,7 +177,7 @@ class OPGG:
             for result in results
         ]
 
-        if returns == "profile":
+        if returns == "full":
             # set each summoner property in the search_results array
             # to the corresponding Summoner object
             self.logger.info(

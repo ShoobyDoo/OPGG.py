@@ -37,6 +37,23 @@ class Region(Enum):
     def __str__(self):
         return self.value
 
+    @classmethod
+    def from_str(cls, region: str) -> "Region":
+        """
+        Get a Region enum from a string.
+        Case-insensitive match. Falls back to `Region.ANY` if no match.
+
+        Parameters:
+            region: `str`: The region string to convert
+
+        Returns:
+            `Region`: The Region enum
+        """
+        try:
+            return cls(region.upper())
+        except ValueError:
+            raise cls.ANY
+
 
 class By(Enum):
     """

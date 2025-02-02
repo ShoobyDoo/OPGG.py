@@ -82,3 +82,43 @@ class Summoner(BaseModel):
                 self.most_champions is not None,
             ]
         )
+
+    def get_summary(self) -> str:
+        """Return the summary string of the summoner."""
+
+        # left/right just factor
+        LJF = 18
+        RJF = 14
+
+        previous_seasons_fmt, league_stats_fmt, champion_stats_fmt = "", "", ""
+
+        if self.previous_seasons:
+            for season in self.previous_seasons:
+                previous_seasons_fmt += f"{''.ljust(LJF+RJF)}  | {season}\n"
+
+        if self.league_stats:
+            for league_stat in self.league_stats:
+                league_stats_fmt += f"{''.ljust(LJF+RJF)}  | {league_stat}\n"
+
+        if self.most_champions.champion_stats:
+            for champ_stat in self.most_champions.champion_stats:
+                champion_stats_fmt += f"{''.ljust(LJF+RJF)}  | {champ_stat}\n"
+
+        return (
+            f"[Summoner: {self.game_name}]\n{'-' * 80}\n"
+            f"{'Id'.ljust(LJF)} {'(int)'.rjust(RJF)} | {self.id}\n"
+            f"{'Summoner Id'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.summoner_id}\n"
+            f"{'Account Id'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.acct_id}\n"
+            f"{'Puuid'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.puuid}\n"
+            f"{'Game Name'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.game_name}\n"
+            f"{'Tagline'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.tagline}\n"
+            f"{'Name'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.name}\n"
+            f"{'Internal Name'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.internal_name}\n"
+            f"{'Profile Image Url'.ljust(LJF)} {'(str)'.rjust(RJF)} | {self.profile_image_url}\n"
+            f"{'Level'.ljust(LJF)} {'(int)'.rjust(RJF)} | {self.level}\n"
+            f"{'Updated At'.ljust(LJF)} {'(datetime)'.rjust(RJF)} | {self.updated_at}\n"
+            f"{'Renewable At'.ljust(LJF)} {'(datetime)'.rjust(RJF)} | {self.renewable_at}\n"
+            f"{'Previous Seasons'.ljust(LJF)} {'(Season)'.rjust(RJF)} | [List ({len(self.previous_seasons) if self.previous_seasons else 0})] \n{previous_seasons_fmt}"
+            f"{'League Stats'.ljust(LJF)} {'(LeagueStats)'.rjust(RJF)} | [List ({len(self.league_stats) if self.league_stats else 0})] \n{league_stats_fmt}"
+            f"{'Most Champions'.ljust(LJF)} {'(ChampStats)'.rjust(RJF)} | [List ({len(self.most_champions.champion_stats) if self.most_champions.champion_stats else 0})] \n{champion_stats_fmt}"
+        )
