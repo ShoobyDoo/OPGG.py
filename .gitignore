@@ -174,3 +174,6 @@ tests/game.txt
 tests/summoner.txt
 
 opgg/data/*
+
+.DS_Store
+opgg/v2/payloads/*
