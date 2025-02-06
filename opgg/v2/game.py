@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Any, Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from opgg.v2.opscore import OPScore, OPScoreAnalysis
 from opgg.v2.season import QueueInfo, TierInfo
@@ -112,16 +112,17 @@ class Stats(BaseModel):
     is_opscore_max_in_team: bool
     """Whether this player had highest OP score in team."""
 
-    lane_score: int
+    # lane score can be None when the game is a remake it seems...
+    lane_score: int | None
     """Lane phase performance score."""
 
     op_score_timeline: list[OPScore]
     """OP score timeline."""
 
-    op_score_timeline_analysis: OPScoreAnalysis
+    op_score_timeline_analysis: OPScoreAnalysis | None
     """OP score timeline analysis."""
 
-    keyword: str
+    keyword: str | None
     """Keyword for OP score analysis. (Leader, Average, Struggle, etc.)"""
 
 
@@ -156,7 +157,7 @@ class Participant(BaseModel):
     position: str
     """Lane position played (e.g. 'TOP', 'JUNGLE')."""
 
-    role: str
+    role: str | None
     """Role played in team composition."""
 
     items: list[int]
@@ -251,7 +252,7 @@ class Team(BaseModel):
     game_stat: GameStat
     """Team's game statistics."""
 
-    banned_champions: list[int]
+    banned_champions: list[int | None]
     """List of champion IDs banned by team."""
 
 
@@ -387,8 +388,12 @@ class Game(BaseModel):
     is_opscore_active: bool
     """Whether OP scores were calculated for this game."""
 
-    is_recorded: bool = None
+    is_recorded: bool = False
     """Whether the game was recorded."""
+
+    @field_validator('is_recorded', mode='before')
+    def set_is_recorded(cls, v):
+        return v if v is not None else False
 
     record_info: Any = None
     """Recording information if available."""
