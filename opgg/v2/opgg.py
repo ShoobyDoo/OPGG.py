@@ -1,16 +1,16 @@
 import os
 import logging
 import asyncio
+import pprint
 
 from datetime import datetime
-import pprint
 from typing import Literal
 from fake_useragent import UserAgent
 
 from opgg.v2.champion import Champion
-from opgg.v2.game import Game, LiveGame
+from opgg.v2.game import Game
 from opgg.v2.summoner import Summoner
-from opgg.v2.types.response import LiveGameResponse, UpdateResponse
+from opgg.v2.response import LiveGameResponse, UpdateResponse
 from opgg.v2.utils import Utils
 from opgg.v2.cacher import Cacher
 from opgg.v2.params import By, LangCode, Region, GenericReqParams
@@ -21,7 +21,7 @@ class OPGG:
     """
     ### OPGG.py
 
-    Copyright (c) 2023-2024, ShoobyDoo
+    Copyright (c) 2023-2025, ShoobyDoo
 
     License: BSD-3-Clause, See LICENSE for more details.
     """
