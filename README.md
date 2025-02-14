@@ -22,8 +22,8 @@ py -m pip install opgg.py
 ### Manual
 
 #### Dependencies
-* [requests](https://pypi.org/project/requests/)
-* [beautifulsoup4](https://pypi.org/project/beautifulsoup4/)
+* [aiohttp](https://pypi.org/project/aiohttp/)
+* [pydantic](https://pypi.org/project/pydantic/)
 * [fake-useragent](https://pypi.org/project/fake-useragent/)
 
 Alternatively, you can use the provided requirements.txt to install the required libraries by running the following command: <br>
