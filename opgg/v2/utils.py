@@ -81,7 +81,7 @@ class Utils:
         logger.debug(f"Constructed search data: {data}")
         search_url = params["base_api_url"].format_map(data)
         logger.info(
-            f"Sending search request to OPGG API... (API_URL = {search_url}, HEADERS = {params["headers"]})"
+            f"Sending search request to OPGG API... (API_URL = {search_url}, HEADERS = {params['headers']})"
         )
 
         try:
