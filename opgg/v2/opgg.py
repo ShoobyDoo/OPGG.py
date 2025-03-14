@@ -122,12 +122,12 @@ class OPGG:
         Search for League of Legends summoners by name across one or all regions.
 
         #### Args:
-        - `query` (`str`): Summoner name to search for. Can include tagline (e.g., "name#tag")
-        - `region` (`Region`, optional): Specific region to search in. Defaults to `Region.ANY` which searches all regions concurrently.
+            - `query` (`str`): Summoner name to search for. Can include tagline (e.g., "name#tag")
+            - `region` (`Region`, optional): Specific region to search in. Defaults to `Region.ANY` which searches all regions concurrently.
 
         #### Returns:
-            `list[SearchResult]`: List of `SearchResult` objects containing the found summoners.
-            Each `SearchResult` object contains formatted summoner data and the region it was found in.
+            - `list[SearchResult]`: List of `SearchResult` objects containing the found summoners.
+              Each `SearchResult` object contains formatted summoner data and the region it was found in.
 
         #### Example:
         ```python
@@ -266,7 +266,33 @@ class OPGG:
         game_type: Literal["total", "ranked", "normal"] = "total",
         lang_code=LangCode.ENGLISH,
     ) -> list[Game] | list[list[Game]]:
+        """
+        Retrieve recent games for the given summoner(s).
 
+        #### Args:
+            - `search_result` (`SearchResult` or `list[SearchResult]`, optional): The search result(s) representing the summoner(s) whose recent games are to be retrieved. If not provided, you must supply `summoner_id` and `region`.
+            - `summoner_id` (`str` or `list[str]`, optional): Summoner ID(s) for which to fetch recent games (used when `search_result` is not provided).
+            - `region` (`Region` or `list[Region]`, optional): The region(s) corresponding to the summoner ID(s).
+            - `results` (`int`, optional): The number of recent games to retrieve. Defaults to 15.
+            - `game_type` (`str`, optional): The type of games to retrieve (e.g., "total", "ranked", "normal"). Defaults to "total".
+            - `lang_code` (`LangCode`, optional): Language code for localization. Defaults to `LangCode.ENGLISH`.
+
+        #### Returns:
+        - If a single `SearchResult` is provided:
+            `list[Game]`: A list of `Game` objects representing the recent games for that summoner.
+        - If a list of `SearchResult` objects is provided:
+            `list[list[Game]]`: A list of lists, where each inner list contains `Game` objects corresponding to each individual `SearchResult`.
+
+        #### Example:
+        ```python
+        >>> opgg = OPGG()
+        >>> # For a single summoner:
+        >>> games = opgg.get_recent_games(search_result=some_search_result)
+        >>> # For multiple summoners:
+        >>> grouped_games = opgg.get_recent_games(search_result=[result1, result2])
+        ```
+        """
+        
         if search_result is None and summoner_id is not None and region is not None:
             if isinstance(summoner_id, str) and isinstance(region, Region):
                 search_result = SearchResult(
