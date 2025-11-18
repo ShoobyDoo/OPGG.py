@@ -165,6 +165,7 @@ opgg*.db
 setup.cfg
 setup.py
 pip-deploy.txt
+.claude
 
 tests/requirements.txt
 pageprops.txt
