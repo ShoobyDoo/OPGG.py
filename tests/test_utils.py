@@ -474,13 +474,8 @@ class TestFetchProfileMultiple:
         assert len(results) == 2
 
     @pytest.mark.asyncio
-    @pytest.mark.xfail(reason="Bug in utils.py line 234: Summoner() called with dict instead of kwargs")
     async def test_fetch_multiple_with_summoner_ids_and_regions(self, mock_profile_response):
-        """Test fetching multiple profiles using summoner_ids and regions.
-
-        Note: This test is marked as xfail due to a bug in utils.py where
-        Summoner({"summoner_id": ...}) should be Summoner(summoner_id=...)
-        """
+        """Test fetching multiple profiles using summoner_ids and regions."""
         params: GenericReqParams = {
             "base_api_url": "https://lol-api-summoner.op.gg/api/summoners/{region}/{summoner_id}/summary?hl={hl}",
             "headers": {"User-Agent": "Test"},

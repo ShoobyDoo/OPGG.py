@@ -608,9 +608,7 @@ class Cacher:
             keyword_key = keyword.get("keyword")
             if not keyword_key:
                 continue
-            payloads.append(
-                (keyword_key, lang_value, json.dumps(keyword), cached_at)
-            )
+            payloads.append((keyword_key, lang_value, json.dumps(keyword), cached_at))
 
         if not payloads:
             self.logger.warning("No valid keyword entries provided for caching.")
@@ -934,10 +932,15 @@ class Cacher:
 
             # Versions stats
             version_row = conn.execute(
-                "SELECT COUNT(*), MIN(cached_at), MAX(cached_at) FROM tblVersions"
+                "SELECT data, MIN(cached_at), MAX(cached_at) FROM tblVersions"
             ).fetchone()
-            if version_row:
-                stats["versions"]["total_count"] = version_row[0]
+            if version_row and version_row[0]:
+                # Count actual versions in the JSON array, not database rows
+                version_data = json.loads(version_row[0])
+                version_count = (
+                    len(version_data) if isinstance(version_data, list) else 1
+                )
+                stats["versions"]["total_count"] = version_count
                 stats["versions"]["oldest_cache"] = version_row[1]
                 stats["versions"]["newest_cache"] = version_row[2]
 
@@ -983,7 +986,9 @@ class Cacher:
         lang_value = (
             lang_code.value
             if isinstance(lang_code, LangCode)
-            else None if lang_code is None else str(lang_code)
+            else None
+            if lang_code is None
+            else str(lang_code)
         )
 
         with self._connect() as conn:

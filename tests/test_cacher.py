@@ -700,8 +700,15 @@ class TestConcurrency:
         c.setup()
         return c
 
-    def test_multiple_connections(self, cacher, sample_champions):
+    def test_multiple_connections(self, cacher, create_champion):
         """Test that multiple connections work correctly."""
+        # Create sample champions
+        sample_champions = [
+            create_champion(champion_id=1, name="Annie"),
+            create_champion(champion_id=2, name="Ahri"),
+            create_champion(champion_id=3, name="Ashe"),
+        ]
+
         # Cache with one connection
         cacher.cache_champs(sample_champions, LangCode.ENGLISH)
 

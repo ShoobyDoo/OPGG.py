@@ -229,12 +229,7 @@ class Utils:
     ):
         if search_results is None and summoner_ids is not None and regions is not None:
             search_results = [
-                SearchResult(
-                    {
-                        "summoner": Summoner({"summoner_id": summoner_id}),
-                        "region": region,
-                    }
-                )
+                SearchResult(summoner=Summoner(summoner_id=summoner_id), region=region)
                 for summoner_id, region in zip(summoner_ids, regions)
             ]
 
@@ -314,7 +309,6 @@ class Utils:
     @staticmethod
     async def _fetch_all_champions(params: GenericReqParams):
         async with aiohttp.ClientSession() as session:
-
             logger.debug(f"API URL: {params['base_api_url']}")
 
             async with session.get(

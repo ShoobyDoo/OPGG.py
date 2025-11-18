@@ -44,7 +44,7 @@ _SUMMARY_API_URL = (
 # ===== GAMES API ===== #
 _GAMES_API_URL = (
     f"{_SUMMONER_API_URL}/{{region}}/summoners/{{summoner_id}}/games?"
-    "limit={{limit}}&game_type={{game_type}}&hl={{hl}}"
+    "limit={limit}&game_type={game_type}&hl={hl}"
 )
 
 # ===== METADATA API ===== #
@@ -91,13 +91,13 @@ class OPGG:
             for file in os.listdir("./logs"):
                 if (
                     os.stat(f"./logs/{file}").st_size == 0
-                    and file != f'opgg_{datetime.now().strftime("%Y-%m-%d")}.log'
+                    and file != f"opgg_{datetime.now().strftime('%Y-%m-%d')}.log"
                 ):
                     logging.info(f"Removing empty log file: {file}")
                     os.remove(f"./logs/{file}")
 
         logging.basicConfig(
-            filename=f'./logs/opgg_{datetime.now().strftime("%Y-%m-%d")}.log',
+            filename=f"./logs/opgg_{datetime.now().strftime('%Y-%m-%d')}.log",
             filemode="a+",
             format="[%(asctime)s][%(name)s->%(module)-10s:%(lineno)3d][%(levelname)-7s] : %(message)s",
             datefmt="%d-%b-%y %H:%M:%S",
