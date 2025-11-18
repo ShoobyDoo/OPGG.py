@@ -65,18 +65,21 @@ Many of the objects have several additional properties that can be accessed by r
 
 ### Setting Up Development Environment
 
-1. Clone the repository:
+Step 1. Clone the repository:
+
 ```bash
 git clone https://github.com/ShoobyDoo/OPGG.py.git
 cd OPGG.py
 ```
 
-2. Install production dependencies:
+Step 2. Install production dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Install development dependencies:
+Step 3. Install development dependencies:
+
 ```bash
 pip install -r requirements-dev.txt
 ```
@@ -84,21 +87,25 @@ pip install -r requirements-dev.txt
 ### Running Tests
 
 Run the full test suite with coverage:
+
 ```bash
 pytest
 ```
 
 Run tests with verbose output:
+
 ```bash
 pytest -v
 ```
 
 Run specific test file:
+
 ```bash
 pytest tests/test_opgg_init.py
 ```
 
 Run tests matching a pattern:
+
 ```bash
 pytest -k "test_search"
 ```
@@ -106,21 +113,25 @@ pytest -k "test_search"
 ### Code Quality
 
 Run linting with ruff:
+
 ```bash
 ruff check opgg/
 ```
 
 Auto-fix linting issues:
+
 ```bash
 ruff check --fix opgg/
 ```
 
 Check code formatting:
+
 ```bash
 ruff format --check opgg/
 ```
 
 Auto-format code:
+
 ```bash
 ruff format opgg/
 ```
@@ -128,26 +139,22 @@ ruff format opgg/
 ### Coverage Reports
 
 Generate HTML coverage report:
+
 ```bash
 pytest --cov=opgg --cov-report=html
 ```
 
 View the report by opening `htmlcov/index.html` in your browser.
 
-### Test Configuration
-
-- Minimum coverage requirement: 85%
-- Test framework: pytest with pytest-asyncio
-- Mocking: aioresponses for HTTP mocking, pytest-mock for general mocking
-- All tests use isolated temporary databases for caching tests
-
 ### CI/CD
 
 GitHub Actions runs tests automatically on:
+
 - Push to `main`, `develop`, or feature branches (`OPGG-*`)
 - Pull requests to `main` or `develop`
 
 The CI pipeline tests against:
+
 - Python 3.12 and 3.13
 - Ubuntu, Windows, and macOS
 
