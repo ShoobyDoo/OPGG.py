@@ -58,7 +58,7 @@ if __name__ == "__main__":
 Many of the objects have several additional properties that can be accessed by referencing the object in code.
 
 ```txt
-[NA  ] HandoftheCouncil #NA1     | Level: 547  [Summoner ID: t7NuBl5eATWiqoZMu2MzZbAX1S9IDyp4Kzut5Z_4QT3-tWs]
+[NA  ] HandoftheCouncil #NA1     | Level: 556  [Summoner ID: t7NuBl5eATWiqoZMu2MzZbAX1S9IDyp4Kzut5Z_4QT3-tWs]
 ```
 
 ## Development
@@ -76,38 +76,6 @@ Step 2. Install production dependencies:
 
 ```bash
 pip install -r requirements.txt
-```
-
-Step 3. Install development dependencies:
-
-```bash
-pip install -r requirements-dev.txt
-```
-
-### Running Tests
-
-Run the full test suite with coverage:
-
-```bash
-pytest
-```
-
-Run tests with verbose output:
-
-```bash
-pytest -v
-```
-
-Run specific test file:
-
-```bash
-pytest tests/test_opgg_init.py
-```
-
-Run tests matching a pattern:
-
-```bash
-pytest -k "test_search"
 ```
 
 ### Code Quality
@@ -135,28 +103,6 @@ Auto-format code:
 ```bash
 ruff format opgg/
 ```
-
-### Coverage Reports
-
-Generate HTML coverage report:
-
-```bash
-pytest --cov=opgg --cov-report=html
-```
-
-View the report by opening `htmlcov/index.html` in your browser.
-
-### CI/CD
-
-GitHub Actions runs tests automatically on:
-
-- Push to `main`, `develop`, or feature branches (`OPGG-*`)
-- Pull requests to `main` or `develop`
-
-The CI pipeline tests against:
-
-- Python 3.12 and 3.13
-- Ubuntu, Windows, and macOS
 
 ## Join the Discussion
 
