@@ -1,0 +1,2 @@
+# Code quality
+ruff>=0.14.0

@@ -104,6 +104,8 @@ Auto-format code:
 ruff format opgg/
 ```
 
+Ensure code formatting is run prior to opening a pull request.
+
 ## Join the Discussion
 
 Here's a link to the [Support Discord](https://discord.gg/fzRK2Sb)
