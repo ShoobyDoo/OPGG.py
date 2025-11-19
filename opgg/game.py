@@ -3,9 +3,9 @@ from typing import Any, Optional, List
 from pydantic import BaseModel, Field, field_validator
 import logging
 
-from opgg.v2.opscore import OPScore, OPScoreAnalysis
-from opgg.v2.season import QueueInfo, TierInfo
-from opgg.v2.summoner import Summoner
+from opgg.opscore import OPScore, OPScoreAnalysis
+from opgg.season import QueueInfo, TierInfo
+from opgg.summoner import Summoner
 
 logger = logging.getLogger("OPGG.py")
 

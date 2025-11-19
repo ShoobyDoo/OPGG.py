@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel, field_validator
 import logging
 
-from opgg.v2.game import LiveGame
+from opgg.game import LiveGame
 
 logger = logging.getLogger("OPGG.py")
 

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 from pydantic import BaseModel, HttpUrl, field_validator
 import logging
 
@@ -80,12 +80,30 @@ class RankEntry(BaseModel):
         json_encoders = {datetime: lambda v: v.isoformat()}
 
 
+class SeasonMeta(BaseModel):
+    """Metadata describing a season returned from the /meta/seasons endpoint."""
+
+    id: Optional[int] = None
+    value: Optional[int] = None
+    display_value: Optional[Union[int, str]] = None
+    split: Optional[int] = None
+    season: Optional[int] = None
+    is_preseason: Optional[bool] = None
+
+    @field_validator("*", mode="after")
+    def log_none_values(cls, v, info):
+        if v is None:
+            logger.warning(f"Field '{info.field_name}' is None in SeasonMeta model")
+        return v
+
+
 class Season(BaseModel):
     """Represents a League season."""
 
     season_id: Optional[int] = None
     tier_info: Optional[TierInfo] = None
     created_at: Optional[datetime] = None
+    meta: Optional[SeasonMeta] = None
 
     @field_validator("*", mode="after")
     def log_none_values(cls, v, info):

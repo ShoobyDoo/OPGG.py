@@ -6,10 +6,9 @@ import aiohttp
 from typing import Optional, Tuple, Any
 from pprint import pformat
 
-from opgg.v2.champion import Champion
-from opgg.v2.params import LangCode, Region, GenericReqParams
-from opgg.v2.search_result import SearchResult
-from opgg.v2.summoner import Summoner
+from opgg.params import LangCode, Region, GenericReqParams
+from opgg.search_result import SearchResult
+from opgg.summoner import Summoner
 
 
 logger = logging.getLogger("OPGG.py")
@@ -19,9 +18,6 @@ class Utils:
     """
     ### utils.py
     A collection of static utility helper methods that perform various opgg and league specific tasks such as fetching champions, seasons, etc.
-
-    Copyright (c) 2023-2024, ShoobyDoo
-    License: BSD-3-Clause, See LICENSE for more details.
     """
 
     @staticmethod
@@ -48,6 +44,42 @@ class Utils:
         return obj
 
     @staticmethod
+    def filter_results_with_summoner_id(
+        search_results: list[SearchResult],
+        logger_obj: logging.Logger | None = None,
+    ) -> list[SearchResult]:
+        """
+        Filter out search results lacking a `summoner_id` while logging the skip.
+        """
+        if not search_results:
+            return []
+
+        logger_to_use = logger_obj or logger
+        valid_results: list[SearchResult] = []
+
+        for result in search_results:
+            summoner = getattr(result, "summoner", None)
+            summoner_id = getattr(summoner, "summoner_id", None)
+
+            if not summoner_id:
+                logger_to_use.critical(
+                    "Search result is missing a summoner_id. Skipping region '%s' (Riot ID: %s#%s). Raw payload: %s",
+                    getattr(result, "region", "unknown"),
+                    getattr(summoner, "game_name", None),
+                    getattr(summoner, "tagline", None),
+                    pformat(
+                        summoner.model_dump()
+                        if hasattr(summoner, "model_dump")
+                        else summoner
+                    ),
+                )
+                continue
+
+            valid_results.append(result)
+
+        return valid_results
+
+    @staticmethod
     async def _search_region(
         session: aiohttp.ClientSession,
         query: str,
@@ -67,16 +99,18 @@ class Utils:
         Returns:
             `Tuple[Region, list[dict]]`: Region and list of found summoners
         """
-        data = {
-            "summoner_name": query,
-            "region": str(region),
-            "tagline": "",
-        }
-
+        # Construct riot_id with or without tagline based on query format
         if "#" in query:
             summoner_name, tagline = query.split("#")
-            data["summoner_name"] = summoner_name
-            data["tagline"] = tagline
+            riot_id = f"{summoner_name}%23{tagline}"
+        else:
+            riot_id = query
+
+        data = {
+            "riot_id": riot_id,
+            "region": str(region),
+            "hl": params.get("lang_code", LangCode.ENGLISH),
+        }
 
         logger.debug(f"Constructed search data: {data}")
         search_url = params["base_api_url"].format_map(data)
@@ -195,12 +229,7 @@ class Utils:
     ):
         if search_results is None and summoner_ids is not None and regions is not None:
             search_results = [
-                SearchResult(
-                    {
-                        "summoner": Summoner({"summoner_id": summoner_id}),
-                        "region": region,
-                    }
-                )
+                SearchResult(summoner=Summoner(summoner_id=summoner_id), region=region)
                 for summoner_id, region in zip(summoner_ids, regions)
             ]
 
@@ -212,6 +241,7 @@ class Utils:
                         {
                             "summoner_id": search_result.summoner.summoner_id,
                             "region": search_result.region,
+                            "hl": params.get("lang_code", LangCode.ENGLISH),
                         }
                     ),
                     "headers": params["headers"],
@@ -279,7 +309,6 @@ class Utils:
     @staticmethod
     async def _fetch_all_champions(params: GenericReqParams):
         async with aiohttp.ClientSession() as session:
-
             logger.debug(f"API URL: {params['base_api_url']}")
 
             async with session.get(
@@ -325,6 +354,130 @@ class Utils:
                         f"CHAMPION DATA AT /CHAMPIONS ENDPOINT:\n{pformat(content)}\n"
                     )
                     return content.get("data", {})
+
+                res.raise_for_status()
+
+    @staticmethod
+    async def _fetch_champion_stats(params: GenericReqParams):
+        """
+        `[Internal Helper Method]` Fetch champion statistics from the Champion API.
+
+        Args:
+            `params` (`GenericReqParams`): Parameters containing API URL and headers
+
+        Returns:
+            `dict`: Champion statistics data
+        """
+        async with aiohttp.ClientSession() as session:
+            logger.debug(f"API URL: {params['base_api_url']}")
+
+            async with session.get(
+                params["base_api_url"], headers=params["headers"]
+            ) as res:
+                logger.debug(f"Response status: {res.status}")
+
+                if res.status == 200:
+                    content: dict = await res.json()
+                    logger.info(
+                        f"Request to OPGG Champion API was successful (Content Length: {len(str(content))})"
+                    )
+                    logger.debug(
+                        f"CHAMPION STATS DATA AT /CHAMPIONS/RANKED ENDPOINT:\n{pformat(content)}\n"
+                    )
+                    return content.get("data", {})
+
+                res.raise_for_status()
+
+    @staticmethod
+    async def _fetch_versions(params: GenericReqParams):
+        """
+        `[Internal Helper Method]` Fetch available game versions from the Champion API.
+
+        Args:
+            `params` (`GenericReqParams`): Parameters containing API URL and headers
+
+        Returns:
+            `dict`: Version data
+        """
+        async with aiohttp.ClientSession() as session:
+            logger.debug(f"API URL: {params['base_api_url']}")
+
+            async with session.get(
+                params["base_api_url"], headers=params["headers"]
+            ) as res:
+                logger.debug(f"Response status: {res.status}")
+
+                if res.status == 200:
+                    content: dict = await res.json()
+                    logger.info(
+                        f"Request to OPGG Champion API was successful (Content Length: {len(str(content))})"
+                    )
+                    logger.debug(
+                        f"VERSION DATA AT /VERSIONS ENDPOINT:\n{pformat(content)}\n"
+                    )
+                    return content.get("data", {})
+
+                res.raise_for_status()
+
+    @staticmethod
+    async def _fetch_seasons(params: GenericReqParams):
+        """
+        `[Internal Helper Method]` Fetch available seasons from the Summoner API.
+
+        Args:
+            `params` (`GenericReqParams`): Parameters containing API URL and headers
+
+        Returns:
+            `dict`: Season data
+        """
+        async with aiohttp.ClientSession() as session:
+            logger.debug(f"API URL: {params['base_api_url']}")
+
+            async with session.get(
+                params["base_api_url"], headers=params["headers"]
+            ) as res:
+                logger.debug(f"Response status: {res.status}")
+
+                if res.status == 200:
+                    content: dict = await res.json()
+                    logger.info(
+                        f"Request to OPGG Summoner API was successful (Content Length: {len(str(content))})"
+                    )
+                    logger.debug(
+                        f"SEASONS DATA AT /META/SEASONS ENDPOINT:\n{pformat(content)}\n"
+                    )
+                    return content.get("data", {})
+
+                res.raise_for_status()
+
+    @staticmethod
+    async def _fetch_keywords(params: GenericReqParams):
+        """
+        `[Internal Helper Method]` Fetch keyword metadata from the Summoner API.
+
+        Args:
+            `params` (`GenericReqParams`): Parameters containing API URL and headers
+
+        Returns:
+            `list[dict]`: Keyword entries
+        """
+        async with aiohttp.ClientSession() as session:
+            logger.debug(f"API URL: {params['base_api_url']}")
+
+            async with session.get(
+                params["base_api_url"], headers=params["headers"]
+            ) as res:
+                logger.debug(f"Response status: {res.status}")
+
+                if res.status == 200:
+                    content: dict = await res.json()
+                    logger.info(
+                        f"Request to OPGG Summoner API was successful (Content Length: {len(str(content))})"
+                    )
+                    logger.debug(
+                        f"KEYWORDS DATA AT /META/KEYWORDS ENDPOINT:\n{pformat(content)}\n"
+                    )
+                    return content.get("data", [])
 
                 res.raise_for_status()
 

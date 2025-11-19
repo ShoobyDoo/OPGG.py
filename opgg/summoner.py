@@ -3,8 +3,8 @@ from datetime import datetime
 from pydantic import BaseModel, Field, HttpUrl, field_validator
 import logging
 
-from opgg.v2.season import League, Season, TierInfo
-from opgg.v2.champion import MostChampions
+from opgg.season import League, Season, TierInfo
+from opgg.champion import MostChampions
 
 logger = logging.getLogger("OPGG.py")
 

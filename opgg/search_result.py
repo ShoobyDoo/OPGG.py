@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
-from opgg.v2.params import Region
-from opgg.v2.summoner import Summoner
+from opgg.params import Region
+from opgg.summoner import Summoner
 
 
 class SearchResult(BaseModel):
