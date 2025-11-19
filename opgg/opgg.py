@@ -57,7 +57,7 @@ _CHAMPION_BY_ID_API_URL = (
 _VERSIONS_API_URL = f"{_CHAMPION_API_URL}/meta/versions?hl={{hl}}"
 
 # ===== CHAMPION STATS API ===== #
-# Incomplete: more routes than ranked.
+# Incomplete: more routes than just ranked.
 # Tested and confirmed working: ranked, aram, urf, doom (likely doombots), arena, nexus_blitz
 _CHAMPION_STATS_API_URL = (
     f"{_CHAMPION_API_URL}/{{region}}/champions/ranked?tier={{tier}}"
@@ -66,15 +66,32 @@ _CHAMPION_STATS_API_URL = (
 
 class OPGG:
     """
-    ### OPGG.py
+    ### OPGG.py — An unofficial Python library for accessing OPGG data.
 
-    Copyright (c) 2025, ShoobyDoo
+    Copyright (C) 2025 ShoobyDoo
 
-    License: BSD-3-Clause, See LICENSE for more details.
+    This program is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation, either version 3 of the License, or (at your
+    option) any later version.
+
+    This program is distributed in the hope that it will be useful, but
+    WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    Full license text available in the LICENSE file or at:
+    https://www.gnu.org/licenses/
+
+    Contact:
+    https://github.com/ShoobyDoo
+
+    Support:
+    https://discord.gg/fzRK2Sb
     """
 
     __author__ = "ShoobyDoo"
-    __license__ = "BSD-3-Clause"
+    __license__ = "GNU General Public License v3.0"
 
     def __init__(self) -> None:
         self._ua = UserAgent()
