@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -7,8 +8,8 @@ from pydantic import (
     field_serializer,
 )
 
-from opgg.season import League, Season, TierInfo
 from opgg.champion import MostChampions
+from opgg.season import League, Season, TierInfo
 
 
 class Summoner(BaseModel):

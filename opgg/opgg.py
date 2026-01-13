@@ -1,38 +1,38 @@
-import os
-import logging
 import asyncio
+import logging
+import os
 import pprint
-import aiohttp
-
 from datetime import datetime
+
+import aiohttp
 from fake_useragent import UserAgent
 
+from opgg.cacher import Cacher
 from opgg.champion import Champion
+from opgg.exceptions import (
+    APIError,
+    NetworkError,
+    OPGGError,
+    RateLimitError,
+)
 from opgg.game import Game
 from opgg.keyword import Keyword
-from opgg.summoner import Summoner
-from opgg.season import SeasonMeta
-from opgg.utils import Utils
-from opgg.cacher import Cacher
-from opgg.exceptions import (
-    OPGGError,
-    APIError,
-    RateLimitError,
-    NetworkError,
-)
 from opgg.params import (
     By,
     CacheType,
     GameType,
+    GenericReqParams,
     LangCode,
     Queue,
     Region,
     SearchReturnType,
     StatsRegion,
     Tier,
-    GenericReqParams,
 )
 from opgg.search_result import SearchResult
+from opgg.season import SeasonMeta
+from opgg.summoner import Summoner
+from opgg.utils import Utils
 
 # All api endpoints pulled out of the main OPGG class to reduce clutter on the library object
 
@@ -41,12 +41,8 @@ _SUMMONER_API_URL = "https://lol-api-summoner.op.gg/api"
 _CHAMPION_API_URL = "https://lol-api-champion.op.gg/api"
 
 # ===== MAIN SEARCH AND SUMMONER DETAILS API - SEARCH SUPPORTS FUZZY MATCH ===== #
-_SEARCH_API_URL = (
-    f"{_SUMMONER_API_URL}/v3/{{region}}/summoners?riot_id={{riot_id}}&hl={{hl}}"
-)
-_SUMMARY_API_URL = (
-    f"{_SUMMONER_API_URL}/{{region}}/summoners/{{summoner_id}}/summary?hl={{hl}}"
-)
+_SEARCH_API_URL = f"{_SUMMONER_API_URL}/v3/{{region}}/summoners?riot_id={{riot_id}}&hl={{hl}}"
+_SUMMARY_API_URL = f"{_SUMMONER_API_URL}/{{region}}/summoners/{{summoner_id}}/summary?hl={{hl}}"
 
 # ===== GAMES API ===== #
 _GAMES_API_URL = (
@@ -65,17 +61,13 @@ _MAX_TOTAL_GAMES = 200
 _SEASONS_API_URL = f"{_SUMMONER_API_URL}/meta/seasons?hl={{hl}}"
 _KEYWORDS_API_URL = f"{_SUMMONER_API_URL}/meta/keywords?hl={{hl}}"
 _CHAMPIONS_API_URL = f"{_CHAMPION_API_URL}/meta/champions?hl={{hl}}"
-_CHAMPION_BY_ID_API_URL = (
-    f"{_CHAMPION_API_URL}/meta/champions/{{champion_id}}?hl={{hl}}"
-)
+_CHAMPION_BY_ID_API_URL = f"{_CHAMPION_API_URL}/meta/champions/{{champion_id}}?hl={{hl}}"
 _VERSIONS_API_URL = f"{_CHAMPION_API_URL}/meta/versions?hl={{hl}}"
 
 # ===== CHAMPION STATS API ===== #
 # Incomplete: more routes than just ranked.
 # Tested and confirmed working: ranked, aram, urf, doom (likely doombots), arena, nexus_blitz
-_CHAMPION_STATS_API_URL = (
-    f"{_CHAMPION_API_URL}/{{region}}/champions/ranked?tier={{tier}}"
-)
+_CHAMPION_STATS_API_URL = f"{_CHAMPION_API_URL}/{{region}}/champions/ranked?tier={{tier}}"
 
 
 class OPGG:
@@ -140,8 +132,7 @@ class OPGG:
         self._logger = logging.getLogger("OPGG.py")
 
         self.logger.info(
-            f"OPGG.__init__(SUMMONER_API_URL={_SUMMONER_API_URL}, "
-            f"headers={self._headers})"
+            f"OPGG.__init__(SUMMONER_API_URL={_SUMMONER_API_URL}, headers={self._headers})"
         )
 
         # at object creation, setup and query the cache
@@ -263,15 +254,11 @@ class OPGG:
         >>>     results = await opgg.search_async("faker", Region.KR)
         ```
         """
-        returns_value = (
-            returns.value if isinstance(returns, SearchReturnType) else str(returns)
-        )
+        returns_value = returns.value if isinstance(returns, SearchReturnType) else str(returns)
 
         normalized_query = query.strip()
 
-        self.logger.info(
-            f"Starting summoner search for '{normalized_query}' in region '{region}'"
-        )
+        self.logger.info(f"Starting summoner search for '{normalized_query}' in region '{region}'")
 
         search_params: GenericReqParams = {
             "base_api_url": _SEARCH_API_URL,
@@ -283,9 +270,7 @@ class OPGG:
 
         if region == Region.ANY:
             self.logger.info("Searching all regions...")
-            results = await Utils._search_all_regions(
-                session, normalized_query, search_params
-            )
+            results = await Utils._search_all_regions(session, normalized_query, search_params)
         else:
             self.logger.info(f"Searching specific region: {region}")
             results = await Utils._single_region_search(
@@ -306,22 +291,16 @@ class OPGG:
             for result in results
         ]
 
-        search_results = Utils.filter_results_with_summoner_id(
-            search_results, self.logger
-        )
+        search_results = Utils.filter_results_with_summoner_id(search_results, self.logger)
 
         if returns_value == "full":
             # set each summoner property in the search_results array
             # to the corresponding Summoner object
-            self.logger.info(
-                f"Fetching profiles for {len(search_results)} summoners..."
-            )
+            self.logger.info(f"Fetching profiles for {len(search_results)} summoners...")
 
             # This call is done passing the array because if there are multiple, we want the benefit of concurrency
             # provided by the asynchronous nature of the call
-            summoners = await self.get_summoner_async(
-                search_results, lang_code=lang_code
-            )
+            summoners = await self.get_summoner_async(search_results, lang_code=lang_code)
 
             # We then build the search_results array with the Summoner objects
             for sr, s in zip(search_results, summoners):
@@ -416,9 +395,7 @@ class OPGG:
                 )
             elif isinstance(summoner_id, list) and isinstance(region, list):
                 search_result = [
-                    SearchResult(
-                        **{"summoner": Summoner(**{"summoner_id": sid}), "region": reg}
-                    )
+                    SearchResult(**{"summoner": Summoner(**{"summoner_id": sid}), "region": reg})
                     for sid, reg in zip(summoner_id, region)
                 ]
             else:
@@ -459,22 +436,16 @@ class OPGG:
             return summoner
 
         elif isinstance(search_result, list):
-            self.logger.debug(
-                f"Raw summoner results: \n{pprint.pformat(search_result)}"
-            )
+            self.logger.debug(f"Raw summoner results: \n{pprint.pformat(search_result)}")
 
-            filtered_results = Utils.filter_results_with_summoner_id(
-                search_result, self.logger
-            )
+            filtered_results = Utils.filter_results_with_summoner_id(search_result, self.logger)
             if not filtered_results:
                 self.logger.warning(
                     "All provided search results were missing summoner IDs. Skipping profile fetch."
                 )
                 return []
 
-            self.logger.info(
-                f"Fetching profiles for {len(filtered_results)} summoner results"
-            )
+            self.logger.info(f"Fetching profiles for {len(filtered_results)} summoner results")
             profile_data = await Utils._fetch_profile_multiple(
                 session,
                 {
@@ -527,9 +498,7 @@ class OPGG:
         #### Note:
         For async contexts, use `get_summoner_async()` instead.
         """
-        return asyncio.run(
-            self.get_summoner_async(search_result, summoner_id, region, lang_code)
-        )
+        return asyncio.run(self.get_summoner_async(search_result, summoner_id, region, lang_code))
 
     async def get_recent_games_async(
         self,
@@ -575,15 +544,11 @@ class OPGG:
         >>>     grouped_games = await opgg.get_recent_games_async(search_result=results)
         ```
         """
-        game_type_value = (
-            game_type.value if isinstance(game_type, GameType) else str(game_type)
-        )
+        game_type_value = game_type.value if isinstance(game_type, GameType) else str(game_type)
 
         # Validate results parameter
         if not (0 < results <= _MAX_TOTAL_GAMES):
-            raise ValueError(
-                f"results must be between 1 and {_MAX_TOTAL_GAMES}, got {results}"
-            )
+            raise ValueError(f"results must be between 1 and {_MAX_TOTAL_GAMES}, got {results}")
 
         needs_pagination = results > _MAX_GAMES_PER_REQUEST
 
@@ -705,9 +670,7 @@ class OPGG:
                     game_params_list,
                 )
 
-            return [
-                [Game(**game) for game in game_data] for game_data in game_data_list
-            ]
+            return [[Game(**game) for game in game_data] for game_data in game_data_list]
 
         else:
             raise ValueError("Invalid type for search_result")
@@ -926,15 +889,11 @@ class OPGG:
             cache_stats = self._cacher.get_cache_stats()
             languages_set = set()
             for cache_type in cache_types_list:
-                languages_set.update(
-                    cache_stats.get(cache_type, {}).get("languages", [])
-                )
+                languages_set.update(cache_stats.get(cache_type, {}).get("languages", []))
 
             # If no languages cached yet, default to English
             languages = (
-                [LangCode(lang) for lang in languages_set]
-                if languages_set
-                else [LangCode.ENGLISH]
+                [LangCode(lang) for lang in languages_set] if languages_set else [LangCode.ENGLISH]
             )
             self.logger.info(
                 "Refreshing cache types %s for all cached languages: %s",
@@ -964,9 +923,7 @@ class OPGG:
                     champs = self.get_all_champions(lang_code=lang, force_refresh=True)
                     stats["champions"]["languages"].append(lang.value)
                     stats["champions"]["count"] += len(champs)
-                    self.logger.info(
-                        "Refreshed %d champions for lang=%s", len(champs), lang.value
-                    )
+                    self.logger.info("Refreshed %d champions for lang=%s", len(champs), lang.value)
                 except RateLimitError as exc:
                     self.logger.warning(
                         "Rate limited while refreshing champions for lang=%s: %s",
@@ -1001,9 +958,7 @@ class OPGG:
                         exc,
                     )
                 except (NetworkError, APIError) as exc:
-                    self.logger.error(
-                        "Failed to refresh seasons for lang=%s: %s", lang.value, exc
-                    )
+                    self.logger.error("Failed to refresh seasons for lang=%s: %s", lang.value, exc)
                 except OPGGError as exc:
                     self.logger.error(
                         "Unexpected OPGG error refreshing seasons for lang=%s: %s",
@@ -1025,9 +980,7 @@ class OPGG:
                         exc,
                     )
                 except (NetworkError, APIError) as exc:
-                    self.logger.error(
-                        "Failed to refresh versions for lang=%s: %s", lang.value, exc
-                    )
+                    self.logger.error("Failed to refresh versions for lang=%s: %s", lang.value, exc)
                 except OPGGError as exc:
                     self.logger.error(
                         "Unexpected OPGG error refreshing versions for lang=%s: %s",
@@ -1040,9 +993,7 @@ class OPGG:
                     keywords = self.get_keywords(lang_code=lang, force_refresh=True)
                     stats["keywords"]["languages"].append(lang.value)
                     stats["keywords"]["count"] += len(keywords)
-                    self.logger.info(
-                        "Refreshed %d keywords for lang=%s", len(keywords), lang.value
-                    )
+                    self.logger.info("Refreshed %d keywords for lang=%s", len(keywords), lang.value)
                 except RateLimitError as exc:
                     self.logger.warning(
                         "Rate limited while refreshing keywords for lang=%s: %s",
@@ -1050,9 +1001,7 @@ class OPGG:
                         exc,
                     )
                 except (NetworkError, APIError) as exc:
-                    self.logger.error(
-                        "Failed to refresh keywords for lang=%s: %s", lang.value, exc
-                    )
+                    self.logger.error("Failed to refresh keywords for lang=%s: %s", lang.value, exc)
                 except OPGGError as exc:
                     self.logger.error(
                         "Unexpected OPGG error refreshing keywords for lang=%s: %s",
@@ -1234,9 +1183,7 @@ class OPGG:
                 lang_code=lang_code, force_refresh=force_refresh
             )
             champs = [
-                champ
-                for champ in all_champs
-                if champ.name and value.lower() in champ.name.lower()
+                champ for champ in all_champs if champ.name and value.lower() in champ.name.lower()
             ]
 
             if len(champs) == 0:
@@ -1294,9 +1241,7 @@ class OPGG:
         ### Note
         For async contexts, use `get_champion_by_async()` instead.
         """
-        return asyncio.run(
-            self.get_champion_by_async(by, value, lang_code, force_refresh)
-        )
+        return asyncio.run(self.get_champion_by_async(by, value, lang_code, force_refresh))
 
     async def get_champion_stats_async(
         self,
@@ -1476,9 +1421,7 @@ class OPGG:
                 lang_code, ttl_seconds=self._champion_cache_ttl
             )
             if cached_versions:
-                self.logger.info(
-                    "Returning cached versions data for lang=%s", lang_code
-                )
+                self.logger.info("Returning cached versions data for lang=%s", lang_code)
                 return cached_versions
         else:
             self.logger.info(
@@ -1591,9 +1534,7 @@ class OPGG:
             )
 
         url = _KEYWORDS_API_URL.format(hl=lang_code.value)
-        self.logger.info(
-            "Fetching keywords from API with language=%s (url=%s)", lang_value, url
-        )
+        self.logger.info("Fetching keywords from API with language=%s (url=%s)", lang_value, url)
 
         keywords_params: GenericReqParams = {
             "base_api_url": url,
@@ -1691,9 +1632,7 @@ class OPGG:
         if not force_refresh:
             in_memory = self._season_meta_cache.get(lang_value)
             if in_memory:
-                self.logger.info(
-                    "Returning in-memory seasons data for lang=%s", lang_code
-                )
+                self.logger.info("Returning in-memory seasons data for lang=%s", lang_code)
                 return list(in_memory.values())
 
             cached_seasons = self._cacher.get_cached_seasons(
@@ -1788,9 +1727,7 @@ class OPGG:
         )
         return []
 
-    def _hydrate_season_meta(
-        self, payload: list[dict], lang_value: str
-    ) -> list[SeasonMeta]:
+    def _hydrate_season_meta(self, payload: list[dict], lang_value: str) -> list[SeasonMeta]:
         """Convert normalized payload into SeasonMeta objects and update cache."""
         if not payload:
             self._season_meta_cache.pop(lang_value, None)
@@ -1842,9 +1779,7 @@ class OPGG:
             return self._season_meta_cache.get(lang_value, {})
         return {}
 
-    async def _get_season_meta_map_async(
-        self, lang_code: LangCode
-    ) -> dict[int, SeasonMeta]:
+    async def _get_season_meta_map_async(self, lang_code: LangCode) -> dict[int, SeasonMeta]:
         """Async version: Return a mapping of season_id -> SeasonMeta for the requested language."""
         lang_value = LangCode.normalize(lang_code)
         meta_map = self._season_meta_cache.get(lang_value)

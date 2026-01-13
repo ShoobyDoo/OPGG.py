@@ -1,11 +1,11 @@
+import json
+import logging
 import os
 import sqlite3
-import logging
-import json
 import time
 
 from opgg.champion import Champion
-from opgg.params import LangCode, CacheType
+from opgg.params import CacheType, LangCode
 
 
 class Cacher:
@@ -95,9 +95,7 @@ class Cacher:
                 );
                 """
             )
-            cursor.execute(
-                "CREATE INDEX IF NOT EXISTS idx_seasons_lang ON tblSeasons(lang_code)"
-            )
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_seasons_lang ON tblSeasons(lang_code)")
             cursor.execute(
                 "CREATE INDEX IF NOT EXISTS idx_seasons_cached_at ON tblSeasons(cached_at)"
             )
@@ -115,9 +113,7 @@ class Cacher:
                 );
                 """
             )
-            cursor.execute(
-                "CREATE INDEX IF NOT EXISTS idx_versions_lang ON tblVersions(lang_code)"
-            )
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_versions_lang ON tblVersions(lang_code)")
             cursor.execute(
                 "CREATE INDEX IF NOT EXISTS idx_versions_cached_at ON tblVersions(cached_at)"
             )
@@ -135,9 +131,7 @@ class Cacher:
                 );
                 """
             )
-            cursor.execute(
-                "CREATE INDEX IF NOT EXISTS idx_keywords_lang ON tblKeywords(lang_code)"
-            )
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_keywords_lang ON tblKeywords(lang_code)")
             cursor.execute(
                 "CREATE INDEX IF NOT EXISTS idx_keywords_cached_at ON tblKeywords(cached_at)"
             )
@@ -199,9 +193,7 @@ class Cacher:
             )
 
         if not payloads:
-            self.logger.warning(
-                "No champions with valid IDs were provided for caching."
-            )
+            self.logger.warning("No champions with valid IDs were provided for caching.")
             return
 
         self.logger.debug(
@@ -223,9 +215,7 @@ class Cacher:
             )
             conn.commit()
 
-        self.logger.debug(
-            f"Successfully cached {len(payloads)} champions for lang={lang_value}."
-        )
+        self.logger.debug(f"Successfully cached {len(payloads)} champions for lang={lang_value}.")
 
     def get_cached_champs_count(self, lang_code: LangCode | None = None) -> int:
         """
@@ -261,9 +251,7 @@ class Cacher:
         Return all cached champions for the requested language, if available.
         """
         if ttl_seconds and self.is_champion_cache_stale(lang_code, ttl_seconds):
-            self.logger.info(
-                "Champion cache expired for lang=%s. Skipping cached data.", lang_code
-            )
+            self.logger.info("Champion cache expired for lang=%s. Skipping cached data.", lang_code)
             return []
 
         lang_value = LangCode.normalize(lang_code)
@@ -320,9 +308,7 @@ class Cacher:
         try:
             return Champion(**json.loads(data))
         except Exception as exc:
-            self.logger.error(
-                f"Failed to rebuild Champion({champion_id}) from cache: {exc}"
-            )
+            self.logger.error(f"Failed to rebuild Champion({champion_id}) from cache: {exc}")
             return None
 
     def get_cached_champions_by_name(
@@ -362,9 +348,7 @@ class Cacher:
 
         return champions
 
-    def get_champion_cache_timestamp(
-        self, lang_code: LangCode | None = None
-    ) -> float | None:
+    def get_champion_cache_timestamp(self, lang_code: LangCode | None = None) -> float | None:
         """
         Return the latest cached_at timestamp for champions, optionally scoped by language.
         """
@@ -384,9 +368,7 @@ class Cacher:
         timestamp = row[0]
         return float(timestamp) if timestamp is not None else None
 
-    def is_champion_cache_stale(
-        self, lang_code: LangCode, ttl_seconds: int | None
-    ) -> bool:
+    def is_champion_cache_stale(self, lang_code: LangCode, ttl_seconds: int | None) -> bool:
         if not ttl_seconds:
             return False
 
@@ -421,17 +403,13 @@ class Cacher:
             for season in seasons_data.get("seasons", []):
                 season_id = season.get("id")
                 if season_id is not None:
-                    payloads.append(
-                        (season_id, lang_value, json.dumps(season), cached_at)
-                    )
+                    payloads.append((season_id, lang_value, json.dumps(season), cached_at))
         elif isinstance(seasons_data, list):
             # If it's a list of seasons directly
             for season in seasons_data:
                 season_id = season.get("id")
                 if season_id is not None:
-                    payloads.append(
-                        (season_id, lang_value, json.dumps(season), cached_at)
-                    )
+                    payloads.append((season_id, lang_value, json.dumps(season), cached_at))
 
         if not payloads:
             self.logger.warning("No valid season data provided for caching.")
@@ -454,13 +432,9 @@ class Cacher:
             )
             conn.commit()
 
-        self.logger.debug(
-            f"Successfully cached {len(payloads)} seasons for lang={lang_value}."
-        )
+        self.logger.debug(f"Successfully cached {len(payloads)} seasons for lang={lang_value}.")
 
-    def get_cached_seasons(
-        self, lang_code: LangCode, ttl_seconds: int | None = None
-    ) -> list[dict]:
+    def get_cached_seasons(self, lang_code: LangCode, ttl_seconds: int | None = None) -> list[dict]:
         """
         Return cached seasons for the requested language, if available.
 
@@ -472,9 +446,7 @@ class Cacher:
             `list[dict]`: Cached seasons data or empty list if not found
         """
         if ttl_seconds and self.is_seasons_cache_stale(lang_code, ttl_seconds):
-            self.logger.info(
-                "Seasons cache expired for lang=%s. Skipping cached data.", lang_code
-            )
+            self.logger.info("Seasons cache expired for lang=%s. Skipping cached data.", lang_code)
             return []
 
         lang_value = LangCode.normalize(lang_code)
@@ -502,9 +474,7 @@ class Cacher:
 
         return seasons
 
-    def get_seasons_cache_timestamp(
-        self, lang_code: LangCode | None = None
-    ) -> float | None:
+    def get_seasons_cache_timestamp(self, lang_code: LangCode | None = None) -> float | None:
         """
         Return the latest cached_at timestamp for seasons, optionally scoped by language.
 
@@ -530,9 +500,7 @@ class Cacher:
         timestamp = row[0]
         return float(timestamp) if timestamp is not None else None
 
-    def is_seasons_cache_stale(
-        self, lang_code: LangCode, ttl_seconds: int | None
-    ) -> bool:
+    def is_seasons_cache_stale(self, lang_code: LangCode, ttl_seconds: int | None) -> bool:
         """
         Check if seasons cache is stale for given language.
 
@@ -554,9 +522,7 @@ class Cacher:
 
     # === KEYWORDS CACHING ===
 
-    def cache_keywords(
-        self, keywords_data: list[dict] | dict, lang_code: LangCode
-    ) -> None:
+    def cache_keywords(self, keywords_data: list[dict] | dict, lang_code: LangCode) -> None:
         """
         Cache keyword metadata in the database.
 
@@ -634,9 +600,7 @@ class Cacher:
             `list[dict]`: Keyword entries or empty list if not found
         """
         if ttl_seconds and self.is_keywords_cache_stale(lang_code, ttl_seconds):
-            self.logger.info(
-                "Keyword cache expired for lang=%s. Skipping cached data.", lang_code
-            )
+            self.logger.info("Keyword cache expired for lang=%s. Skipping cached data.", lang_code)
             return []
 
         lang_value = LangCode.normalize(lang_code)
@@ -662,9 +626,7 @@ class Cacher:
 
         return keywords
 
-    def get_keywords_cache_timestamp(
-        self, lang_code: LangCode | None = None
-    ) -> float | None:
+    def get_keywords_cache_timestamp(self, lang_code: LangCode | None = None) -> float | None:
         """
         Return the latest cached_at timestamp for keywords, optionally scoped by language.
         """
@@ -684,9 +646,7 @@ class Cacher:
         timestamp = row[0]
         return float(timestamp) if timestamp is not None else None
 
-    def is_keywords_cache_stale(
-        self, lang_code: LangCode, ttl_seconds: int | None
-    ) -> bool:
+    def is_keywords_cache_stale(self, lang_code: LangCode, ttl_seconds: int | None) -> bool:
         """
         Check if keywords cache is stale for given language.
         """
@@ -754,9 +714,7 @@ class Cacher:
             `dict | list | None`: Dictionary or list containing versions data, or None
         """
         if ttl_seconds and self.is_versions_cache_stale(lang_code, ttl_seconds):
-            self.logger.info(
-                "Versions cache expired for lang=%s. Skipping cached data.", lang_code
-            )
+            self.logger.info("Versions cache expired for lang=%s. Skipping cached data.", lang_code)
             return None
 
         lang_value = LangCode.normalize(lang_code)
@@ -786,9 +744,7 @@ class Cacher:
             self.logger.error(f"Failed to parse versions data from cache: {exc}")
             return None
 
-    def get_versions_cache_timestamp(
-        self, lang_code: LangCode | None = None
-    ) -> float | None:
+    def get_versions_cache_timestamp(self, lang_code: LangCode | None = None) -> float | None:
         """
         Return the latest cached_at timestamp for versions, optionally scoped by language.
 
@@ -814,9 +770,7 @@ class Cacher:
         timestamp = row[0]
         return float(timestamp) if timestamp is not None else None
 
-    def is_versions_cache_stale(
-        self, lang_code: LangCode, ttl_seconds: int | None
-    ) -> bool:
+    def is_versions_cache_stale(self, lang_code: LangCode, ttl_seconds: int | None) -> bool:
         """
         Check if versions cache is stale for given language.
 
@@ -882,9 +836,7 @@ class Cacher:
                 stats["champions"]["oldest_cache"] = champ_row[1]
                 stats["champions"]["newest_cache"] = champ_row[2]
 
-            champ_langs = conn.execute(
-                "SELECT DISTINCT lang_code FROM tblChampions"
-            ).fetchall()
+            champ_langs = conn.execute("SELECT DISTINCT lang_code FROM tblChampions").fetchall()
             stats["champions"]["languages"] = [row[0] for row in champ_langs]
 
             # Seasons stats
@@ -896,9 +848,7 @@ class Cacher:
                 stats["seasons"]["oldest_cache"] = season_row[1]
                 stats["seasons"]["newest_cache"] = season_row[2]
 
-            season_langs = conn.execute(
-                "SELECT DISTINCT lang_code FROM tblSeasons"
-            ).fetchall()
+            season_langs = conn.execute("SELECT DISTINCT lang_code FROM tblSeasons").fetchall()
             stats["seasons"]["languages"] = [row[0] for row in season_langs]
 
             # Versions stats
@@ -908,16 +858,12 @@ class Cacher:
             if version_row and version_row[0]:
                 # Count actual versions in the JSON array, not database rows
                 version_data = json.loads(version_row[0])
-                version_count = (
-                    len(version_data) if isinstance(version_data, list) else 1
-                )
+                version_count = len(version_data) if isinstance(version_data, list) else 1
                 stats["versions"]["total_count"] = version_count
                 stats["versions"]["oldest_cache"] = version_row[1]
                 stats["versions"]["newest_cache"] = version_row[2]
 
-            version_langs = conn.execute(
-                "SELECT DISTINCT lang_code FROM tblVersions"
-            ).fetchall()
+            version_langs = conn.execute("SELECT DISTINCT lang_code FROM tblVersions").fetchall()
             stats["versions"]["languages"] = [row[0] for row in version_langs]
 
             # Keywords stats
@@ -929,9 +875,7 @@ class Cacher:
                 stats["keywords"]["oldest_cache"] = keyword_row[1]
                 stats["keywords"]["newest_cache"] = keyword_row[2]
 
-            keyword_langs = conn.execute(
-                "SELECT DISTINCT lang_code FROM tblKeywords"
-            ).fetchall()
+            keyword_langs = conn.execute("SELECT DISTINCT lang_code FROM tblKeywords").fetchall()
             stats["keywords"]["languages"] = [row[0] for row in keyword_langs]
 
         return stats

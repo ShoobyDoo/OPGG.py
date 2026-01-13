@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from opgg.opscore import OPScore, OPScoreAnalysis
@@ -407,7 +408,7 @@ class Game(BaseModel):
     memo: Any | None = None
     """Internal OPGG memo field."""
 
-    myData: Participant | None = None
+    my_data: Participant | None = None
     """The queried player's game data."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)

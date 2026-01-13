@@ -1,26 +1,25 @@
+import asyncio
 import json
 import logging
-import asyncio
-import aiohttp
-
-from typing import Any
 from pprint import pformat
+from typing import Any
 from urllib.parse import quote_plus
 
-from opgg.params import LangCode, Region, GenericReqParams
+import aiohttp
+
+from opgg.exceptions import (
+    ClientHTTPError,
+    HTTPError,
+    NetworkError,
+    NotFoundError,
+    OPGGJSONDecodeError,
+    RateLimitError,
+    ResponseValidationError,
+    ServerHTTPError,
+)
+from opgg.params import GenericReqParams, LangCode, Region
 from opgg.search_result import SearchResult
 from opgg.summoner import Summoner
-from opgg.exceptions import (
-    HTTPError,
-    ClientHTTPError,
-    ServerHTTPError,
-    NotFoundError,
-    RateLimitError,
-    NetworkError,
-    OPGGJSONDecodeError,
-    ResponseValidationError,
-)
-
 
 logger = logging.getLogger("OPGG.py")
 
@@ -73,9 +72,7 @@ class ResponseHandler:
 
         # Handle non-success status codes BEFORE trying to parse JSON
         if status >= 400:
-            return await ResponseHandler._handle_error_status(
-                response, url, status, allow_404, log
-            )
+            return await ResponseHandler._handle_error_status(response, url, status, allow_404, log)
 
         # Parse JSON with error handling
         try:
@@ -178,9 +175,7 @@ class ResponseHandler:
 
         missing = [k for k in expected_keys if k not in content]
         if missing:
-            raise ResponseValidationError(
-                url, f"keys {expected_keys}", f"missing {missing}"
-            )
+            raise ResponseValidationError(url, f"keys {expected_keys}", f"missing {missing}")
 
     @staticmethod
     def extract_data(
@@ -219,7 +214,7 @@ class Utils:
         Returns:
             `dict[str, Any]`: Parsed JSON data as a dictionary
         """
-        with open(file, "r") as f:
+        with open(file) as f:
             return json.loads(f.read())
 
     @staticmethod
@@ -255,11 +250,7 @@ class Utils:
                     getattr(result, "region", "unknown"),
                     getattr(summoner, "game_name", None),
                     getattr(summoner, "tagline", None),
-                    pformat(
-                        summoner.model_dump()
-                        if hasattr(summoner, "model_dump")
-                        else summoner
-                    ),
+                    pformat(summoner.model_dump() if hasattr(summoner, "model_dump") else summoner),
                 )
                 continue
 
@@ -391,9 +382,7 @@ class Utils:
 
         async with session.get(url, headers=params["headers"]) as res:
             content = await ResponseHandler.handle_response(res, url)
-            logger.info(
-                f"Request to OPGG API was successful (Content Length: {len(str(content))})"
-            )
+            logger.info(f"Request to OPGG API was successful (Content Length: {len(str(content))})")
             logger.debug(f"SUMMONER DATA AT /SUMMARY ENDPOINT:\n{pformat(content)}\n")
             return ResponseHandler.extract_data(content, "data", default={})
 
@@ -441,9 +430,7 @@ class Utils:
 
         async with session.get(url, headers=params["headers"]) as res:
             content = await ResponseHandler.handle_response(res, url)
-            logger.info(
-                f"Request to OPGG API was successful (Content Length: {len(str(content))})"
-            )
+            logger.info(f"Request to OPGG API was successful (Content Length: {len(str(content))})")
             logger.debug(f"GAME DATA AT /GAMES ENDPOINT:\n{pformat(content)}\n")
             return ResponseHandler.extract_data(content, "data", default={})
 
@@ -525,8 +512,7 @@ class Utils:
                 if not page_games:
                     # No more games available
                     logger.info(
-                        f"Pagination complete: received empty page after "
-                        f"{len(all_games)} games"
+                        f"Pagination complete: received empty page after {len(all_games)} games"
                     )
                     break
 
@@ -549,9 +535,7 @@ class Utils:
                 # Extract timestamp from last game for next page
                 last_game = page_games[-1]
                 if "created_at" not in last_game:
-                    logger.warning(
-                        "Last game missing 'created_at' field, stopping pagination"
-                    )
+                    logger.warning("Last game missing 'created_at' field, stopping pagination")
                     break
 
                 # Use the raw ISO format string from API, URL-encode it
@@ -559,8 +543,7 @@ class Utils:
                 logger.debug(f"Next page ended_at: {ended_at_param}")
 
         logger.info(
-            f"Pagination complete: fetched {len(all_games)} games "
-            f"(requested {total_results})"
+            f"Pagination complete: fetched {len(all_games)} games (requested {total_results})"
         )
         return all_games
 
@@ -618,9 +601,7 @@ class Utils:
             }
         )
 
-        logger.info(
-            f"Updating profile for summoner ID: {search_result.summoner.summoner_id}"
-        )
+        logger.info(f"Updating profile for summoner ID: {search_result.summoner.summoner_id}")
         logger.debug(f"API URL: {url}")
 
         async with session.post(url, headers=params["headers"]) as res:
@@ -636,17 +617,13 @@ class Utils:
             await ResponseHandler.handle_response(res, url)
 
     @staticmethod
-    async def _fetch_all_champions(
-        session: aiohttp.ClientSession, params: GenericReqParams
-    ):
+    async def _fetch_all_champions(session: aiohttp.ClientSession, params: GenericReqParams):
         url = params["base_api_url"]
         logger.debug(f"API URL: {url}")
 
         async with session.get(url, headers=params["headers"]) as res:
             content = await ResponseHandler.handle_response(res, url)
-            logger.info(
-                f"Request to OPGG API was successful (Content Length: {len(str(content))})"
-            )
+            logger.info(f"Request to OPGG API was successful (Content Length: {len(str(content))})")
             logger.debug(
                 f"CHAMPION DATA AT /CHAMPIONS ENDPOINT:\n{pformat(content, sort_dicts=False)}\n"
             )
@@ -664,16 +641,12 @@ class Utils:
 
         async with session.get(url, headers=params["headers"]) as res:
             content = await ResponseHandler.handle_response(res, url)
-            logger.info(
-                f"Request to OPGG API was successful (Content Length: {len(str(content))})"
-            )
+            logger.info(f"Request to OPGG API was successful (Content Length: {len(str(content))})")
             logger.debug(f"CHAMPION DATA AT /CHAMPIONS ENDPOINT:\n{pformat(content)}\n")
             return ResponseHandler.extract_data(content, "data", default={})
 
     @staticmethod
-    async def _fetch_champion_stats(
-        session: aiohttp.ClientSession, params: GenericReqParams
-    ):
+    async def _fetch_champion_stats(session: aiohttp.ClientSession, params: GenericReqParams):
         """
         `[Internal Helper Method]` Fetch champion statistics from the Champion API.
 
@@ -740,9 +713,7 @@ class Utils:
             logger.info(
                 f"Request to OPGG Summoner API was successful (Content Length: {len(str(content))})"
             )
-            logger.debug(
-                f"SEASONS DATA AT /META/SEASONS ENDPOINT:\n{pformat(content)}\n"
-            )
+            logger.debug(f"SEASONS DATA AT /META/SEASONS ENDPOINT:\n{pformat(content)}\n")
             return ResponseHandler.extract_data(content, "data", default={})
 
     @staticmethod
@@ -765,15 +736,11 @@ class Utils:
             logger.info(
                 f"Request to OPGG Summoner API was successful (Content Length: {len(str(content))})"
             )
-            logger.debug(
-                f"KEYWORDS DATA AT /META/KEYWORDS ENDPOINT:\n{pformat(content)}\n"
-            )
+            logger.debug(f"KEYWORDS DATA AT /META/KEYWORDS ENDPOINT:\n{pformat(content)}\n")
             return ResponseHandler.extract_data(content, "data", default=[])
 
     @staticmethod
-    async def _fetch_live_game(
-        session: aiohttp.ClientSession, params: GenericReqParams
-    ):
+    async def _fetch_live_game(session: aiohttp.ClientSession, params: GenericReqParams):
         url = params["base_api_url"]
         logger.debug(f"API URL: {url}")
 
@@ -790,9 +757,7 @@ class Utils:
                 logger.info(
                     f"Request to OPGG API was successful (Content Length: {len(str(content))})"
                 )
-                logger.debug(
-                    f"LIVE GAME DATA AT /spectate ENDPOINT:\n{pformat(content)}\n"
-                )
+                logger.debug(f"LIVE GAME DATA AT /spectate ENDPOINT:\n{pformat(content)}\n")
 
                 return {
                     "status": 200,
@@ -814,9 +779,7 @@ class Utils:
                     "status": 404,
                     "message": message,
                     "detail": (
-                        "Provided summoner is not in a live game!"
-                        if detail == ""
-                        else detail
+                        "Provided summoner is not in a live game!" if detail == "" else detail
                     ),
                 }
 

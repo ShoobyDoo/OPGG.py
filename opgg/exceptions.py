@@ -63,7 +63,9 @@ class APIError(OPGGError):
         super().__init__(message, original_error)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.message!r}, url={self.url!r}, method={self.method!r})"
+        return (
+            f"{self.__class__.__name__}({self.message!r}, url={self.url!r}, method={self.method!r})"
+        )
 
 
 class HTTPError(APIError):
@@ -86,9 +88,7 @@ class HTTPError(APIError):
     ):
         self.status_code = status_code
         self.response_body = (
-            response_body[:1000]
-            if response_body and len(response_body) > 1000
-            else response_body
+            response_body[:1000] if response_body and len(response_body) > 1000 else response_body
         )
         self.headers = headers or {}
         super().__init__(message, url, "GET", original_error)
