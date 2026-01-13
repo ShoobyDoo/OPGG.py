@@ -1,0 +1,103 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "opgg.py"
+version = "3.0.0"
+description = "An unofficial Python library for scraping/accessing data from OP.GG"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+authors = [{ name = "ShoobyDoo" }]
+requires-python = ">=3.12"
+keywords = ["opgg", "league-of-legends", "web-scraping", "summoner", "data", "riot-api"]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+]
+
+dependencies = [
+    "aiohttp>=3.13.0",
+    "pydantic>=2.12.0",
+    "fake-useragent>=2.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    # Code quality
+    "ruff>=0.14.0",
+    # Testing
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "aioresponses>=0.7.6",
+    # Type checking
+    "mypy>=1.8.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/ShoobyDoo/OPGG.py"
+"Bug Reports" = "https://github.com/ShoobyDoo/OPGG.py/issues"
+"Source" = "https://github.com/ShoobyDoo/OPGG.py"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["opgg*"]
+exclude = ["tests*"]
+
+[tool.setuptools.package-data]
+opgg = ["py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--cov=opgg",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    "--cov-fail-under=50",
+    "-v",
+]
+asyncio_mode = "auto"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["opgg"]
+omit = ["tests/*", "*/tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

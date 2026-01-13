@@ -162,8 +162,6 @@ cython_debug/
 .vscode
 main*.py
 opgg*.db
-setup.cfg
-setup.py
 pip-deploy.txt
 .claude
 

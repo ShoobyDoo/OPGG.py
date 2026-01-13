@@ -1,0 +1,252 @@
+{
+  "data": [
+    {
+      "id": 1,
+      "value": 1,
+      "display_value": 1,
+      "split": null,
+      "season": null,
+      "is_preseason": false
+    },
+    {
+      "id": 2,
+      "value": 2,
+      "display_value": 2,
+      "split": null,
+      "season": null,
+      "is_preseason": false
+    },
+    {
+      "id": 3,
+      "value": 3,
+      "display_value": 3,
+      "split": null,
+      "season": null,
+      "is_preseason": false
+    },
+    {
+      "id": 4,
+      "value": 4,
+      "display_value": 4,
+      "split": null,
+      "season": null,
+      "is_preseason": false
+    },
+    {
+      "id": 5,
+      "value": 5,
+      "display_value": 5,
+      "split": null,
+      "season": null,
+      "is_preseason": false
+    },
+    {
+      "id": 6,
+      "value": 6,
+      "display_value": 6,
+      "split": null,
+      "season": null,
+      "is_preseason": false
+    },
+    {
+      "id": 7,
+      "value": 7,
+      "display_value": 7,
+      "split": null,
+      "season": null,
+      "is_preseason": false
+    },
+    {
+      "id": 10,
+      "value": 8,
+      "display_value": 8,
+      "split": null,
+      "season": null,
+      "is_preseason": true
+    },
+    {
+      "id": 11,
+      "value": 8,
+      "display_value": 8,
+      "split": null,
+      "season": null,
+      "is_preseason": false
+    },
+    {
+      "id": 12,
+      "value": 9,
+      "display_value": 9,
+      "split": null,
+      "season": null,
+      "is_preseason": true
+    },
+    {
+      "id": 13,
+      "value": 9,
+      "display_value": 9,
+      "split": null,
+      "season": null,
+      "is_preseason": false
+    },
+    {
+      "id": 14,
+      "value": 10,
+      "display_value": 2020,
+      "split": null,
+      "season": null,
+      "is_preseason": true
+    },
+    {
+      "id": 15,
+      "value": 10,
+      "display_value": 2020,
+      "split": null,
+      "season": null,
+      "is_preseason": false
+    },
+    {
+      "id": 16,
+      "value": 11,
+      "display_value": 2021,
+      "split": null,
+      "season": null,
+      "is_preseason": true
+    },
+    {
+      "id": 17,
+      "value": 11,
+      "display_value": 2021,
+      "split": null,
+      "season": null,
+      "is_preseason": false
+    },
+    {
+      "id": 18,
+      "value": 12,
+      "display_value": 2022,
+      "split": null,
+      "season": null,
+      "is_preseason": true
+    },
+    {
+      "id": 19,
+      "value": 12,
+      "display_value": 2022,
+      "split": null,
+      "season": null,
+      "is_preseason": false
+    },
+    {
+      "id": 20,
+      "value": 13,
+      "display_value": 2023,
+      "split": 1,
+      "season": null,
+      "is_preseason": true
+    },
+    {
+      "id": 21,
+      "value": 13,
+      "display_value": 2023,
+      "split": 1,
+      "season": null,
+      "is_preseason": false
+    },
+    {
+      "id": 22,
+      "value": 13,
+      "display_value": 2023,
+      "split": 2,
+      "season": null,
+      "is_preseason": true
+    },
+    {
+      "id": 23,
+      "value": 13,
+      "display_value": 2023,
+      "split": 2,
+      "season": null,
+      "is_preseason": false
+    },
+    {
+      "id": 24,
+      "value": 14,
+      "display_value": 2024,
+      "split": 1,
+      "season": null,
+      "is_preseason": true
+    },
+    {
+      "id": 25,
+      "value": 14,
+      "display_value": 2024,
+      "split": 1,
+      "season": null,
+      "is_preseason": false
+    },
+    {
+      "id": 26,
+      "value": 14,
+      "display_value": 2024,
+      "split": 2,
+      "season": null,
+      "is_preseason": true
+    },
+    {
+      "id": 27,
+      "value": 14,
+      "display_value": 2024,
+      "split": 2,
+      "season": null,
+      "is_preseason": false
+    },
+    {
+      "id": 28,
+      "value": 14,
+      "display_value": 2024,
+      "split": 3,
+      "season": null,
+      "is_preseason": true
+    },
+    {
+      "id": 29,
+      "value": 14,
+      "display_value": 2024,
+      "split": 3,
+      "season": null,
+      "is_preseason": false
+    },
+    {
+      "id": 30,
+      "value": 15,
+      "display_value": 2025,
+      "split": null,
+      "season": null,
+      "is_preseason": true
+    },
+    {
+      "id": 31,
+      "value": 15,
+      "display_value": 2025,
+      "split": null,
+      "season": 1,
+      "is_preseason": false
+    },
+    {
+      "id": 32,
+      "value": 16,
+      "display_value": 2026,
+      "split": null,
+      "season": null,
+      "is_preseason": true
+    },
+    {
+      "id": 33,
+      "value": 16,
+      "display_value": 2026,
+      "split": null,
+      "season": 1,
+      "is_preseason": false
+    }
+  ]
+}

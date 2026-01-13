@@ -1,11 +1,11 @@
+import json
+import logging
 import os
 import sqlite3
-import logging
-import json
 import time
 
 from opgg.champion import Champion
-from opgg.params import LangCode, CacheType
+from opgg.params import CacheType, LangCode
 
 
 class Cacher:
@@ -26,16 +26,18 @@ class Cacher:
         conn.row_factory = sqlite3.Row
         return conn
 
-    def _ensure_column(self, table: str, column: str, definition: str) -> None:
+    def _ensure_column(
+        self, cursor: sqlite3.Cursor, table: str, column: str, definition: str
+    ) -> None:
         """
         Ensure a column exists on the specified table, adding it if missing.
         """
-        self.cursor.execute(f"PRAGMA table_info({table})")
-        existing_columns = {info[1] for info in self.cursor.fetchall()}
+        cursor.execute(f"PRAGMA table_info({table})")
+        existing_columns = {info[1] for info in cursor.fetchall()}
 
         if column not in existing_columns:
             self.logger.info(f"Adding missing column '{column}' to table '{table}'")
-            self.cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+            cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
 
     def setup(self) -> None:
         """
@@ -48,100 +50,93 @@ class Cacher:
             os.mkdir("./cache")
             self.logger.info("Setting up cache database...")
 
-        self.conn = self._connect()
-        self.cursor = self.conn.cursor()
+        with self._connect() as conn:
+            cursor = conn.cursor()
 
-        # === CHAMPIONS TABLE ===
-        self.logger.debug("Creating champions table if it doesn't exist...")
-        self.cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS tblChampions (
-                champion_id PRIMARY KEY,
-                name,
-                lang_code,
-                data,
-                cached_at REAL
-            );
-            """
-        )
-        self._ensure_column("tblChampions", "lang_code", "TEXT")
-        self._ensure_column("tblChampions", "data", "TEXT")
-        self._ensure_column("tblChampions", "cached_at", "REAL")
+            # === CHAMPIONS TABLE ===
+            self.logger.debug("Creating champions table if it doesn't exist...")
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS tblChampions (
+                    champion_id PRIMARY KEY,
+                    name,
+                    lang_code,
+                    data,
+                    cached_at REAL
+                );
+                """
+            )
+            self._ensure_column(cursor, "tblChampions", "lang_code", "TEXT")
+            self._ensure_column(cursor, "tblChampions", "data", "TEXT")
+            self._ensure_column(cursor, "tblChampions", "cached_at", "REAL")
 
-        # Create indexes for tblChampions
-        self.logger.debug("Creating indexes for tblChampions...")
-        self.cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_champions_lang ON tblChampions(lang_code)"
-        )
-        self.cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_champions_name ON tblChampions(name COLLATE NOCASE)"
-        )
-        self.cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_champions_cached_at ON tblChampions(cached_at)"
-        )
+            # Create indexes for tblChampions
+            self.logger.debug("Creating indexes for tblChampions...")
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_champions_lang ON tblChampions(lang_code)"
+            )
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_champions_name ON tblChampions(name COLLATE NOCASE)"
+            )
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_champions_cached_at ON tblChampions(cached_at)"
+            )
 
-        # === SEASONS TABLE ===
-        self.logger.debug("Creating seasons table if it doesn't exist...")
-        self.cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS tblSeasons (
-                season_id INTEGER,
-                lang_code TEXT,
-                data TEXT,
-                cached_at REAL,
-                PRIMARY KEY (season_id, lang_code)
-            );
-            """
-        )
-        self.cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_seasons_lang ON tblSeasons(lang_code)"
-        )
-        self.cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_seasons_cached_at ON tblSeasons(cached_at)"
-        )
+            # === SEASONS TABLE ===
+            self.logger.debug("Creating seasons table if it doesn't exist...")
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS tblSeasons (
+                    season_id INTEGER,
+                    lang_code TEXT,
+                    data TEXT,
+                    cached_at REAL,
+                    PRIMARY KEY (season_id, lang_code)
+                );
+                """
+            )
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_seasons_lang ON tblSeasons(lang_code)")
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_seasons_cached_at ON tblSeasons(cached_at)"
+            )
 
-        # === VERSIONS TABLE ===
-        self.logger.debug("Creating versions table if it doesn't exist...")
-        self.cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS tblVersions (
-                version TEXT,
-                lang_code TEXT,
-                data TEXT,
-                cached_at REAL,
-                PRIMARY KEY (version, lang_code)
-            );
-            """
-        )
-        self.cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_versions_lang ON tblVersions(lang_code)"
-        )
-        self.cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_versions_cached_at ON tblVersions(cached_at)"
-        )
+            # === VERSIONS TABLE ===
+            self.logger.debug("Creating versions table if it doesn't exist...")
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS tblVersions (
+                    version TEXT,
+                    lang_code TEXT,
+                    data TEXT,
+                    cached_at REAL,
+                    PRIMARY KEY (version, lang_code)
+                );
+                """
+            )
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_versions_lang ON tblVersions(lang_code)")
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_versions_cached_at ON tblVersions(cached_at)"
+            )
 
-        # === KEYWORDS TABLE ===
-        self.logger.debug("Creating keywords table if it doesn't exist...")
-        self.cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS tblKeywords (
-                keyword TEXT,
-                lang_code TEXT,
-                data TEXT,
-                cached_at REAL,
-                PRIMARY KEY (keyword, lang_code)
-            );
-            """
-        )
-        self.cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_keywords_lang ON tblKeywords(lang_code)"
-        )
-        self.cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_keywords_cached_at ON tblKeywords(cached_at)"
-        )
+            # === KEYWORDS TABLE ===
+            self.logger.debug("Creating keywords table if it doesn't exist...")
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS tblKeywords (
+                    keyword TEXT,
+                    lang_code TEXT,
+                    data TEXT,
+                    cached_at REAL,
+                    PRIMARY KEY (keyword, lang_code)
+                );
+                """
+            )
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_keywords_lang ON tblKeywords(lang_code)")
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_keywords_cached_at ON tblKeywords(cached_at)"
+            )
 
-        self.conn.commit()
-        self.conn.close()
+            conn.commit()
 
     def get_champ_id_by_name(self, champ_name: str) -> int | None:
         """
@@ -180,9 +175,7 @@ class Cacher:
         if not champs:
             return
 
-        lang_value = (
-            lang_code.value if isinstance(lang_code, LangCode) else str(lang_code)
-        )
+        lang_value = LangCode.normalize(lang_code)
         payloads: list[tuple[int, str | None, str, str, float]] = []
         cached_at = time.time()
 
@@ -200,9 +193,7 @@ class Cacher:
             )
 
         if not payloads:
-            self.logger.warning(
-                "No champions with valid IDs were provided for caching."
-            )
+            self.logger.warning("No champions with valid IDs were provided for caching.")
             return
 
         self.logger.debug(
@@ -224,9 +215,7 @@ class Cacher:
             )
             conn.commit()
 
-        self.logger.debug(
-            f"Successfully cached {len(payloads)} champions for lang={lang_value}."
-        )
+        self.logger.debug(f"Successfully cached {len(payloads)} champions for lang={lang_value}.")
 
     def get_cached_champs_count(self, lang_code: LangCode | None = None) -> int:
         """
@@ -240,9 +229,7 @@ class Cacher:
 
         if lang_code:
             query += " WHERE lang_code = ?"
-            params.append(
-                lang_code.value if isinstance(lang_code, LangCode) else str(lang_code)
-            )
+            params.append(LangCode.normalize(lang_code))
 
         with self._connect() as conn:
             cursor = conn.execute(query, params)
@@ -264,14 +251,10 @@ class Cacher:
         Return all cached champions for the requested language, if available.
         """
         if ttl_seconds and self.is_champion_cache_stale(lang_code, ttl_seconds):
-            self.logger.info(
-                "Champion cache expired for lang=%s. Skipping cached data.", lang_code
-            )
+            self.logger.info("Champion cache expired for lang=%s. Skipping cached data.", lang_code)
             return []
 
-        lang_value = (
-            lang_code.value if isinstance(lang_code, LangCode) else str(lang_code)
-        )
+        lang_value = LangCode.normalize(lang_code)
 
         with self._connect() as conn:
             rows = conn.execute(
@@ -304,9 +287,7 @@ class Cacher:
         if ttl_seconds and self.is_champion_cache_stale(lang_code, ttl_seconds):
             return None
 
-        lang_value = (
-            lang_code.value if isinstance(lang_code, LangCode) else str(lang_code)
-        )
+        lang_value = LangCode.normalize(lang_code)
 
         with self._connect() as conn:
             row = conn.execute(
@@ -327,9 +308,7 @@ class Cacher:
         try:
             return Champion(**json.loads(data))
         except Exception as exc:
-            self.logger.error(
-                f"Failed to rebuild Champion({champion_id}) from cache: {exc}"
-            )
+            self.logger.error(f"Failed to rebuild Champion({champion_id}) from cache: {exc}")
             return None
 
     def get_cached_champions_by_name(
@@ -344,9 +323,7 @@ class Cacher:
         if ttl_seconds and self.is_champion_cache_stale(lang_code, ttl_seconds):
             return []
 
-        lang_value = (
-            lang_code.value if isinstance(lang_code, LangCode) else str(lang_code)
-        )
+        lang_value = LangCode.normalize(lang_code)
         matcher = f"%{champ_name.lower()}%"
 
         with self._connect() as conn:
@@ -371,9 +348,7 @@ class Cacher:
 
         return champions
 
-    def get_champion_cache_timestamp(
-        self, lang_code: LangCode | None = None
-    ) -> float | None:
+    def get_champion_cache_timestamp(self, lang_code: LangCode | None = None) -> float | None:
         """
         Return the latest cached_at timestamp for champions, optionally scoped by language.
         """
@@ -382,9 +357,7 @@ class Cacher:
 
         if lang_code:
             query += " WHERE lang_code = ?"
-            params.append(
-                lang_code.value if isinstance(lang_code, LangCode) else str(lang_code)
-            )
+            params.append(LangCode.normalize(lang_code))
 
         with self._connect() as conn:
             row = conn.execute(query, params).fetchone()
@@ -395,9 +368,7 @@ class Cacher:
         timestamp = row[0]
         return float(timestamp) if timestamp is not None else None
 
-    def is_champion_cache_stale(
-        self, lang_code: LangCode, ttl_seconds: int | None
-    ) -> bool:
+    def is_champion_cache_stale(self, lang_code: LangCode, ttl_seconds: int | None) -> bool:
         if not ttl_seconds:
             return False
 
@@ -420,9 +391,7 @@ class Cacher:
         if not seasons_data:
             return
 
-        lang_value = (
-            lang_code.value if isinstance(lang_code, LangCode) else str(lang_code)
-        )
+        lang_value = LangCode.normalize(lang_code)
         cached_at = time.time()
 
         # seasons_data is expected to be a dict with season info
@@ -434,17 +403,13 @@ class Cacher:
             for season in seasons_data.get("seasons", []):
                 season_id = season.get("id")
                 if season_id is not None:
-                    payloads.append(
-                        (season_id, lang_value, json.dumps(season), cached_at)
-                    )
+                    payloads.append((season_id, lang_value, json.dumps(season), cached_at))
         elif isinstance(seasons_data, list):
             # If it's a list of seasons directly
             for season in seasons_data:
                 season_id = season.get("id")
                 if season_id is not None:
-                    payloads.append(
-                        (season_id, lang_value, json.dumps(season), cached_at)
-                    )
+                    payloads.append((season_id, lang_value, json.dumps(season), cached_at))
 
         if not payloads:
             self.logger.warning("No valid season data provided for caching.")
@@ -467,13 +432,9 @@ class Cacher:
             )
             conn.commit()
 
-        self.logger.debug(
-            f"Successfully cached {len(payloads)} seasons for lang={lang_value}."
-        )
+        self.logger.debug(f"Successfully cached {len(payloads)} seasons for lang={lang_value}.")
 
-    def get_cached_seasons(
-        self, lang_code: LangCode, ttl_seconds: int | None = None
-    ) -> list[dict] | None:
+    def get_cached_seasons(self, lang_code: LangCode, ttl_seconds: int | None = None) -> list[dict]:
         """
         Return cached seasons for the requested language, if available.
 
@@ -482,17 +443,13 @@ class Cacher:
             `ttl_seconds` (`int | None`): Time-to-live in seconds
 
         Returns:
-            `list[dict] | None`: Cached seasons data or None
+            `list[dict]`: Cached seasons data or empty list if not found
         """
         if ttl_seconds and self.is_seasons_cache_stale(lang_code, ttl_seconds):
-            self.logger.info(
-                "Seasons cache expired for lang=%s. Skipping cached data.", lang_code
-            )
-            return None
+            self.logger.info("Seasons cache expired for lang=%s. Skipping cached data.", lang_code)
+            return []
 
-        lang_value = (
-            lang_code.value if isinstance(lang_code, LangCode) else str(lang_code)
-        )
+        lang_value = LangCode.normalize(lang_code)
 
         with self._connect() as conn:
             rows = conn.execute(
@@ -504,7 +461,7 @@ class Cacher:
             ).fetchall()
 
         if not rows:
-            return None
+            return []
 
         seasons = []
         for row in rows:
@@ -515,11 +472,9 @@ class Cacher:
                 except Exception as exc:
                     self.logger.error(f"Failed to parse season data from cache: {exc}")
 
-        return seasons or None
+        return seasons
 
-    def get_seasons_cache_timestamp(
-        self, lang_code: LangCode | None = None
-    ) -> float | None:
+    def get_seasons_cache_timestamp(self, lang_code: LangCode | None = None) -> float | None:
         """
         Return the latest cached_at timestamp for seasons, optionally scoped by language.
 
@@ -534,9 +489,7 @@ class Cacher:
 
         if lang_code:
             query += " WHERE lang_code = ?"
-            params.append(
-                lang_code.value if isinstance(lang_code, LangCode) else str(lang_code)
-            )
+            params.append(LangCode.normalize(lang_code))
 
         with self._connect() as conn:
             row = conn.execute(query, params).fetchone()
@@ -547,9 +500,7 @@ class Cacher:
         timestamp = row[0]
         return float(timestamp) if timestamp is not None else None
 
-    def is_seasons_cache_stale(
-        self, lang_code: LangCode, ttl_seconds: int | None
-    ) -> bool:
+    def is_seasons_cache_stale(self, lang_code: LangCode, ttl_seconds: int | None) -> bool:
         """
         Check if seasons cache is stale for given language.
 
@@ -571,9 +522,7 @@ class Cacher:
 
     # === KEYWORDS CACHING ===
 
-    def cache_keywords(
-        self, keywords_data: list[dict] | dict, lang_code: LangCode
-    ) -> None:
+    def cache_keywords(self, keywords_data: list[dict] | dict, lang_code: LangCode) -> None:
         """
         Cache keyword metadata in the database.
 
@@ -598,9 +547,7 @@ class Cacher:
             self.logger.warning("Keyword payload is not a list; skipping cache update.")
             return
 
-        lang_value = (
-            lang_code.value if isinstance(lang_code, LangCode) else str(lang_code)
-        )
+        lang_value = LangCode.normalize(lang_code)
         cached_at = time.time()
 
         payloads: list[tuple[str, str, str, float]] = []
@@ -641,7 +588,7 @@ class Cacher:
 
     def get_cached_keywords(
         self, lang_code: LangCode, ttl_seconds: int | None = None
-    ) -> list[dict] | None:
+    ) -> list[dict]:
         """
         Return cached keywords for the requested language, if available.
 
@@ -650,17 +597,13 @@ class Cacher:
             `ttl_seconds` (`int | None`): TTL in seconds
 
         Returns:
-            `list[dict] | None`: Keyword entries or None
+            `list[dict]`: Keyword entries or empty list if not found
         """
         if ttl_seconds and self.is_keywords_cache_stale(lang_code, ttl_seconds):
-            self.logger.info(
-                "Keyword cache expired for lang=%s. Skipping cached data.", lang_code
-            )
-            return None
+            self.logger.info("Keyword cache expired for lang=%s. Skipping cached data.", lang_code)
+            return []
 
-        lang_value = (
-            lang_code.value if isinstance(lang_code, LangCode) else str(lang_code)
-        )
+        lang_value = LangCode.normalize(lang_code)
 
         with self._connect() as conn:
             rows = conn.execute(
@@ -681,11 +624,9 @@ class Cacher:
             except Exception as exc:
                 self.logger.error(f"Failed to parse keyword data from cache: {exc}")
 
-        return keywords or None
+        return keywords
 
-    def get_keywords_cache_timestamp(
-        self, lang_code: LangCode | None = None
-    ) -> float | None:
+    def get_keywords_cache_timestamp(self, lang_code: LangCode | None = None) -> float | None:
         """
         Return the latest cached_at timestamp for keywords, optionally scoped by language.
         """
@@ -694,9 +635,7 @@ class Cacher:
 
         if lang_code:
             query += " WHERE lang_code = ?"
-            params.append(
-                lang_code.value if isinstance(lang_code, LangCode) else str(lang_code)
-            )
+            params.append(LangCode.normalize(lang_code))
 
         with self._connect() as conn:
             row = conn.execute(query, params).fetchone()
@@ -707,9 +646,7 @@ class Cacher:
         timestamp = row[0]
         return float(timestamp) if timestamp is not None else None
 
-    def is_keywords_cache_stale(
-        self, lang_code: LangCode, ttl_seconds: int | None
-    ) -> bool:
+    def is_keywords_cache_stale(self, lang_code: LangCode, ttl_seconds: int | None) -> bool:
         """
         Check if keywords cache is stale for given language.
         """
@@ -735,9 +672,7 @@ class Cacher:
         if not versions_data:
             return
 
-        lang_value = (
-            lang_code.value if isinstance(lang_code, LangCode) else str(lang_code)
-        )
+        lang_value = LangCode.normalize(lang_code)
         cached_at = time.time()
 
         # versions_data can be either a list or dict
@@ -779,14 +714,10 @@ class Cacher:
             `dict | list | None`: Dictionary or list containing versions data, or None
         """
         if ttl_seconds and self.is_versions_cache_stale(lang_code, ttl_seconds):
-            self.logger.info(
-                "Versions cache expired for lang=%s. Skipping cached data.", lang_code
-            )
+            self.logger.info("Versions cache expired for lang=%s. Skipping cached data.", lang_code)
             return None
 
-        lang_value = (
-            lang_code.value if isinstance(lang_code, LangCode) else str(lang_code)
-        )
+        lang_value = LangCode.normalize(lang_code)
 
         with self._connect() as conn:
             # Get the most recent version entry for this language
@@ -813,9 +744,7 @@ class Cacher:
             self.logger.error(f"Failed to parse versions data from cache: {exc}")
             return None
 
-    def get_versions_cache_timestamp(
-        self, lang_code: LangCode | None = None
-    ) -> float | None:
+    def get_versions_cache_timestamp(self, lang_code: LangCode | None = None) -> float | None:
         """
         Return the latest cached_at timestamp for versions, optionally scoped by language.
 
@@ -830,9 +759,7 @@ class Cacher:
 
         if lang_code:
             query += " WHERE lang_code = ?"
-            params.append(
-                lang_code.value if isinstance(lang_code, LangCode) else str(lang_code)
-            )
+            params.append(LangCode.normalize(lang_code))
 
         with self._connect() as conn:
             row = conn.execute(query, params).fetchone()
@@ -843,9 +770,7 @@ class Cacher:
         timestamp = row[0]
         return float(timestamp) if timestamp is not None else None
 
-    def is_versions_cache_stale(
-        self, lang_code: LangCode, ttl_seconds: int | None
-    ) -> bool:
+    def is_versions_cache_stale(self, lang_code: LangCode, ttl_seconds: int | None) -> bool:
         """
         Check if versions cache is stale for given language.
 
@@ -911,9 +836,7 @@ class Cacher:
                 stats["champions"]["oldest_cache"] = champ_row[1]
                 stats["champions"]["newest_cache"] = champ_row[2]
 
-            champ_langs = conn.execute(
-                "SELECT DISTINCT lang_code FROM tblChampions"
-            ).fetchall()
+            champ_langs = conn.execute("SELECT DISTINCT lang_code FROM tblChampions").fetchall()
             stats["champions"]["languages"] = [row[0] for row in champ_langs]
 
             # Seasons stats
@@ -925,9 +848,7 @@ class Cacher:
                 stats["seasons"]["oldest_cache"] = season_row[1]
                 stats["seasons"]["newest_cache"] = season_row[2]
 
-            season_langs = conn.execute(
-                "SELECT DISTINCT lang_code FROM tblSeasons"
-            ).fetchall()
+            season_langs = conn.execute("SELECT DISTINCT lang_code FROM tblSeasons").fetchall()
             stats["seasons"]["languages"] = [row[0] for row in season_langs]
 
             # Versions stats
@@ -937,16 +858,12 @@ class Cacher:
             if version_row and version_row[0]:
                 # Count actual versions in the JSON array, not database rows
                 version_data = json.loads(version_row[0])
-                version_count = (
-                    len(version_data) if isinstance(version_data, list) else 1
-                )
+                version_count = len(version_data) if isinstance(version_data, list) else 1
                 stats["versions"]["total_count"] = version_count
                 stats["versions"]["oldest_cache"] = version_row[1]
                 stats["versions"]["newest_cache"] = version_row[2]
 
-            version_langs = conn.execute(
-                "SELECT DISTINCT lang_code FROM tblVersions"
-            ).fetchall()
+            version_langs = conn.execute("SELECT DISTINCT lang_code FROM tblVersions").fetchall()
             stats["versions"]["languages"] = [row[0] for row in version_langs]
 
             # Keywords stats
@@ -958,9 +875,7 @@ class Cacher:
                 stats["keywords"]["oldest_cache"] = keyword_row[1]
                 stats["keywords"]["newest_cache"] = keyword_row[2]
 
-            keyword_langs = conn.execute(
-                "SELECT DISTINCT lang_code FROM tblKeywords"
-            ).fetchall()
+            keyword_langs = conn.execute("SELECT DISTINCT lang_code FROM tblKeywords").fetchall()
             stats["keywords"]["languages"] = [row[0] for row in keyword_langs]
 
         return stats
@@ -978,21 +893,15 @@ class Cacher:
         Returns:
             `dict`: Dictionary with counts of cleared items
         """
-        cache_type_value = (
-            cache_type.value if isinstance(cache_type, CacheType) else str(cache_type)
-        )
+        # Normalize cache_type to CacheType enum
+        if not isinstance(cache_type, CacheType):
+            cache_type = CacheType(str(cache_type))
 
         cleared = {"champions": 0, "seasons": 0, "versions": 0, "keywords": 0}
-        lang_value = (
-            lang_code.value
-            if isinstance(lang_code, LangCode)
-            else None
-            if lang_code is None
-            else str(lang_code)
-        )
+        lang_value = LangCode.normalize(lang_code) if lang_code else None
 
         with self._connect() as conn:
-            if cache_type_value in ["all", "champions"]:
+            if cache_type in (CacheType.ALL, CacheType.CHAMPIONS):
                 if lang_value:
                     result = conn.execute(
                         "DELETE FROM tblChampions WHERE lang_code = ?", (lang_value,)
@@ -1005,7 +914,7 @@ class Cacher:
                     + (f" for lang={lang_value}" if lang_value else "")
                 )
 
-            if cache_type_value in ["all", "seasons"]:
+            if cache_type in (CacheType.ALL, CacheType.SEASONS):
                 if lang_value:
                     result = conn.execute(
                         "DELETE FROM tblSeasons WHERE lang_code = ?", (lang_value,)
@@ -1018,7 +927,7 @@ class Cacher:
                     + (f" for lang={lang_value}" if lang_value else "")
                 )
 
-            if cache_type_value in ["all", "versions"]:
+            if cache_type in (CacheType.ALL, CacheType.VERSIONS):
                 if lang_value:
                     result = conn.execute(
                         "DELETE FROM tblVersions WHERE lang_code = ?", (lang_value,)
@@ -1031,7 +940,7 @@ class Cacher:
                     + (f" for lang={lang_value}" if lang_value else "")
                 )
 
-            if cache_type_value in ["all", "keywords"]:
+            if cache_type in (CacheType.ALL, CacheType.KEYWORDS):
                 if lang_value:
                     result = conn.execute(
                         "DELETE FROM tblKeywords WHERE lang_code = ?", (lang_value,)

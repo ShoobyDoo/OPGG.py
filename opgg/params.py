@@ -118,6 +118,19 @@ class LangCode(Enum):
     def __str__(self):
         return self.value
 
+    @classmethod
+    def normalize(cls, value: "LangCode | str") -> str:
+        """
+        Normalize a LangCode enum or string to a string value.
+
+        Args:
+            `value` (`LangCode | str`): A LangCode enum member or string
+
+        Returns:
+            `str`: The string value of the language code
+        """
+        return value.value if isinstance(value, cls) else str(value)
+
 
 class CacheType(Enum):
     """

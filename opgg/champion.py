@@ -1,40 +1,31 @@
-from pydantic import BaseModel, Field, field_validator
-
-from typing import Any, Optional
 from datetime import datetime
-import logging
+from typing import Any
 
-logger = logging.getLogger("OPGG.py")
+from pydantic import BaseModel, Field
 
 
 class ChampionStats(BaseModel):
-    id: Optional[int] = None
-    play: Optional[int] = None
-    win: Optional[int] = None
-    lose: Optional[int] = None
-    game_length_second: Optional[int] = None
-    kill: Optional[int] = None
-    death: Optional[int] = None
-    assist: Optional[int] = None
-    gold_earned: Optional[int] = None
-    minion_kill: Optional[int] = None
-    neutral_minion_kill: Optional[int] = None
-    damage_taken: Optional[int] = None
-    damage_dealt_to_champions: Optional[int] = None
-    double_kill: Optional[int] = 0
-    triple_kill: Optional[int] = 0
-    quadra_kill: Optional[int] = 0
-    penta_kill: Optional[int] = 0
-    vision_wards_bought_in_game: Optional[int] = 0
-    op_score: Optional[int] = None
-    snowball_throws: Optional[int] = None
-    snowball_hits: Optional[int] = None
-
-    @field_validator("*", mode="after")
-    def log_none_values(cls, v, info):
-        if v is None:
-            logger.warning(f"Field '{info.field_name}' is None in ChampionStats model")
-        return v
+    id: int | None = None
+    play: int | None = None
+    win: int | None = None
+    lose: int | None = None
+    game_length_second: int | None = None
+    kill: int | None = None
+    death: int | None = None
+    assist: int | None = None
+    gold_earned: int | None = None
+    minion_kill: int | None = None
+    neutral_minion_kill: int | None = None
+    damage_taken: int | None = None
+    damage_dealt_to_champions: int | None = None
+    double_kill: int = 0
+    triple_kill: int = 0
+    quadra_kill: int = 0
+    penta_kill: int = 0
+    vision_wards_bought_in_game: int = 0
+    op_score: int | None = None
+    snowball_throws: int | None = None
+    snowball_hits: int | None = None
 
     @property
     def winrate(self) -> int:
@@ -43,161 +34,107 @@ class ChampionStats(BaseModel):
 
 
 class MostChampions(BaseModel):
-    game_type: Optional[str] = None
-    season_id: Optional[int] = None
-    year: Optional[int] = None
-    play: Optional[int] = None
-    win: Optional[int] = None
-    lose: Optional[int] = None
-    champion_stats: Optional[list[ChampionStats]] = Field(default_factory=list)
-
-    @field_validator("*", mode="after")
-    def log_none_values(cls, v, info):
-        if v is None:
-            logger.warning(f"Field '{info.field_name}' is None in MostChampions model")
-        return v
+    game_type: str | None = None
+    season_id: int | None = None
+    year: int | None = None
+    play: int | None = None
+    win: int | None = None
+    lose: int | None = None
+    champion_stats: list[ChampionStats] | None = Field(default_factory=list)
 
 
 class Price(BaseModel):
-    currency: Optional[str] = None
-    cost: Optional[int] = None
-
-    @field_validator("*", mode="after")
-    def log_none_values(cls, v, info):
-        if v is None:
-            logger.warning(f"Field '{info.field_name}' is None in Price model")
-        return v
+    currency: str | None = None
+    cost: int | None = None
 
 
 class Skin(BaseModel):
-    id: Optional[int] = None
-    champion_id: Optional[int] = None
-    name: Optional[str] = None
-    has_chromas: Optional[bool] = None
-    splash_image: Optional[str] = None
-    loading_image: Optional[str] = None
-    tiles_image: Optional[str] = None
-    centered_image: Optional[str] = None
-    skin_video_url: Optional[str] = None
-    prices: Optional[list[Price]] = None
-    sales: Optional[Any] = None
-    release_date: Optional[datetime] = None
-
-    @field_validator("*", mode="after")
-    def log_none_values(cls, v, info):
-        if v is None:
-            logger.warning(f"Field '{info.field_name}' is None in Skin model")
-        return v
+    id: int | None = None
+    champion_id: int | None = None
+    name: str | None = None
+    has_chromas: bool | None = None
+    splash_image: str | None = None
+    loading_image: str | None = None
+    tiles_image: str | None = None
+    centered_image: str | None = None
+    skin_video_url: str | None = None
+    prices: list[Price] | None = None
+    sales: Any | None = None
+    release_date: datetime | None = None
 
 
 class Info(BaseModel):
-    attack: Optional[int] = None
-    defense: Optional[int] = None
-    magic: Optional[int] = None
-    difficulty: Optional[int] = None
-
-    @field_validator("*", mode="after")
-    def log_none_values(cls, v, info):
-        if v is None:
-            logger.warning(f"Field '{info.field_name}' is None in Info model")
-        return v
+    attack: int | None = None
+    defense: int | None = None
+    magic: int | None = None
+    difficulty: int | None = None
 
 
 class Stats(BaseModel):
-    hp: Optional[float] = None
-    hpperlevel: Optional[float] = None
-    mp: Optional[float] = None
-    mpperlevel: Optional[float] = None
-    movespeed: Optional[float] = None
-    armor: Optional[float] = None
-    armorperlevel: Optional[float] = None
-    spellblock: Optional[float] = None
-    spellblockperlevel: Optional[float] = None
-    attackrange: Optional[float] = None
-    hpregen: Optional[float] = None
-    hpregenperlevel: Optional[float] = None
-    mpregen: Optional[float] = None
-    mpregenperlevel: Optional[float] = None
-    crit: Optional[float] = None
-    critperlevel: Optional[float] = None
-    attackdamage: Optional[float] = None
-    attackdamageperlevel: Optional[float] = None
-    attackspeed: Optional[float] = None
-    attackspeedperlevel: Optional[float] = None
-
-    @field_validator("*", mode="after")
-    def log_none_values(cls, v, info):
-        if v is None:
-            logger.warning(f"Field '{info.field_name}' is None in Stats model")
-        return v
+    hp: float | None = None
+    hpperlevel: float | None = None
+    mp: float | None = None
+    mpperlevel: float | None = None
+    movespeed: float | None = None
+    armor: float | None = None
+    armorperlevel: float | None = None
+    spellblock: float | None = None
+    spellblockperlevel: float | None = None
+    attackrange: float | None = None
+    hpregen: float | None = None
+    hpregenperlevel: float | None = None
+    mpregen: float | None = None
+    mpregenperlevel: float | None = None
+    crit: float | None = None
+    critperlevel: float | None = None
+    attackdamage: float | None = None
+    attackdamageperlevel: float | None = None
+    attackspeed: float | None = None
+    attackspeedperlevel: float | None = None
 
 
 class Passive(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    image_url: Optional[str] = None
-    video_url: Optional[str] = None
-
-    @field_validator("*", mode="after")
-    def log_none_values(cls, v, info):
-        if v is None:
-            logger.warning(f"Field '{info.field_name}' is None in Passive model")
-        return v
+    name: str | None = None
+    description: str | None = None
+    image_url: str | None = None
+    video_url: str | None = None
 
 
 class Spell(BaseModel):
-    key: Optional[str] = None
-    name: Optional[str] = None
-    description: Optional[str] = None
-    max_rank: Optional[int] = None
-    range_burn: Optional[list[int]] = Field(default_factory=list)
-    cooldown_burn: Optional[list[float]] = Field(default_factory=list)
-    cooldown_burn_float: Optional[list[float]] = Field(default_factory=list)
-    cost_burn: Optional[list[int]] = Field(default_factory=list)
-    tooltip: Optional[str] = None
-    image_url: Optional[str] = None
-    video_url: Optional[str] = None
-
-    @field_validator("*", mode="after")
-    def log_none_values(cls, v, info):
-        if v is None:
-            logger.warning(f"Field '{info.field_name}' is None in Spell model")
-        return v
+    key: str | None = None
+    name: str | None = None
+    description: str | None = None
+    max_rank: int | None = None
+    range_burn: list[int] | None = Field(default_factory=list)
+    cooldown_burn: list[float] | None = Field(default_factory=list)
+    cooldown_burn_float: list[float] | None = Field(default_factory=list)
+    cost_burn: list[int] | None = Field(default_factory=list)
+    tooltip: str | None = None
+    image_url: str | None = None
+    video_url: str | None = None
 
 
 class Evolve(BaseModel):
-    key: Optional[str] = None
-    name: Optional[str] = None
-    image_url: Optional[str] = None
-
-    @field_validator("*", mode="after")
-    def log_none_values(cls, v, info):
-        if v is None:
-            logger.warning(f"Field '{info.field_name}' is None in Evolve model")
-        return v
+    key: str | None = None
+    name: str | None = None
+    image_url: str | None = None
 
 
 class Champion(BaseModel):
-    id: Optional[int] = None
-    key: Optional[str] = None
-    name: Optional[str] = None
-    image_url: Optional[str] = None
-    evolve: Optional[list[Evolve]] = None
-    blurb: Optional[str] = None
-    title: Optional[str] = None
-    tags: Optional[list[str]] = Field(default_factory=list)
-    lore: Optional[str] = None
-    partype: Optional[str] = None
-    info: Optional[Info] = None
-    stats: Optional[Stats] = None
-    enemy_tips: Optional[list[str]] = Field(default_factory=list)
-    ally_tips: Optional[list[str]] = Field(default_factory=list)
-    skins: Optional[list[Skin]] = Field(default_factory=list)
-    passive: Optional[Passive] = None
-    spells: Optional[list[Spell]] = Field(default_factory=list)
-
-    @field_validator("*", mode="after")
-    def log_none_values(cls, v, info):
-        if v is None:
-            logger.warning(f"Field '{info.field_name}' is None in Champion model")
-        return v
+    id: int | None = None
+    key: str | None = None
+    name: str | None = None
+    image_url: str | None = None
+    evolve: list[Evolve] | None = None
+    blurb: str | None = None
+    title: str | None = None
+    tags: list[str] | None = Field(default_factory=list)
+    lore: str | None = None
+    partype: str | None = None
+    info: Info | None = None
+    stats: Stats | None = None
+    enemy_tips: list[str] | None = Field(default_factory=list)
+    ally_tips: list[str] | None = Field(default_factory=list)
+    skins: list[Skin] | None = Field(default_factory=list)
+    passive: Passive | None = None
+    spells: list[Spell] | None = Field(default_factory=list)

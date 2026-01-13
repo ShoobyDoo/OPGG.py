@@ -1,0 +1,150 @@
+{
+  "data": [
+    {
+      "keyword": "UNSTOPPABLE",
+      "label": "Unstoppable",
+      "description": "Displayed unmatched performance and brilliant strategy, leading the team to victory.",
+      "arrows": [
+        "DOUBLE_UP"
+      ],
+      "is_op": true,
+      "context": "WIN"
+    },
+    {
+      "keyword": "LEADER",
+      "label": "Leader",
+      "description": "Made the perfect decisions and strategies, leading the team to victory.",
+      "arrows": [
+        "UP"
+      ],
+      "is_op": false,
+      "context": "WIN"
+    },
+    {
+      "keyword": "VICTOR",
+      "label": "Victor",
+      "description": "Contributed significantly in the early and mid-game, securing the win.",
+      "arrows": [
+        "UPPER_RIGHT",
+        "RIGHT"
+      ],
+      "is_op": false,
+      "context": "WIN"
+    },
+    {
+      "keyword": "DEVOTED",
+      "label": "Devoted",
+      "description": "Displayed exemplary effort and dedication for victory, resulting in a positive outcome.",
+      "arrows": [
+        "UPPER_RIGHT",
+        "LOWER_RIGHT"
+      ],
+      "is_op": false,
+      "context": "WIN"
+    },
+    {
+      "keyword": "LATE_BLOOMER",
+      "label": "Late bloomer",
+      "description": "Demonstrated increasingly better performance over time, leading to a victory.",
+      "arrows": [
+        "UPPER_RIGHT"
+      ],
+      "is_op": false,
+      "context": "WIN"
+    },
+    {
+      "keyword": "RESILIENT",
+      "label": "Resilient",
+      "description": "Demonstrated strength and perseverance in overcoming difficult situations.",
+      "arrows": [
+        "LOWER_RIGHT",
+        "RIGHT"
+      ],
+      "is_op": false,
+      "context": "WIN"
+    },
+    {
+      "keyword": "AVERAGE",
+      "label": "Average",
+      "description": "Played along with the game flow.",
+      "arrows": [
+        "RIGHT"
+      ],
+      "is_op": false,
+      "context": "BOTH"
+    },
+    {
+      "keyword": "ROLLERCOASTER",
+      "label": "Rollercoaster",
+      "description": "Performance fluctuated like a rollercoaster.",
+      "arrows": [
+        "UP",
+        "DOWN"
+      ],
+      "is_op": false,
+      "context": "BOTH"
+    },
+    {
+      "keyword": "DOWNFALL",
+      "label": "Downfall",
+      "description": "Started off well, but performance weakened over time.",
+      "arrows": [
+        "LOWER_RIGHT"
+      ],
+      "is_op": false,
+      "context": "BOTH"
+    },
+    {
+      "keyword": "STRUGGLE",
+      "label": "Struggle",
+      "description": "Faced challenges and struggled to perform as desired.",
+      "arrows": [
+        "DOWN"
+      ],
+      "is_op": false,
+      "context": "BOTH"
+    },
+    {
+      "keyword": "INNOCENT",
+      "label": "Innocent",
+      "description": "Demonstrated the best possible play a player could perform.",
+      "arrows": [
+        "UP"
+      ],
+      "is_op": true,
+      "context": "LOSE"
+    },
+    {
+      "keyword": "UNLUCKY",
+      "label": "Unlucky",
+      "description": "Displayed good performance but was unlucky.",
+      "arrows": [
+        "UPPER_RIGHT",
+        "RIGHT"
+      ],
+      "is_op": false,
+      "context": "LOSE"
+    },
+    {
+      "keyword": "SLOW_STARTER",
+      "label": "Slow starter",
+      "description": "Demonstrated consistent growth, but didn't have enough time.",
+      "arrows": [
+        "UPPER_RIGHT"
+      ],
+      "is_op": false,
+      "context": "LOSE"
+    },
+    {
+      "keyword": "UNYIELDING",
+      "label": "Unyielding",
+      "description": "Displayed unyielding determination and never gave up.",
+      "arrows": [
+        "LOWER_RIGHT",
+        "RIGHT"
+      ],
+      "is_op": false,
+      "context": "LOSE"
+    }
+  ]
+}

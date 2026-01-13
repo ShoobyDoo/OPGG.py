@@ -1,0 +1,438 @@
+{
+  "data": {
+    "id": 266,
+    "key": "Aatrox",
+    "name": "Aatrox",
+    "image_url": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/Aatrox.png",
+    "evolve": [],
+    "blurb": "Once honored defenders of Shurima against the Void, Aatrox and his brethren would eventually become an even greater threat to Runeterra, and were defeated only by cunning mortal sorcery. But after centuries of imprisonment, Aatrox was the first to find...",
+    "title": "the Darkin Blade",
+    "tags": [
+      "Fighter"
+    ],
+    "lore": "Once honored defenders of Shurima against the Void, Aatrox and his brethren would eventually become an even greater threat to Runeterra, and were defeated only by cunning mortal sorcery. But after centuries of imprisonment, Aatrox was the first to find freedom once more, corrupting and transforming those foolish enough to try and wield the magical weapon that contained his essence. Now, with stolen flesh, he walks Runeterra in a brutal approximation of his previous form, seeking an apocalyptic and long overdue vengeance.",
+    "partype": "Blood Well",
+    "info": {
+      "attack": 8,
+      "defense": 4,
+      "magic": 3,
+      "difficulty": 4
+    },
+    "stats": {
+      "hp": 650,
+      "hpperlevel": 114,
+      "mp": 0,
+      "mpperlevel": 0,
+      "movespeed": 345,
+      "armor": 38,
+      "armorperlevel": 4.8,
+      "spellblock": 32,
+      "spellblockperlevel": 2.05,
+      "attackrange": 175,
+      "hpregen": 3,
+      "hpregenperlevel": 0.5,
+      "mpregen": 0,
+      "mpregenperlevel": 0,
+      "crit": 0,
+      "critperlevel": 0,
+      "attackdamage": 60,
+      "attackdamageperlevel": 5,
+      "attackspeed": 0.651,
+      "attackspeedperlevel": 2.5
+    },
+    "enemy_tips": [
+      "Aatrox's attacks are very telegraphed, so use the time to dodge the hit zones.",
+      "Aatrox's Infernal Chains are easier to exit when running towards the sides or at Aatrox.",
+      "Keep your distance when Aatrox uses his Ultimate to prevent him from reviving."
+    ],
+    "ally_tips": [
+      "Use Umbral Dash while casting The Darkin Blade to increase your chances of hitting the enemy.",
+      "Crowd Control abilities like Infernal Chains or your allies' immobilizing effects will help you set up The Darkin Blade.",
+      "Cast World Ender when you are sure you can force a fight."
+    ],
+    "skins": [
+      {
+        "id": 266000,
+        "champion_id": 266,
+        "name": "Aatrox",
+        "is_base": true,
+        "has_chromas": false,
+        "is_blue_essence_purchasable": true,
+        "splash_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/splash/Aatrox_0.jpg",
+        "loading_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/loading/Aatrox_0.jpg",
+        "tiles_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/tiles/Aatrox_0.jpg",
+        "centered_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/centered/Aatrox_0.jpg",
+        "skin_video_url": null,
+        "prices": [
+          {
+            "currency": "IP",
+            "cost": 2400
+          },
+          {
+            "currency": "RP",
+            "cost": 880
+          }
+        ],
+        "sales": null,
+        "release_date": null
+      },
+      {
+        "id": 266001,
+        "champion_id": 266,
+        "name": "Justicar Aatrox",
+        "is_base": false,
+        "has_chromas": false,
+        "is_blue_essence_purchasable": false,
+        "splash_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/splash/Aatrox_1.jpg",
+        "loading_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/loading/Aatrox_1.jpg",
+        "tiles_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/tiles/Aatrox_1.jpg",
+        "centered_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/centered/Aatrox_1.jpg",
+        "skin_video_url": "https://youtu.be/FO3wAkVO8E4",
+        "prices": [
+          {
+            "currency": "RP",
+            "cost": 975
+          }
+        ],
+        "sales": null,
+        "release_date": "2013-06-23T07:00:00+09:00"
+      },
+      {
+        "id": 266002,
+        "champion_id": 266,
+        "name": "Mecha Aatrox",
+        "is_base": false,
+        "has_chromas": true,
+        "is_blue_essence_purchasable": false,
+        "splash_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/splash/Aatrox_2.jpg",
+        "loading_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/loading/Aatrox_2.jpg",
+        "tiles_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/tiles/Aatrox_2.jpg",
+        "centered_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/centered/Aatrox_2.jpg",
+        "skin_video_url": "https://youtu.be/R7YLAfU1fHM",
+        "prices": [
+          {
+            "currency": "RP",
+            "cost": 1350
+          }
+        ],
+        "sales": null,
+        "release_date": "2014-07-24T07:00:00+09:00"
+      },
+      {
+        "id": 266003,
+        "champion_id": 266,
+        "name": "Sea Hunter Aatrox",
+        "is_base": false,
+        "has_chromas": false,
+        "is_blue_essence_purchasable": false,
+        "splash_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/splash/Aatrox_3.jpg",
+        "loading_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/loading/Aatrox_3.jpg",
+        "tiles_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/tiles/Aatrox_3.jpg",
+        "centered_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/centered/Aatrox_3.jpg",
+        "skin_video_url": "https://youtu.be/ad2qQjOIRe0",
+        "prices": [
+          {
+            "currency": "RP",
+            "cost": 750
+          }
+        ],
+        "sales": null,
+        "release_date": "2015-07-23T06:00:00+09:00"
+      },
+      {
+        "id": 266007,
+        "champion_id": 266,
+        "name": "Blood Moon Aatrox",
+        "is_base": false,
+        "has_chromas": false,
+        "is_blue_essence_purchasable": false,
+        "splash_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/splash/Aatrox_7.jpg",
+        "loading_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/loading/Aatrox_7.jpg",
+        "tiles_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/tiles/Aatrox_7.jpg",
+        "centered_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/centered/Aatrox_7.jpg",
+        "skin_video_url": "https://youtu.be/xagjvV4-yes",
+        "prices": [
+          {
+            "currency": "RP",
+            "cost": 1350
+          }
+        ],
+        "sales": null,
+        "release_date": "2019-01-10T01:00:00+09:00"
+      },
+      {
+        "id": 266008,
+        "champion_id": 266,
+        "name": "Prestige Blood Moon Aatrox",
+        "is_base": false,
+        "has_chromas": false,
+        "is_blue_essence_purchasable": false,
+        "splash_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/splash/Aatrox_8.jpg",
+        "loading_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/loading/Aatrox_8.jpg",
+        "tiles_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/tiles/Aatrox_8.jpg",
+        "centered_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/centered/Aatrox_8.jpg",
+        "skin_video_url": "https://youtu.be/golAu_e3dME",
+        "prices": null,
+        "sales": null,
+        "release_date": "2018-11-08T20:00:00+09:00"
+      },
+      {
+        "id": 266009,
+        "champion_id": 266,
+        "name": "Victorious Aatrox",
+        "is_base": false,
+        "has_chromas": true,
+        "is_blue_essence_purchasable": false,
+        "splash_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/splash/Aatrox_9.jpg",
+        "loading_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/loading/Aatrox_9.jpg",
+        "tiles_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/tiles/Aatrox_9.jpg",
+        "centered_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/centered/Aatrox_9.jpg",
+        "skin_video_url": "https://youtu.be/HHT5ZwauFfk",
+        "prices": null,
+        "sales": null,
+        "release_date": null
+      },
+      {
+        "id": 266011,
+        "champion_id": 266,
+        "name": "Odyssey Aatrox",
+        "is_base": false,
+        "has_chromas": true,
+        "is_blue_essence_purchasable": false,
+        "splash_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/splash/Aatrox_11.jpg",
+        "loading_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/loading/Aatrox_11.jpg",
+        "tiles_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/tiles/Aatrox_11.jpg",
+        "centered_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/centered/Aatrox_11.jpg",
+        "skin_video_url": "https://youtu.be/Hv09S0aDgOU",
+        "prices": [
+          {
+            "currency": "RP",
+            "cost": 1350
+          }
+        ],
+        "sales": null,
+        "release_date": "2020-10-15T04:00:00+09:00"
+      },
+      {
+        "id": 266020,
+        "champion_id": 266,
+        "name": "Prestige Blood Moon Aatrox (2022)",
+        "is_base": false,
+        "has_chromas": false,
+        "is_blue_essence_purchasable": false,
+        "splash_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/splash/Aatrox_20.jpg",
+        "loading_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/loading/Aatrox_20.jpg",
+        "tiles_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/tiles/Aatrox_20.jpg",
+        "centered_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/centered/Aatrox_20.jpg",
+        "skin_video_url": "https://youtu.be/9wva31Ol2fY",
+        "prices": null,
+        "sales": null,
+        "release_date": null
+      },
+      {
+        "id": 266021,
+        "champion_id": 266,
+        "name": "Lunar Eclipse Aatrox",
+        "is_base": false,
+        "has_chromas": true,
+        "is_blue_essence_purchasable": false,
+        "splash_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/splash/Aatrox_21.jpg",
+        "loading_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/loading/Aatrox_21.jpg",
+        "tiles_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/tiles/Aatrox_21.jpg",
+        "centered_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/centered/Aatrox_21.jpg",
+        "skin_video_url": "https://youtu.be/cBW58DJxT-o",
+        "prices": [
+          {
+            "currency": "RP",
+            "cost": 1350
+          }
+        ],
+        "sales": null,
+        "release_date": "2022-04-28T04:00:00+09:00"
+      },
+      {
+        "id": 266030,
+        "champion_id": 266,
+        "name": "DRX Aatrox",
+        "is_base": false,
+        "has_chromas": true,
+        "is_blue_essence_purchasable": false,
+        "splash_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/splash/Aatrox_30.jpg",
+        "loading_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/loading/Aatrox_30.jpg",
+        "tiles_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/tiles/Aatrox_30.jpg",
+        "centered_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/centered/Aatrox_30.jpg",
+        "skin_video_url": "https://youtu.be/qCqhQVYxeZE",
+        "prices": [
+          {
+            "currency": "RP",
+            "cost": 1350
+          }
+        ],
+        "sales": null,
+        "release_date": null
+      },
+      {
+        "id": 266031,
+        "champion_id": 266,
+        "name": "Prestige DRX Aatrox",
+        "is_base": false,
+        "has_chromas": false,
+        "is_blue_essence_purchasable": false,
+        "splash_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/splash/Aatrox_31.jpg",
+        "loading_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/loading/Aatrox_31.jpg",
+        "tiles_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/tiles/Aatrox_31.jpg",
+        "centered_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/centered/Aatrox_31.jpg",
+        "skin_video_url": "https://youtu.be/H6fO9QhlFN0",
+        "prices": null,
+        "sales": null,
+        "release_date": null
+      },
+      {
+        "id": 266033,
+        "champion_id": 266,
+        "name": "Primordian Aatrox",
+        "is_base": false,
+        "has_chromas": true,
+        "is_blue_essence_purchasable": false,
+        "splash_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/splash/Aatrox_33.jpg",
+        "loading_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/loading/Aatrox_33.jpg",
+        "tiles_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/tiles/Aatrox_33.jpg",
+        "centered_image": "https://opgg-static.akamaized.net/meta/images/lol/latest/champion/centered/Aatrox_33.jpg",
+        "skin_video_url": "https://youtu.be/mi1PQityBIs",
+        "prices": [
+          {
+            "currency": "RP",
+            "cost": 1820
+          }
+        ],
+        "sales": null,
+        "release_date": "2024-07-31T09:00:00+09:00"
+      }
+    ],
+    "passive": {
+      "name": "Deathbringer Stance",
+      "description": "Periodically, Aatrox's next basic attack deals bonus <magicDamage>magic damage</magicDamage> and heals him, based on the target's max health. ",
+      "image_url": "https://opgg-static.akamaized.net/meta/images/lol/latest/passive/Aatrox_Passive.png",
+      "video_url": "https://d28xe8vt774jo5.cloudfront.net/champion-abilities/0266/ability_0266_P1.webm"
+    },
+    "spells": [
+      {
+        "key": "Q",
+        "name": "The Darkin Blade",
+        "description": "Aatrox slams his greatsword down, dealing physical damage. He can swing three times, each with a different area of effect.",
+        "max_rank": 5,
+        "range_burn": [
+          25000
+        ],
+        "cooldown_burn": [
+          14,
+          12,
+          10,
+          8,
+          6
+        ],
+        "cooldown_burn_float": [
+          14,
+          12,
+          10,
+          8,
+          6
+        ],
+        "cost_burn": [
+          0
+        ],
+        "tooltip": "Aatrox slams his greatsword, dealing <physicalDamage>? physical damage</physicalDamage>. If they are hit on the edge, they are briefly <status>Knocked Up</status> and they take <physicalDamage>?</physicalDamage> instead. This Ability can be <recast>Recast</recast> twice, each one changing shape and dealing 25% more damage than the previous one.?",
+        "image_url": "https://opgg-static.akamaized.net/meta/images/lol/latest/spell/AatroxQ.png",
+        "video_url": "https://d28xe8vt774jo5.cloudfront.net/champion-abilities/0266/ability_0266_Q1.webm"
+      },
+      {
+        "key": "W",
+        "name": "Infernal Chains",
+        "description": "Aatrox smashes the ground, dealing damage to the first enemy hit. Champions and large monsters have to leave the impact area quickly or they will be dragged to the center and take the damage again.",
+        "max_rank": 5,
+        "range_burn": [
+          825
+        ],
+        "cooldown_burn": [
+          20,
+          18,
+          16,
+          14,
+          12
+        ],
+        "cooldown_burn_float": [
+          20,
+          18,
+          16,
+          14,
+          12
+        ],
+        "cost_burn": [
+          0
+        ],
+        "tooltip": "Aatrox fires a chain, <status>Slowing</status> the first enemy hit by ?% for ? seconds and dealing <physicalDamage>? physical damage</physicalDamage>. Champions and large jungle monsters have ? seconds to leave the impact area or be <status>Pulled</status> back to the center and damaged again for the same amount.?",
+        "image_url": "https://opgg-static.akamaized.net/meta/images/lol/latest/spell/AatroxW.png",
+        "video_url": "https://d28xe8vt774jo5.cloudfront.net/champion-abilities/0266/ability_0266_W1.webm"
+      },
+      {
+        "key": "E",
+        "name": "Umbral Dash",
+        "description": "Passively, Aatrox heals when damaging enemy champions. On activation, he dashes in a direction.",
+        "max_rank": 5,
+        "range_burn": [
+          25000
+        ],
+        "cooldown_burn": [
+          9,
+          8,
+          7,
+          6,
+          5
+        ],
+        "cooldown_burn_float": [
+          9,
+          8,
+          7,
+          6,
+          5
+        ],
+        "cost_burn": [
+          0
+        ],
+        "tooltip": "<spellPassive>Passive:</spellPassive> Aatrox heals for <lifeSteal>?</lifeSteal> of the damage he deals to Champions.<br /><br /><spellActive>Active:</spellActive> Aatrox dashes. He can use this Ability while winding up his other Abilities.?",
+        "image_url": "https://opgg-static.akamaized.net/meta/images/lol/latest/spell/AatroxE.png",
+        "video_url": "https://d28xe8vt774jo5.cloudfront.net/champion-abilities/0266/ability_0266_E1.webm"
+      },
+      {
+        "key": "R",
+        "name": "World Ender",
+        "description": "Aatrox unleashes his demonic form, fearing nearby enemy minions and gaining attack damage, increased healing, and Move Speed. If he gets a takedown, this effect is extended.",
+        "max_rank": 3,
+        "range_burn": [
+          25000
+        ],
+        "cooldown_burn": [
+          120,
+          100,
+          80
+        ],
+        "cooldown_burn_float": [
+          120,
+          100,
+          80
+        ],
+        "cost_burn": [
+          0
+        ],
+        "tooltip": "Aatrox reveals his true demonic form, <status>Fearing</status> nearby minions for ? seconds and gaining <speed>?% Move Speed</speed> decaying over ? seconds. He also gains <scaleAD>?% Attack Damage</scaleAD> and increases <healing>self-healing by ?%</healing> for the duration.<br /><br />Champion takedowns extend the duration of this effect by ? seconds and refresh the <speed>Move Speed</speed> effect.?",
+        "image_url": "https://opgg-static.akamaized.net/meta/images/lol/latest/spell/AatroxR.png",
+        "video_url": "https://d28xe8vt774jo5.cloudfront.net/champion-abilities/0266/ability_0266_R1.webm"
+      }
+    ],
+    "release_date": "2013-06-24T01:00:00+09:00"
+  },
+  "meta": {
+    "version": "16.01",
+    "cached_timestamp": 1768180874
+  }
+}

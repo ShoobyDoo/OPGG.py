@@ -1,85 +1,82 @@
-from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, Field, HttpUrl, field_validator
-import logging
 
-from opgg.season import League, Season, TierInfo
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    HttpUrl,
+    field_serializer,
+)
+
 from opgg.champion import MostChampions
-
-logger = logging.getLogger("OPGG.py")
+from opgg.season import League, Season, TierInfo
 
 
 class Summoner(BaseModel):
     """Represents a League of Legends summoner."""
 
     # Base summoner attributes
-    id: Optional[int] = None
+    id: int | None = None
     """The internal OPGG id."""
 
-    summoner_id: Optional[str] = None
+    summoner_id: str | None = None
     """The summoner ID."""
 
-    acct_id: Optional[str] = None
+    acct_id: str | None = None
     """The account ID used by Riot's API."""
 
-    puuid: Optional[str] = None
+    puuid: str | None = None
     """The PUUID (`P`layer `U`niversally `U`nique `ID`entifier)."""
 
-    game_name: Optional[str] = None
+    game_name: str | None = None
     """The summoner's display name."""
 
-    tagline: Optional[str] = None
+    tagline: str | None = None
     """The summoner's tagline (e.g. NA1, EUW)."""
 
-    name: Optional[str] = None
+    name: str | None = None
     """The summoner's previous name before Riot ID system."""
 
-    internal_name: Optional[str] = None
+    internal_name: str | None = None
     """OPGG's internal name format (lowercase, no spaces)."""
 
-    profile_image_url: Optional[HttpUrl] = None
+    profile_image_url: HttpUrl | None = None
     """URL to the summoner's profile icon image."""
 
-    level: Optional[int] = None
+    level: int | None = None
     """The summoner's current level."""
 
-    updated_at: Optional[datetime] = None
+    updated_at: datetime | None = None
     """When the summoner's data was last updated."""
 
-    renewable_at: Optional[datetime] = None
+    renewable_at: datetime | None = None
     """When the summoner's data can be updated again."""
 
-    revision_at: Optional[datetime] = None
+    revision_at: datetime | None = None
     """When the summoner's data was last revised."""
 
     # Search result specific attributes
-    solo_tier_info: Optional[TierInfo] = None
+    solo_tier_info: TierInfo | None = None
     """Solo tier ranking information."""
 
-    team_info: Optional[dict] = None
+    team_info: dict | None = None
     """Team information."""
 
     # Full profile specific attributes
-    previous_seasons: Optional[list[Season]] = Field(default_factory=list)
+    previous_seasons: list[Season] | None = Field(default_factory=list)
     """Previous season information."""
 
-    league_stats: Optional[list[League]] = Field(default_factory=list)
+    league_stats: list[League] | None = Field(default_factory=list)
     """League statistics."""
 
-    most_champions: Optional[MostChampions] = None
+    most_champions: MostChampions | None = None
     """Most played champions."""
 
-    @field_validator("*", mode="after")
-    def log_none_values(cls, v, info):
-        if v is None:
-            logger.warning(f"Field '{info.field_name}' is None in Summoner model")
-        return v
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    class Config:
-        """Pydantic model configuration."""
-
-        arbitrary_types_allowed = True
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    @field_serializer("updated_at", "renewable_at", "revision_at")
+    def serialize_datetime(self, value: datetime | None) -> str | None:
+        return value.isoformat() if value else None
 
     @property
     def is_full_profile(self) -> bool:

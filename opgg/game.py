@@ -1,137 +1,129 @@
 from datetime import datetime
-from typing import Any, Optional, List
-from pydantic import BaseModel, Field, field_validator
-import logging
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from opgg.opscore import OPScore, OPScoreAnalysis
 from opgg.season import QueueInfo, TierInfo
 from opgg.summoner import Summoner
 
-logger = logging.getLogger("OPGG.py")
-
 
 class Stats(BaseModel):
     """Represents a player's stats in a game."""
 
-    champion_level: Optional[int] = None
+    champion_level: int | None = None
     """Current champion level reached in game."""
 
-    damage_self_mitigated: Optional[int] = None
+    damage_self_mitigated: int | None = None
     """Damage prevented through armor, magic resist and other damage reduction."""
 
-    damage_dealt_to_objectives: Optional[int] = None
+    damage_dealt_to_objectives: int | None = None
     """Total damage dealt to neutral objectives (dragons, herald, baron)."""
 
-    damage_dealt_to_turrets: Optional[int] = None
+    damage_dealt_to_turrets: int | None = None
     """Total damage dealt to enemy turrets."""
 
-    magic_damage_dealt_player: Optional[int] = None
+    magic_damage_dealt_player: int | None = None
     """Total magic damage dealt to all targets."""
 
-    physical_damage_taken: Optional[int] = None
+    physical_damage_taken: int | None = None
     """Physical damage taken from all sources."""
 
-    physical_damage_dealt_to_champions: Optional[int] = None
+    physical_damage_dealt_to_champions: int | None = None
     """Physical damage dealt to enemy champions."""
 
-    total_damage_taken: Optional[int] = None
+    total_damage_taken: int | None = None
     """Total damage taken from all sources."""
 
-    total_damage_dealt: Optional[int] = None
+    total_damage_dealt: int | None = None
     """Total damage dealt to all targets."""
 
-    total_damage_dealt_to_champions: Optional[int] = None
+    total_damage_dealt_to_champions: int | None = None
     """Total damage dealt to enemy champions."""
 
-    largest_critical_strike: Optional[int] = None
+    largest_critical_strike: int | None = None
     """Highest critical strike damage dealt."""
 
-    time_ccing_others: Optional[int] = None
+    time_ccing_others: int | None = None
     """Time spent applying crowd control to enemies (in seconds)."""
 
-    vision_score: Optional[int] = None
+    vision_score: int | None = None
     """Vision score based on wards placed/destroyed."""
 
-    vision_wards_bought_in_game: Optional[int] = None
+    vision_wards_bought_in_game: int | None = None
     """Number of control wards purchased."""
 
-    sight_wards_bought_in_game: Optional[int] = None
+    sight_wards_bought_in_game: int | None = None
     """Number of stealth wards purchased."""
 
-    ward_kill: Optional[int] = None
+    ward_kill: int | None = None
     """Number of enemy wards destroyed."""
 
-    ward_place: Optional[int] = None
+    ward_place: int | None = None
     """Number of wards placed."""
 
-    turret_kill: Optional[int] = None
+    turret_kill: int | None = None
     """Number of turrets destroyed."""
 
-    barrack_kill: Optional[int] = None
+    barrack_kill: int | None = None
     """Number of inhibitors destroyed."""
 
-    kill: Optional[int] = None
+    kill: int | None = None
     """Number of enemy champions killed."""
 
-    death: Optional[int] = None
+    death: int | None = None
     """Number of times died."""
 
-    assist: Optional[int] = None
+    assist: int | None = None
     """Number of assists on enemy champion kills."""
 
-    largest_multi_kill: Optional[int] = None
+    largest_multi_kill: int | None = None
     """Highest multi-kill achieved (double, triple etc)."""
 
-    largest_killing_spree: Optional[int] = None
+    largest_killing_spree: int | None = None
     """Highest number of kills without dying."""
 
-    minion_kill: Optional[int] = None
+    minion_kill: int | None = None
     """Number of minions killed."""
 
-    neutral_minion_kill_team_jungle: Optional[int] = None
+    neutral_minion_kill_team_jungle: int | None = None
     """Number of allied jungle monsters killed."""
 
-    neutral_minion_kill_enemy_jungle: Optional[int] = None
+    neutral_minion_kill_enemy_jungle: int | None = None
     """Number of enemy jungle monsters killed."""
 
-    neutral_minion_kill: Optional[int] = None
+    neutral_minion_kill: int | None = None
     """Total neutral monsters killed."""
 
-    gold_earned: Optional[int] = None
+    gold_earned: int | None = None
     """Total gold earned this game."""
 
-    total_heal: Optional[int] = None
+    total_heal: int | None = None
     """Total amount healed (self and allies)."""
 
-    result: Optional[str] = None
+    result: str | None = None
     """Game result (WIN/LOSS)."""
 
-    op_score: Optional[float] = None
+    op_score: float | None = None
     """OP.GG performance score."""
 
-    op_score_rank: Optional[int] = None
+    op_score_rank: int | None = None
     """Performance ranking within team."""
 
-    is_opscore_max_in_team: Optional[bool] = None
+    is_opscore_max_in_team: bool | None = None
     """Whether this player had highest OP score in team."""
 
-    lane_score: Optional[int] = None
+    lane_score: int | None = None
     """Lane phase performance score."""
 
-    op_score_timeline: Optional[list[OPScore]] = Field(default_factory=list)
+    op_score_timeline: list[OPScore] | None = Field(default_factory=list)
     """OP score timeline."""
 
-    op_score_timeline_analysis: Optional[OPScoreAnalysis] = None
+    op_score_timeline_analysis: OPScoreAnalysis | None = None
     """OP score timeline analysis."""
 
-    keyword: Optional[str] = None
+    keyword: str | None = None
     """Keyword for OP score analysis. (Leader, Average, Struggle, etc.)"""
-
-    @field_validator("*", mode="after")
-    def log_none_values(cls, v, info):
-        if v is None:
-            logger.warning(f"Field '{info.field_name}' is None in Stats model")
-        return v
 
 
 class Rune(BaseModel):
@@ -150,196 +142,173 @@ class Rune(BaseModel):
 class Participant(BaseModel):
     """Represents a participant in a game."""
 
-    summoner: Optional[Summoner] = None
+    summoner: Summoner | None = None
     """The summoner (player) information."""
 
-    participant_id: Optional[int] = None
+    participant_id: int | None = None
     """Unique identifier for this participant in the game."""
 
-    champion_id: Optional[int] = None
+    champion_id: int | None = None
     """ID of the champion played."""
 
-    team_key: Optional[str] = None
+    team_key: str | None = None
     """Team identifier (e.g. 'BLUE', 'RED')."""
 
-    position: Optional[str] = None
+    position: str | None = None
     """Lane position played (e.g. 'TOP', 'JUNGLE')."""
 
-    role: Optional[str] = None
+    role: str | None = None
     """Role played in team composition."""
 
-    items: Optional[list[int]] = Field(default_factory=list)
+    items: list[int] | None = Field(default_factory=list)
     """List of item IDs in inventory."""
 
-    trinket_item: Optional[int] = None
+    trinket_item: int | None = None
     """ID of equipped trinket item."""
 
-    rune: Optional[Rune] = None
+    rune: Rune | None = None
     """Rune configuration used."""
 
-    spells: Optional[list[int]] = Field(default_factory=list)
+    spells: list[int] | None = Field(default_factory=list)
     """List of summoner spell IDs."""
 
-    stats: Optional[Stats] = None
+    stats: Stats | None = None
     """In-game performance statistics."""
 
-    tier_info: Optional[TierInfo] = None
+    tier_info: TierInfo | None = None
     """Player's ranked tier information."""
-
-    @field_validator("*", mode="after")
-    def log_none_values(cls, v, info):
-        if v is None:
-            logger.warning(f"Field '{info.field_name}' is None in Participant model")
-        return v
 
 
 class GameStat(BaseModel):
     """Represents team-wide game statistics."""
 
-    is_win: Optional[bool] = None
+    is_win: bool | None = None
     """Whether the team won the game."""
 
-    champion_kill: Optional[int] = None
+    champion_kill: int | None = None
     """Total champion kills by team."""
 
-    champion_first: Optional[bool] = None
+    champion_first: bool | None = None
     """Whether team got first champion kill."""
 
-    inhibitor_kill: Optional[int] = None
+    inhibitor_kill: int | None = None
     """Number of inhibitors destroyed."""
 
-    inhibitor_first: Optional[bool] = None
+    inhibitor_first: bool | None = None
     """Whether team destroyed first inhibitor."""
 
-    rift_herald_kill: Optional[int] = None
+    rift_herald_kill: int | None = None
     """Number of Rift Heralds killed."""
 
-    rift_herald_first: Optional[bool] = None
+    rift_herald_first: bool | None = None
     """Whether team killed first Rift Herald."""
 
-    dragon_kill: Optional[int] = None
+    dragon_kill: int | None = None
     """Number of dragons killed."""
 
-    dragon_first: Optional[bool] = None
+    dragon_first: bool | None = None
     """Whether team killed first dragon."""
 
-    baron_kill: Optional[int] = None
+    baron_kill: int | None = None
     """Number of Baron Nashors killed."""
 
-    baron_first: Optional[bool] = None
+    baron_first: bool | None = None
     """Whether team killed first Baron."""
 
-    tower_kill: Optional[int] = None
+    tower_kill: int | None = None
     """Number of towers destroyed."""
 
-    tower_first: Optional[bool] = None
+    tower_first: bool | None = None
     """Whether team destroyed first tower."""
 
-    horde_kill: Optional[int] = None
+    horde_kill: int | None = None
     """Number of void monsters killed."""
 
-    horde_first: Optional[bool] = None
+    horde_first: bool | None = None
     """Whether team killed first void monster."""
 
-    is_remake: Optional[bool] = None
+    is_remake: bool | None = None
     """Whether the game was remade."""
 
-    death: Optional[int] = None
+    death: int | None = None
     """Total team deaths."""
 
-    assist: Optional[int] = None
+    assist: int | None = None
     """Total team assists."""
 
-    gold_earned: Optional[int] = None
+    gold_earned: int | None = None
     """Total team gold earned."""
 
-    kill: Optional[int] = None
+    kill: int | None = None
     """Total team kills."""
-
-    @field_validator("*", mode="after")
-    def log_none_values(cls, v, info):
-        if v is None:
-            logger.warning(f"Field '{info.field_name}' is None in GameStat model")
-        return v
 
 
 class Team(BaseModel):
     """Represents a team in the game."""
 
-    key: Optional[str] = None
+    key: str | None = None
     """Team identifier (e.g. 'BLUE', 'RED')."""
 
-    game_stat: Optional[GameStat] = None
+    game_stat: GameStat | None = None
     """Team's game statistics."""
 
-    banned_champions: Optional[list[int | None]] = Field(default_factory=list)
+    banned_champions: list[int | None] | None = Field(default_factory=list)
     """List of champion IDs banned by team."""
-
-    @field_validator("*", mode="after")
-    def log_none_values(cls, v, info):
-        if v is None:
-            logger.warning(f"Field '{info.field_name}' is None in Team model")
-        return v
 
 
 class Meta(BaseModel):
     """Metadata about a collection of games."""
 
-    first_game_created_at: Optional[datetime] = None
+    first_game_created_at: datetime | None = None
     """Timestamp of the earliest game in the collection."""
 
-    last_game_created_at: Optional[datetime] = None
+    last_game_created_at: datetime | None = None
     """Timestamp of the most recent game in the collection."""
 
-    @field_validator("*", mode="after")
-    def log_none_values(cls, v, info):
-        if v is None:
-            logger.warning(f"Field '{info.field_name}' is None in Meta model")
-        return v
+    model_config = ConfigDict()
 
-    class Config:
-        """Pydantic model configuration."""
-
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    @field_serializer("first_game_created_at", "last_game_created_at")
+    def serialize_datetime(self, value: datetime | None) -> str | None:
+        return value.isoformat() if value else None
 
 
 class LiveGameParticipant(BaseModel):
     """Represents a participant in a live game."""
 
-    summoner: Optional[Summoner] = None
+    summoner: Summoner | None = None
     """The summoner (player) information."""
 
-    participant_id: Optional[int] = None
+    participant_id: int | None = None
     """Unique identifier for this participant in the game."""
 
-    champion_id: Optional[int] = None
+    champion_id: int | None = None
     """ID of the champion being played."""
 
-    position: Optional[str] = None
+    position: str | None = None
     """Lane position (e.g. 'TOP', 'JUNGLE')."""
 
-    role: Optional[str] = None
+    role: str | None = None
     """Role in team composition."""
 
-    team_key: Optional[str] = None
+    team_key: str | None = None
     """Team identifier (e.g. 'BLUE', 'RED')."""
 
-    items: Optional[List[int]] = Field(default_factory=list)
+    items: list[int] | None = Field(default_factory=list)
     """List of item IDs in inventory."""
 
-    trinket_item: Optional[int] = None
+    trinket_item: int | None = None
     """ID of equipped trinket item."""
 
-    rune: Optional[Rune] = None
+    rune: Rune | None = None
     """Rune configuration used."""
 
-    spells: Optional[List[int]] = Field(default_factory=list)
+    spells: list[int] | None = Field(default_factory=list)
     """List of summoner spell IDs."""
 
-    stats: Optional[Stats] = None
+    stats: Stats | None = None
     """In-game performance statistics."""
 
-    tier_info: Optional[TierInfo] = None
+    tier_info: TierInfo | None = None
     """Player's ranked tier information."""
 
 
@@ -349,109 +318,101 @@ class LiveGameTeam(BaseModel):
     key: str
     """Team identifier (e.g. 'BLUE', 'RED')."""
 
-    game_stat: Optional[GameStat] = None
+    game_stat: GameStat | None = None
     """Team's game statistics."""
 
-    banned_champions: Optional[List[int]] = Field(default_factory=list)
+    banned_champions: list[int] | None = Field(default_factory=list)
     """List of champion IDs banned by team."""
 
-    average_tier_info: Optional[TierInfo] = None
+    average_tier_info: TierInfo | None = None
     """Average rank of team players."""
 
 
 class LiveGame(BaseModel):
     """Represents a live game."""
 
-    participants: List[LiveGameParticipant]
+    participants: list[LiveGameParticipant]
     """List of all players in the game."""
 
-    teams: List[LiveGameTeam]
+    teams: list[LiveGameTeam]
     """List of both teams and their statistics."""
 
-    game_id: Optional[str] = None
+    game_id: str | None = None
     """Unique identifier for this game."""
 
-    game_type: Optional[str] = None
+    game_type: str | None = None
     """Type of game (e.g. ranked, normal)."""
 
-    game_start_time: Optional[datetime] = None
+    game_start_time: datetime | None = None
     """When the game started."""
 
-    platform_id: Optional[str] = None
+    platform_id: str | None = None
     """Server/platform identifier."""
 
-    observer_key: Optional[str] = None
+    observer_key: str | None = None
     """Spectator mode encryption key."""
 
-    queue_info: Optional[QueueInfo] = None
+    queue_info: QueueInfo | None = None
     """Queue type information."""
 
-    class Config:
-        """Pydantic model configuration."""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-        arbitrary_types_allowed = True
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    @field_serializer("game_start_time")
+    def serialize_datetime(self, value: datetime | None) -> str | None:
+        return value.isoformat() if value else None
 
 
 class Game(BaseModel):
-    id: Optional[str] = None
+    id: str | None = None
     """The unique game identifier."""
 
-    created_at: Optional[datetime] = None
+    created_at: datetime | None = None
     """When the game was played."""
 
-    game_map: Optional[str] = None
+    game_map: str | None = None
     """The map the game was played on (e.g. Summoner's Rift)."""
 
-    game_type: Optional[str] = None
+    game_type: str | None = None
     """The type of game (e.g. ranked, normal, aram)."""
 
-    version: Optional[str] = None
+    version: str | None = None
     """Game client version."""
 
-    meta_version: Optional[str] = None
+    meta_version: str | None = None
     """OPGG metadata version."""
 
-    game_length_second: Optional[int] = None
+    game_length_second: int | None = None
     """Total game duration in seconds."""
 
-    is_remake: Optional[bool] = None
+    is_remake: bool | None = None
     """Whether the game was remade."""
 
-    is_opscore_active: Optional[bool] = None
+    is_opscore_active: bool | None = None
     """Whether OP scores were calculated for this game."""
 
-    is_recorded: Optional[bool] = False
+    is_recorded: bool | None = False
     """Whether the game was recorded."""
 
-    record_info: Optional[Any] = None
+    record_info: Any | None = None
     """Recording information if available."""
 
-    average_tier_info: Optional[TierInfo] = None
+    average_tier_info: TierInfo | None = None
     """Average rank of all players in the game."""
 
-    participants: Optional[list[Participant]] = Field(default_factory=list)
+    participants: list[Participant] | None = Field(default_factory=list)
     """List of all players in the game."""
 
-    teams: Optional[list[Team]] = Field(default_factory=list)
+    teams: list[Team] | None = Field(default_factory=list)
     """List of both teams and their statistics."""
 
-    memo: Optional[Any] = None
+    memo: Any | None = None
     """Internal OPGG memo field."""
 
-    myData: Optional[Participant] = None
+    my_data: Participant | None = None
     """The queried player's game data."""
 
-    @field_validator("*", mode="after")
-    def log_none_values(cls, v, info):
-        if (
-            v is None and info.field_name != "is_recorded"
-        ):  # Skip is_recorded since it has a default value
-            logger.warning(f"Field '{info.field_name}' is None in Game model")
-        return v
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    class Config:
-        """Pydantic model configuration."""
-
-        arbitrary_types_allowed = True
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    @field_serializer("created_at")
+    def serialize_datetime(self, value: datetime | None) -> str | None:
+        return value.isoformat() if value else None
