@@ -11,9 +11,27 @@ from .params import (
     Tier,
     GenericReqParams,
 )
+from .exceptions import (
+    OPGGError,
+    APIError,
+    HTTPError,
+    ClientHTTPError,
+    ServerHTTPError,
+    NotFoundError,
+    RateLimitError,
+    NetworkError,
+    OPGGConnectionError,
+    OPGGTimeoutError,
+    ResponseError,
+    OPGGJSONDecodeError,
+    ResponseValidationError,
+    CacheError,
+)
 
 __all__ = [
+    # Main class
     "OPGG",
+    # Params/Enums
     "By",
     "CacheType",
     "GameType",
@@ -24,4 +42,19 @@ __all__ = [
     "StatsRegion",
     "Tier",
     "GenericReqParams",
+    # Exceptions
+    "OPGGError",
+    "APIError",
+    "HTTPError",
+    "ClientHTTPError",
+    "ServerHTTPError",
+    "NotFoundError",
+    "RateLimitError",
+    "NetworkError",
+    "OPGGConnectionError",
+    "OPGGTimeoutError",
+    "ResponseError",
+    "OPGGJSONDecodeError",
+    "ResponseValidationError",
+    "CacheError",
 ]
