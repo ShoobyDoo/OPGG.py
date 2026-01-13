@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "opgg.py"
-version = "3.0.0"
+version = "3.1.0"
 description = "An unofficial Python library for scraping/accessing data from OP.GG"
 readme = "README.md"
 license = "GPL-3.0-or-later"
