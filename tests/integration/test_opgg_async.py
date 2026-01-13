@@ -121,12 +121,16 @@ class TestGetSummonerAsync:
     """Test asynchronous get_summoner functionality."""
 
     async def test_get_summoner_async_with_search_result(
-        self, mock_aiohttp, fixture_search_single, fixture_profile_full
+        self, mock_aiohttp, fixture_search_single, fixture_profile_full, fixture_seasons
     ):
         """Test get_summoner_async with SearchResult input."""
         mock_aiohttp.get(
             PROFILE_URL_PATTERN,
             payload=fixture_profile_full,
+        )
+        mock_aiohttp.get(
+            SEASONS_URL_PATTERN,
+            payload=fixture_seasons,
         )
 
         async with OPGG() as opgg:
@@ -141,12 +145,16 @@ class TestGetSummonerAsync:
         assert summoner.summoner_id is not None
 
     async def test_get_summoner_async_with_id_and_region(
-        self, mock_aiohttp, fixture_profile_full
+        self, mock_aiohttp, fixture_profile_full, fixture_seasons
     ):
         """Test get_summoner_async with summoner_id and region."""
         mock_aiohttp.get(
             PROFILE_URL_PATTERN,
             payload=fixture_profile_full,
+        )
+        mock_aiohttp.get(
+            SEASONS_URL_PATTERN,
+            payload=fixture_seasons,
         )
 
         async with OPGG() as opgg:
@@ -157,13 +165,17 @@ class TestGetSummonerAsync:
         assert summoner is not None
 
     async def test_get_summoner_async_batch(
-        self, mock_aiohttp, fixture_profile_full
+        self, mock_aiohttp, fixture_profile_full, fixture_seasons
     ):
         """Test get_summoner_async with list processes concurrently."""
         mock_aiohttp.get(
             PROFILE_URL_PATTERN,
             payload=fixture_profile_full,
             repeat=True,
+        )
+        mock_aiohttp.get(
+            SEASONS_URL_PATTERN,
+            payload=fixture_seasons,
         )
 
         async with OPGG() as opgg:
@@ -359,13 +371,17 @@ class TestConcurrency:
         assert all(isinstance(r, list) for r in results)
 
     async def test_concurrent_profile_fetches(
-        self, mock_aiohttp, fixture_profile_full
+        self, mock_aiohttp, fixture_profile_full, fixture_seasons
     ):
         """Test concurrent profile fetches."""
         mock_aiohttp.get(
             PROFILE_URL_PATTERN,
             payload=fixture_profile_full,
             repeat=True,
+        )
+        mock_aiohttp.get(
+            SEASONS_URL_PATTERN,
+            payload=fixture_seasons,
         )
 
         async with OPGG() as opgg:
